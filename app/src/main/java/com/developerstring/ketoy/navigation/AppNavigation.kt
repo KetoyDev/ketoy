@@ -1,22 +1,35 @@
 package com.developerstring.ketoy.navigation
 
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.*
-import androidx.compose.material.icons.outlined.*
-import androidx.compose.ui.graphics.vector.ImageVector
+import com.developerstring.ketoy.util.KIconRef
+import com.developerstring.ketoy.util.KIcons
+import kotlinx.serialization.Serializable
 
-// ─── Navigation routes ────────────────────────────────────────────
+// ─── Type-safe @Serializable navigation routes ──────────────────
 
-sealed class Screen(
-    val route: String,
+@Serializable
+data object HomeRoute : KetoyRoute
+
+@Serializable
+data object AnalyticsRoute : KetoyRoute
+
+@Serializable
+data object CardsRoute : KetoyRoute
+
+@Serializable
+data object ProfileRoute : KetoyRoute
+
+// ─── Bottom nav item descriptor (UI metadata only) ──────────────
+
+data class BottomNavItem<T : KetoyRoute>(
+    val route: T,
     val label: String,
-    val icon: ImageVector,
-    val selectedIcon: ImageVector
-) {
-    data object Home : Screen("home", "Home", Icons.Outlined.Home, Icons.Filled.Home)
-    data object Analytics : Screen("analytics", "Analytics", Icons.Outlined.Insights, Icons.Filled.Insights)
-    data object Cards : Screen("cards", "Cards", Icons.Outlined.CreditCard, Icons.Filled.CreditCard)
-    data object Profile : Screen("profile", "Profile", Icons.Outlined.Person, Icons.Filled.Person)
-}
+    val icon: KIconRef,
+    val selectedIcon: KIconRef,
+)
 
-val bottomNavScreens = listOf(Screen.Home, Screen.Analytics, Screen.Cards, Screen.Profile)
+val bottomNavItems = listOf(
+    BottomNavItem(HomeRoute, "Home", KIcons.Outlined.Home, KIcons.Filled.Home),
+    BottomNavItem(AnalyticsRoute, "Analytics", KIcons.Outlined.Insights, KIcons.Filled.Insights),
+    BottomNavItem(CardsRoute, "Cards", KIcons.Outlined.CreditCard, KIcons.Filled.CreditCard),
+    BottomNavItem(ProfileRoute, "Profile", KIcons.Outlined.Person, KIcons.Filled.Person),
+)

@@ -159,6 +159,18 @@ data class KAppBarActionNode(
     val children: List<KNode> = emptyList()
 ) : KNode()
 
+@Serializable @SerialName("NavigationBarItem")
+data class KNavigationBarItemNode(
+    val props: KNavigationBarItemProps = KNavigationBarItemProps(),
+    val children: List<KNode> = emptyList()
+) : KNode()
+
+@Serializable @SerialName("ModalBottomSheet")
+data class KModalBottomSheetNode(
+    val props: KModalBottomSheetProps = KModalBottomSheetProps(),
+    val children: List<KNode> = emptyList()
+) : KNode()
+
 // ── Data structures ─────────────────────────────────────────
 
 @Serializable @SerialName("DataClass")
