@@ -2,8 +2,7 @@ package com.developerstring.ketoy.renderer
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
@@ -12,30 +11,38 @@ import com.developerstring.ketoy.core.ActionRegistry
 import com.developerstring.ketoy.parser.*
 import kotlinx.serialization.json.*
 
-// ─── Scaffold ─────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+//  Scaffold
+// ═══════════════════════════════════════════════════════════════════
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun RenderScaffold(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
     val modifier = parseModifier(props)
-    val containerColor = props["containerColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) }
+    val containerColor = resolveKetoyColorOrNull(props["containerColor"]?.jsonPrimitive?.contentOrNull)
         ?: MaterialTheme.colorScheme.background
-    val contentColor = props["contentColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) }
+    val contentColor = resolveKetoyColorOrNull(props["contentColor"]?.jsonPrimitive?.contentOrNull)
         ?: MaterialTheme.colorScheme.onBackground
-    val contentWindowInsets = props["contentWindowInsets"]?.jsonObject?.let { parseWindowInsets(it) }
-        ?: ScaffoldDefaults.contentWindowInsets
+    val contentWindowInsets = props["contentWindowInsets"]?.jsonObject
+        ?.let { parseWindowInsets(it) } ?: ScaffoldDefaults.contentWindowInsets
 
     val topBarContent = props["topBar"]?.jsonArray
     val bottomBarContent = props["bottomBar"]?.jsonArray
     val snackbarHostContent = props["snackbarHost"]?.jsonArray
     val fabContent = props["floatingActionButton"]?.jsonArray
-    val fabPosition = parseFabPosition(props["floatingActionButtonPosition"]?.jsonPrimitive?.content)
+    val fabPosition = parseFabPosition(
+        props["floatingActionButtonPosition"]?.jsonPrimitive?.contentOrNull
+    )
 
     Scaffold(
         modifier = modifier,
-        topBar = { topBarContent?.forEach { RenderComponent(Json.decodeFromJsonElement(it)) } },
-        bottomBar = { bottomBarContent?.forEach { RenderComponent(Json.decodeFromJsonElement(it)) } },
+        topBar = {
+            topBarContent?.forEach { RenderComponent(Json.decodeFromJsonElement(it)) }
+        },
+        bottomBar = {
+            bottomBarContent?.forEach { RenderComponent(Json.decodeFromJsonElement(it)) }
+        },
         snackbarHost = {
             if (snackbarHostContent != null) {
                 snackbarHostContent.forEach { RenderComponent(Json.decodeFromJsonElement(it)) }
@@ -43,7 +50,9 @@ internal fun RenderScaffold(component: UIComponent) {
                 SnackbarHost(hostState = remember { SnackbarHostState() })
             }
         },
-        floatingActionButton = { fabContent?.forEach { RenderComponent(Json.decodeFromJsonElement(it)) } },
+        floatingActionButton = {
+            fabContent?.forEach { RenderComponent(Json.decodeFromJsonElement(it)) }
+        },
         floatingActionButtonPosition = fabPosition,
         containerColor = containerColor,
         contentColor = contentColor,
@@ -55,45 +64,70 @@ internal fun RenderScaffold(component: UIComponent) {
     }
 }
 
-// ─── TopAppBar ────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+//  TopAppBar  (small | centerAligned | medium | large)
+// ═══════════════════════════════════════════════════════════════════
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun RenderTopAppBar(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
     val modifier = parseModifier(props)
+    val type = props["type"]?.jsonPrimitive?.contentOrNull ?: "small"
     val colors = props["colors"]?.jsonObject?.let { parseTopAppBarColors(it) }
         ?: TopAppBarDefaults.topAppBarColors()
     val windowInsets = props["windowInsets"]?.jsonObject?.let { parseWindowInsets(it) }
         ?: TopAppBarDefaults.windowInsets
-    val scrollBehavior = props["scrollBehavior"]?.jsonObject?.let { parseTopAppBarScrollBehavior(it) }
-    val type = props["type"]?.jsonPrimitive?.content ?: "small"
+    val scrollBehavior = props["scrollBehavior"]?.jsonObject
+        ?.let { parseTopAppBarScrollBehavior(it) }
 
-    val titleContent = props["title"]?.jsonArray
-    val navIconContent = props["navigationIcon"]?.jsonArray
-    val actionsContent = props["actions"]?.jsonArray
-
-    val title: @Composable () -> Unit = { titleContent?.forEach { RenderComponent(Json.decodeFromJsonElement(it)) } }
-    val navIcon: @Composable () -> Unit = { navIconContent?.forEach { RenderComponent(Json.decodeFromJsonElement(it)) } }
-    val actions: @Composable RowScope.() -> Unit = { actionsContent?.forEach { RenderComponent(Json.decodeFromJsonElement(it)) } }
+    val title: @Composable () -> Unit = {
+        props["title"]?.jsonArray?.forEach { RenderComponent(Json.decodeFromJsonElement(it)) }
+    }
+    val navIcon: @Composable () -> Unit = {
+        props["navigationIcon"]?.jsonArray?.forEach {
+            RenderComponent(Json.decodeFromJsonElement(it))
+        }
+    }
+    val actions: @Composable RowScope.() -> Unit = {
+        props["actions"]?.jsonArray?.forEach { RenderComponent(Json.decodeFromJsonElement(it)) }
+    }
 
     when (type) {
-        "small" -> TopAppBar(title = title, modifier = modifier, navigationIcon = navIcon, actions = actions, windowInsets = windowInsets, colors = colors, scrollBehavior = scrollBehavior)
-        "centerAligned" -> CenterAlignedTopAppBar(title = title, modifier = modifier, navigationIcon = navIcon, actions = actions, windowInsets = windowInsets, colors = colors, scrollBehavior = scrollBehavior)
-        "medium" -> MediumTopAppBar(title = title, modifier = modifier, navigationIcon = navIcon, actions = actions, windowInsets = windowInsets, colors = colors, scrollBehavior = scrollBehavior)
-        "large" -> LargeTopAppBar(title = title, modifier = modifier, navigationIcon = navIcon, actions = actions, windowInsets = windowInsets, colors = colors, scrollBehavior = scrollBehavior)
+        "centerAligned" -> CenterAlignedTopAppBar(
+            title = title, modifier = modifier, navigationIcon = navIcon,
+            actions = actions, windowInsets = windowInsets,
+            colors = colors, scrollBehavior = scrollBehavior
+        )
+        "medium" -> MediumTopAppBar(
+            title = title, modifier = modifier, navigationIcon = navIcon,
+            actions = actions, windowInsets = windowInsets,
+            colors = colors, scrollBehavior = scrollBehavior
+        )
+        "large" -> LargeTopAppBar(
+            title = title, modifier = modifier, navigationIcon = navIcon,
+            actions = actions, windowInsets = windowInsets,
+            colors = colors, scrollBehavior = scrollBehavior
+        )
+        else -> TopAppBar(
+            title = title, modifier = modifier, navigationIcon = navIcon,
+            actions = actions, windowInsets = windowInsets,
+            colors = colors, scrollBehavior = scrollBehavior
+        )
     }
 }
 
-// ─── BottomAppBar ─────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+//  BottomAppBar
+// ═══════════════════════════════════════════════════════════════════
 
 @Composable
 internal fun RenderBottomAppBar(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
     val modifier = parseModifier(props)
-    val containerColor = props["containerColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) }
+    val containerColor = resolveKetoyColorOrNull(props["containerColor"]?.jsonPrimitive?.contentOrNull)
         ?: BottomAppBarDefaults.containerColor
-    val contentColor = props["contentColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) }
+    val contentColor = resolveKetoyColorOrNull(props["contentColor"]?.jsonPrimitive?.contentOrNull)
         ?: Color.Unspecified
     val tonalElevation = props["tonalElevation"]?.jsonPrimitive?.intOrNull?.dp
         ?: BottomAppBarDefaults.ContainerElevation
@@ -114,15 +148,17 @@ internal fun RenderBottomAppBar(component: UIComponent) {
     }
 }
 
-// ─── NavigationBar ────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+//  NavigationBar  (contains NavigationBarItem children)
+// ═══════════════════════════════════════════════════════════════════
 
 @Composable
 internal fun RenderNavigationBar(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
     val modifier = parseModifier(props)
-    val containerColor = props["containerColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) }
+    val containerColor = resolveKetoyColorOrNull(props["containerColor"]?.jsonPrimitive?.contentOrNull)
         ?: NavigationBarDefaults.containerColor
-    val contentColor = props["contentColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) }
+    val contentColor = resolveKetoyColorOrNull(props["contentColor"]?.jsonPrimitive?.contentOrNull)
         ?: Color.Unspecified
     val tonalElevation = props["tonalElevation"]?.jsonPrimitive?.intOrNull?.dp
         ?: NavigationBarDefaults.Elevation
@@ -136,11 +172,60 @@ internal fun RenderNavigationBar(component: UIComponent) {
         tonalElevation = tonalElevation,
         windowInsets = windowInsets
     ) {
-        component.children?.forEach { child -> RenderComponent(child) }
+        // Children MUST be NavigationBarItem — rendered inside RowScope
+        component.children?.forEach { child ->
+            if (child.type.equals("NavigationBarItem", ignoreCase = true)) {
+                RenderNavigationBarItem(child)
+            } else {
+                RenderComponent(child)
+            }
+        }
     }
 }
 
-// ─── NavigationDrawerItem ─────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+//  NavigationBarItem  (must be called inside RowScope)
+// ═══════════════════════════════════════════════════════════════════
+
+@Composable
+internal fun RowScope.RenderNavigationBarItem(component: UIComponent) {
+    val props = component.props ?: JsonObject(emptyMap())
+    val selected = props["selected"]?.jsonPrimitive?.booleanOrNull ?: false
+    val onClick = props["onClick"]?.jsonPrimitive?.contentOrNull
+    val modifier = parseModifier(props)
+    val enabled = props["enabled"]?.jsonPrimitive?.booleanOrNull ?: true
+    val alwaysShowLabel = props["alwaysShowLabel"]?.jsonPrimitive?.booleanOrNull ?: true
+
+    val iconContent = props["icon"]?.jsonArray
+    val selectedIconContent = props["selectedIcon"]?.jsonArray
+    val labelContent = props["label"]?.jsonArray
+
+    val colors = props["colors"]?.jsonObject?.let { parseNavigationBarItemColors(it) }
+        ?: NavigationBarItemDefaults.colors()
+
+    NavigationBarItem(
+        selected = selected,
+        onClick = { onClick?.let { ActionRegistry.get(it)?.invoke() } },
+        icon = {
+            if (selected && selectedIconContent != null) {
+                selectedIconContent.forEach { RenderComponent(Json.decodeFromJsonElement(it)) }
+            } else {
+                iconContent?.forEach { RenderComponent(Json.decodeFromJsonElement(it)) }
+            }
+        },
+        modifier = modifier,
+        enabled = enabled,
+        label = labelContent?.let { arr ->
+            { arr.forEach { RenderComponent(Json.decodeFromJsonElement(it)) } }
+        },
+        alwaysShowLabel = alwaysShowLabel,
+        colors = colors
+    )
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  NavigationDrawerItem
+// ═══════════════════════════════════════════════════════════════════
 
 @Composable
 internal fun RenderNavigationDrawerItem(component: UIComponent) {
@@ -160,13 +245,19 @@ internal fun RenderNavigationDrawerItem(component: UIComponent) {
         selected = selected,
         onClick = { onClick?.let { ActionRegistry.get(it)?.invoke() } },
         modifier = modifier,
-        icon = iconContent?.let { arr -> { arr.forEach { RenderComponent(Json.decodeFromJsonElement(it)) } } },
-        badge = badgeContent?.let { arr -> { arr.forEach { RenderComponent(Json.decodeFromJsonElement(it)) } } },
+        icon = iconContent?.let { arr ->
+            { arr.forEach { RenderComponent(Json.decodeFromJsonElement(it)) } }
+        },
+        badge = badgeContent?.let { arr ->
+            { arr.forEach { RenderComponent(Json.decodeFromJsonElement(it)) } }
+        },
         colors = colors
     )
 }
 
-// ─── CustomNavigationItem ─────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+//  CustomNavigationItem  (fallback custom button-based nav item)
+// ═══════════════════════════════════════════════════════════════════
 
 @Composable
 internal fun RenderCustomNavigationItem(component: UIComponent) {
@@ -177,10 +268,10 @@ internal fun RenderCustomNavigationItem(component: UIComponent) {
     val enabled = props["enabled"]?.jsonPrimitive?.booleanOrNull ?: true
     val alwaysShowLabel = props["alwaysShowLabel"]?.jsonPrimitive?.booleanOrNull ?: true
 
-    val containerColor = props["containerColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) }
-    val selectedContainerColor = props["selectedContainerColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) }
-    val contentColor = props["contentColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) }
-    val selectedContentColor = props["selectedContentColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) }
+    val containerColor = resolveKetoyColorOrNull(props["containerColor"]?.jsonPrimitive?.contentOrNull)
+    val selectedContainerColor = resolveKetoyColorOrNull(props["selectedContainerColor"]?.jsonPrimitive?.contentOrNull)
+    val contentColor = resolveKetoyColorOrNull(props["contentColor"]?.jsonPrimitive?.contentOrNull)
+    val selectedContentColor = resolveKetoyColorOrNull(props["selectedContentColor"]?.jsonPrimitive?.contentOrNull)
 
     val iconContent = props["icon"]?.jsonArray
     val selectedIconContent = props["selectedIcon"]?.jsonArray
@@ -191,13 +282,22 @@ internal fun RenderCustomNavigationItem(component: UIComponent) {
         modifier = modifier,
         enabled = enabled,
         colors = ButtonDefaults.buttonColors(
-            containerColor = if (selected) (selectedContainerColor ?: containerColor ?: MaterialTheme.colorScheme.primaryContainer)
-                else (containerColor ?: MaterialTheme.colorScheme.surface),
-            contentColor = if (selected) (selectedContentColor ?: contentColor ?: MaterialTheme.colorScheme.onPrimaryContainer)
-                else (contentColor ?: MaterialTheme.colorScheme.onSurface)
+            containerColor = if (selected) {
+                selectedContainerColor ?: containerColor ?: MaterialTheme.colorScheme.primaryContainer
+            } else {
+                containerColor ?: MaterialTheme.colorScheme.surface
+            },
+            contentColor = if (selected) {
+                selectedContentColor ?: contentColor ?: MaterialTheme.colorScheme.onPrimaryContainer
+            } else {
+                contentColor ?: MaterialTheme.colorScheme.onSurface
+            }
         )
     ) {
-        Column(horizontalAlignment = Alignment.CenterHorizontally, verticalArrangement = Arrangement.Center) {
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
             if (selected && selectedIconContent != null) {
                 selectedIconContent.forEach { RenderComponent(Json.decodeFromJsonElement(it)) }
             } else {
@@ -210,7 +310,9 @@ internal fun RenderCustomNavigationItem(component: UIComponent) {
     }
 }
 
-// ─── FloatingActionButton ─────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+//  FloatingActionButton  (regular | small | large | extended)
+// ═══════════════════════════════════════════════════════════════════
 
 @Composable
 internal fun RenderFloatingActionButton(component: UIComponent) {
@@ -219,42 +321,73 @@ internal fun RenderFloatingActionButton(component: UIComponent) {
     val modifier = parseModifier(props)
     val shape = props["shape"]?.jsonPrimitive?.contentOrNull?.let { parseShape(it) }
         ?: FloatingActionButtonDefaults.shape
-    val containerColor = props["containerColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) }
+    val containerColor = resolveKetoyColorOrNull(props["containerColor"]?.jsonPrimitive?.contentOrNull)
         ?: FloatingActionButtonDefaults.containerColor
-    val contentColor = props["contentColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) }
+    val contentColor = resolveKetoyColorOrNull(props["contentColor"]?.jsonPrimitive?.contentOrNull)
         ?: Color.Unspecified
     val elevation = props["elevation"]?.jsonObject?.let { parseFabElevation(it) }
         ?: FloatingActionButtonDefaults.elevation()
-    val type = props["type"]?.jsonPrimitive?.content ?: "regular"
+    val type = props["type"]?.jsonPrimitive?.contentOrNull ?: "regular"
 
     val onClickAction: () -> Unit = { onClick?.let { ActionRegistry.get(it)?.invoke() } }
-    val content: @Composable () -> Unit = { component.children?.forEach { child -> RenderComponent(child) } }
+    val content: @Composable () -> Unit = {
+        component.children?.forEach { child -> RenderComponent(child) }
+    }
 
     when (type) {
-        "small" -> SmallFloatingActionButton(onClick = onClickAction, modifier = modifier, shape = shape, containerColor = containerColor, contentColor = contentColor, elevation = elevation, content = content)
-        "large" -> LargeFloatingActionButton(onClick = onClickAction, modifier = modifier, shape = shape, containerColor = containerColor, contentColor = contentColor, elevation = elevation, content = content)
-        "extended" -> ExtendedFloatingActionButton(
-            onClick = onClickAction, modifier = modifier, shape = shape,
-            containerColor = containerColor, contentColor = contentColor, elevation = elevation,
-            text = { component.children?.filter { it.type.lowercase() == "text" }?.forEach { RenderComponent(it) } },
-            icon = { component.children?.filter { it.type.lowercase() != "text" }?.forEach { RenderComponent(it) } }
+        "small" -> SmallFloatingActionButton(
+            onClick = onClickAction, modifier = modifier,
+            shape = shape, containerColor = containerColor,
+            contentColor = contentColor, elevation = elevation,
+            content = content
         )
-        else -> FloatingActionButton(onClick = onClickAction, modifier = modifier, shape = shape, containerColor = containerColor, contentColor = contentColor, elevation = elevation, content = content)
+        "large" -> LargeFloatingActionButton(
+            onClick = onClickAction, modifier = modifier,
+            shape = shape, containerColor = containerColor,
+            contentColor = contentColor, elevation = elevation,
+            content = content
+        )
+        "extended" -> ExtendedFloatingActionButton(
+            onClick = onClickAction, modifier = modifier,
+            shape = shape, containerColor = containerColor,
+            contentColor = contentColor, elevation = elevation,
+            text = {
+                component.children?.filter { it.type.equals("Text", ignoreCase = true) }
+                    ?.forEach { RenderComponent(it) }
+            },
+            icon = {
+                component.children?.filter { !it.type.equals("Text", ignoreCase = true) }
+                    ?.forEach { RenderComponent(it) }
+            }
+        )
+        else -> FloatingActionButton(
+            onClick = onClickAction, modifier = modifier,
+            shape = shape, containerColor = containerColor,
+            contentColor = contentColor, elevation = elevation,
+            content = content
+        )
     }
 }
 
-// ─── SnackBar ─────────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+//  Snackbar
+// ═══════════════════════════════════════════════════════════════════
 
 @Composable
 internal fun RenderSnackBar(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
     val modifier = parseModifier(props)
     val actionOnNewLine = props["actionOnNewLine"]?.jsonPrimitive?.booleanOrNull ?: false
-    val shape = props["shape"]?.jsonPrimitive?.contentOrNull?.let { parseShape(it) } ?: SnackbarDefaults.shape
-    val containerColor = props["containerColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) } ?: SnackbarDefaults.color
-    val contentColor = props["contentColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) } ?: SnackbarDefaults.contentColor
-    val actionContentColor = props["actionContentColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) } ?: SnackbarDefaults.actionContentColor
-    val dismissActionContentColor = props["dismissActionContentColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) } ?: SnackbarDefaults.dismissActionContentColor
+    val shape = props["shape"]?.jsonPrimitive?.contentOrNull?.let { parseShape(it) }
+        ?: SnackbarDefaults.shape
+    val containerColor = resolveKetoyColorOrNull(props["containerColor"]?.jsonPrimitive?.contentOrNull)
+        ?: SnackbarDefaults.color
+    val contentColor = resolveKetoyColorOrNull(props["contentColor"]?.jsonPrimitive?.contentOrNull)
+        ?: SnackbarDefaults.contentColor
+    val actionContentColor = resolveKetoyColorOrNull(props["actionContentColor"]?.jsonPrimitive?.contentOrNull)
+        ?: SnackbarDefaults.actionContentColor
+    val dismissActionContentColor = resolveKetoyColorOrNull(props["dismissActionContentColor"]?.jsonPrimitive?.contentOrNull)
+        ?: SnackbarDefaults.dismissActionContentColor
     val message = props["message"]?.jsonPrimitive?.contentOrNull ?: ""
 
     val actionContent = props["action"]?.jsonArray
@@ -262,8 +395,12 @@ internal fun RenderSnackBar(component: UIComponent) {
 
     Snackbar(
         modifier = modifier,
-        action = actionContent?.let { arr -> { arr.forEach { RenderComponent(Json.decodeFromJsonElement(it)) } } },
-        dismissAction = dismissActionContent?.let { arr -> { arr.forEach { RenderComponent(Json.decodeFromJsonElement(it)) } } },
+        action = actionContent?.let { arr ->
+            { arr.forEach { RenderComponent(Json.decodeFromJsonElement(it)) } }
+        },
+        dismissAction = dismissActionContent?.let { arr ->
+            { arr.forEach { RenderComponent(Json.decodeFromJsonElement(it)) } }
+        },
         actionOnNewLine = actionOnNewLine,
         shape = shape,
         containerColor = containerColor,
@@ -276,7 +413,9 @@ internal fun RenderSnackBar(component: UIComponent) {
     }
 }
 
-// ─── SnackBarHost ─────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+//  SnackbarHost
+// ═══════════════════════════════════════════════════════════════════
 
 @Composable
 internal fun RenderSnackBarHost(component: UIComponent) {
@@ -294,7 +433,9 @@ internal fun RenderSnackBarHost(component: UIComponent) {
     }
 }
 
-// ─── AppBarAction ─────────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+//  AppBarAction (IconButton wrapper for TopAppBar actions)
+// ═══════════════════════════════════════════════════════════════════
 
 @Composable
 internal fun RenderAppBarAction(component: UIComponent) {
@@ -315,15 +456,17 @@ internal fun RenderAppBarAction(component: UIComponent) {
     }
 }
 
-// ─── NavigationRail ───────────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+//  NavigationRail
+// ═══════════════════════════════════════════════════════════════════
 
 @Composable
 internal fun RenderNavigationRail(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
     val modifier = parseModifier(props)
-    val containerColor = props["containerColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) }
+    val containerColor = resolveKetoyColorOrNull(props["containerColor"]?.jsonPrimitive?.contentOrNull)
         ?: NavigationRailDefaults.ContainerColor
-    val contentColor = props["contentColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) }
+    val contentColor = resolveKetoyColorOrNull(props["contentColor"]?.jsonPrimitive?.contentOrNull)
         ?: Color.Unspecified
     val headerContent = props["header"]?.jsonArray
     val windowInsets = props["windowInsets"]?.jsonObject?.let { parseWindowInsets(it) }
@@ -333,14 +476,18 @@ internal fun RenderNavigationRail(component: UIComponent) {
         modifier = modifier,
         containerColor = containerColor,
         contentColor = contentColor,
-        header = headerContent?.let { arr -> { arr.forEach { RenderComponent(Json.decodeFromJsonElement(it)) } } },
+        header = headerContent?.let { arr ->
+            { arr.forEach { RenderComponent(Json.decodeFromJsonElement(it)) } }
+        },
         windowInsets = windowInsets
     ) {
         component.children?.forEach { child -> RenderComponent(child) }
     }
 }
 
-// ─── NavigationRailItem ───────────────────────────────────────────
+// ═══════════════════════════════════════════════════════════════════
+//  NavigationRailItem
+// ═══════════════════════════════════════════════════════════════════
 
 @Composable
 internal fun RenderNavigationRailItem(component: UIComponent) {
@@ -367,7 +514,50 @@ internal fun RenderNavigationRailItem(component: UIComponent) {
         },
         modifier = modifier,
         enabled = enabled,
-        label = labelContent?.let { arr -> { arr.forEach { RenderComponent(Json.decodeFromJsonElement(it)) } } },
+        label = labelContent?.let { arr ->
+            { arr.forEach { RenderComponent(Json.decodeFromJsonElement(it)) } }
+        },
         alwaysShowLabel = alwaysShowLabel
     )
+}
+
+// ═══════════════════════════════════════════════════════════════════
+//  ModalBottomSheet
+// ═══════════════════════════════════════════════════════════════════
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun RenderModalBottomSheet(component: UIComponent) {
+    val props = component.props ?: JsonObject(emptyMap())
+    val modifier = parseModifier(props)
+    val onDismissAction = props["onDismissRequest"]?.jsonPrimitive?.contentOrNull
+    val shape = props["shape"]?.jsonPrimitive?.contentOrNull?.let { parseShape(it) }
+        ?: BottomSheetDefaults.ExpandedShape
+    val containerColor = resolveKetoyColorOrNull(props["containerColor"]?.jsonPrimitive?.contentOrNull)
+        ?: BottomSheetDefaults.ContainerColor
+    val contentColor = resolveKetoyColorOrNull(props["contentColor"]?.jsonPrimitive?.contentOrNull)
+        ?: Color.Unspecified
+    val tonalElevation = props["tonalElevation"]?.jsonPrimitive?.intOrNull?.dp
+        ?: BottomSheetDefaults.Elevation
+    val scrimColor = resolveKetoyColorOrNull(props["scrimColor"]?.jsonPrimitive?.contentOrNull)
+        ?: BottomSheetDefaults.ScrimColor
+    val dragHandleContent = props["dragHandle"]?.jsonArray
+
+    val sheetState = rememberModalBottomSheetState()
+
+    ModalBottomSheet(
+        onDismissRequest = { onDismissAction?.let { ActionRegistry.get(it)?.invoke() } },
+        modifier = modifier,
+        sheetState = sheetState,
+        shape = shape,
+        containerColor = containerColor,
+        contentColor = contentColor,
+        tonalElevation = tonalElevation,
+        scrimColor = scrimColor,
+        dragHandle = dragHandleContent?.let { arr ->
+            { arr.forEach { RenderComponent(Json.decodeFromJsonElement(it)) } }
+        } ?: { BottomSheetDefaults.DragHandle() }
+    ) {
+        component.children?.forEach { child -> RenderComponent(child) }
+    }
 }

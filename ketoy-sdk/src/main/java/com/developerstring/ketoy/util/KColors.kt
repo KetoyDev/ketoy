@@ -13,6 +13,37 @@ object KColors {
     const val White = "#FFFFFFFF"
     const val Transparent = "#00000000"
 
+    // ── Material3 theme-aware colour references ─────────
+    // These are resolved at render-time via MaterialTheme.colorScheme
+    const val Primary = "@theme/primary"
+    const val OnPrimary = "@theme/onPrimary"
+    const val PrimaryContainer = "@theme/primaryContainer"
+    const val OnPrimaryContainer = "@theme/onPrimaryContainer"
+    const val Secondary = "@theme/secondary"
+    const val OnSecondary = "@theme/onSecondary"
+    const val SecondaryContainer = "@theme/secondaryContainer"
+    const val OnSecondaryContainer = "@theme/onSecondaryContainer"
+    const val Tertiary = "@theme/tertiary"
+    const val OnTertiary = "@theme/onTertiary"
+    const val TertiaryContainer = "@theme/tertiaryContainer"
+    const val OnTertiaryContainer = "@theme/onTertiaryContainer"
+    const val Error = "@theme/error"
+    const val OnError = "@theme/onError"
+    const val ErrorContainer = "@theme/errorContainer"
+    const val OnErrorContainer = "@theme/onErrorContainer"
+    const val Background = "@theme/background"
+    const val OnBackground = "@theme/onBackground"
+    const val Surface = "@theme/surface"
+    const val OnSurface = "@theme/onSurface"
+    const val SurfaceVariant = "@theme/surfaceVariant"
+    const val OnSurfaceVariant = "@theme/onSurfaceVariant"
+    const val Outline = "@theme/outline"
+    const val OutlineVariant = "@theme/outlineVariant"
+    const val InversePrimary = "@theme/inversePrimary"
+    const val InverseSurface = "@theme/inverseSurface"
+    const val InverseOnSurface = "@theme/inverseOnSurface"
+    const val SurfaceTint = "@theme/surfaceTint"
+
     fun hex(hex: String): String = when {
         hex.startsWith("#") && hex.length == 7 -> "#FF${hex.substring(1)}"
         hex.startsWith("#") && hex.length == 9 -> hex

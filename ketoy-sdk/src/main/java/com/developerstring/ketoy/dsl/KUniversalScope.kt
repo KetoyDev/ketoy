@@ -7,6 +7,7 @@ import com.developerstring.ketoy.registry.KComponentRegistry
 import com.developerstring.ketoy.util.KColors
 import com.developerstring.ketoy.util.KFabPosition
 import com.developerstring.ketoy.util.KFabType
+import com.developerstring.ketoy.util.KIconRef
 import com.developerstring.ketoy.util.KShapes
 import com.developerstring.ketoy.util.KSnackBarDuration
 import com.developerstring.ketoy.util.KTopAppBarType
@@ -165,6 +166,22 @@ open class KUniversalScope : KScope() {
         addChild(KIconNode(KIconProps(icon, modifier, size, color, style, contentDescription)))
     }
 
+    /**
+     * Renders a Material3 Icon from a [KIconRef] (style-qualified reference).
+     *
+     * ```kotlin
+     * KIcon(icon = KIcons.Outlined.Home, size = 24)
+     * KIcon(icon = KIcons.Rounded.Settings, color = KColors.Red)
+     * ```
+     */
+    fun KIcon(
+        icon: KIconRef, modifier: KModifier? = null,
+        size: Int? = null, color: String? = null,
+        contentDescription: String? = null
+    ) {
+        addChild(KIconNode(KIconProps(icon.name, modifier, size, color, icon.style, contentDescription)))
+    }
+
     // ── IconButton ──────────────────────────────────────
 
     /**
@@ -191,6 +208,32 @@ open class KUniversalScope : KScope() {
         val scope = KUniversalScope().apply(content)
         addChild(KIconButtonNode(
             KIconButtonProps(icon, modifier, actionId, enabled, iconSize, iconColor, iconStyle,
+                containerColor, contentColor, disabledContainerColor, disabledContentColor, contentDescription),
+            scope.children
+        ))
+    }
+
+    /**
+     * Renders a Material3 IconButton using a [KIconRef] (style-qualified reference).
+     *
+     * ```kotlin
+     * KIconButton(icon = KIcons.Outlined.Menu, onClick = { openDrawer() })
+     * KIconButton(icon = KIcons.Filled.Favorite, iconColor = KColors.Red, onClick = { like() })
+     * ```
+     */
+    fun KIconButton(
+        icon: KIconRef, onClick: () -> Unit = {},
+        modifier: KModifier? = null, enabled: Boolean? = null,
+        iconSize: Int? = null, iconColor: String? = null,
+        containerColor: String? = null, contentColor: String? = null,
+        disabledContainerColor: String? = null, disabledContentColor: String? = null,
+        contentDescription: String? = null,
+        content: KUniversalScope.() -> Unit = {}
+    ) {
+        val actionId = ActionRegistry.register(onClick)
+        val scope = KUniversalScope().apply(content)
+        addChild(KIconButtonNode(
+            KIconButtonProps(icon.name, modifier, actionId, enabled, iconSize, iconColor, icon.style,
                 containerColor, contentColor, disabledContainerColor, disabledContentColor, contentDescription),
             scope.children
         ))
@@ -375,6 +418,25 @@ open class KUniversalScope : KScope() {
         val ac = action?.let { KSnackBarScope().apply(it).children }
         val dc = dismissAction?.let { KSnackBarScope().apply(it).children }
         addChild(KSnackBarNode(KSnackBarProps(modifier, ac, dc, actionOnNewLine, shape ?: KShapes.Rounded4, containerColor, contentColor, actionContentColor, dismissActionContentColor, message, duration ?: KSnackBarDuration.Short)))
+    }
+
+    // ── ModalBottomSheet ────────────────────────────────
+
+    fun KModalBottomSheet(
+        onDismissRequest: () -> Unit = {}, modifier: KModifier? = null,
+        shape: String? = null, containerColor: String? = null,
+        contentColor: String? = null, tonalElevation: Int? = null,
+        scrimColor: String? = null,
+        dragHandle: (KUniversalScope.() -> Unit)? = null,
+        content: KUniversalScope.() -> Unit
+    ) {
+        val actionId = ActionRegistry.register(onDismissRequest)
+        val body = KUniversalScope().apply(content)
+        val dragNodes = dragHandle?.let { KUniversalScope().apply(it).children }
+        addChild(KModalBottomSheetNode(
+            KModalBottomSheetProps(modifier, actionId, null, shape, containerColor, contentColor, tonalElevation, scrimColor, dragNodes),
+            body.children
+        ))
     }
 
     // ── SnackBarHost ────────────────────────────────────

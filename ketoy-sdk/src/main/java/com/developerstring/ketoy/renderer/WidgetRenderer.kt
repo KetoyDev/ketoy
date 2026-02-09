@@ -44,7 +44,7 @@ internal fun RenderText(component: UIComponent) {
         "light" -> FontWeight.Light
         else -> FontWeight.Normal
     }
-    val color = parseColor(props["color"]?.jsonPrimitive?.content)
+    val color = resolveKetoyColor(props["color"]?.jsonPrimitive?.content)
     val textAlign = when (props["textAlign"]?.jsonPrimitive?.content) {
         "center" -> TextAlign.Center
         "start" -> TextAlign.Start
@@ -103,7 +103,7 @@ internal fun RenderButton(component: UIComponent) {
             mp["padding"]?.let { buttonModifier = applyJsonPadding(buttonModifier, it) }
         }
 
-        val containerColor = props["containerColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) }
+        val containerColor = resolveKetoyColorOrNull(props["containerColor"]?.jsonPrimitive?.contentOrNull)
         val shape = props["shape"]?.jsonPrimitive?.contentOrNull?.let { parseShape(it) }
 
         Button(
@@ -140,13 +140,13 @@ internal fun RenderSpacer(component: UIComponent) {
 @Composable
 internal fun RenderCard(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
-    val containerColor = props["containerColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) }
-    val contentColor = props["contentColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) }
+    val containerColor = resolveKetoyColorOrNull(props["containerColor"]?.jsonPrimitive?.contentOrNull)
+    val contentColor = resolveKetoyColorOrNull(props["contentColor"]?.jsonPrimitive?.contentOrNull)
     val elevation = props["elevation"]?.jsonPrimitive?.intOrNull ?: 1
     val shape = props["shape"]?.jsonPrimitive?.contentOrNull?.let { parseShape(it) } ?: RoundedCornerShape(12.dp)
     val border = props["border"]?.jsonObject?.let { borderObj ->
         val w = borderObj["width"]?.jsonPrimitive?.intOrNull ?: 1
-        val c = borderObj["color"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) } ?: Color.Gray
+        val c = resolveKetoyColorOrNull(borderObj["color"]?.jsonPrimitive?.contentOrNull) ?: Color.Gray
         BorderStroke(w.dp, c)
     }
     val onClick = props["onClick"]?.jsonPrimitive?.contentOrNull
@@ -295,7 +295,7 @@ internal fun RenderIcon(component: UIComponent) {
     val iconName = props["icon"]?.jsonPrimitive?.contentOrNull ?: ""
     val style = props["style"]?.jsonPrimitive?.contentOrNull ?: KIcons.STYLE_FILLED
     val size = props["size"]?.jsonPrimitive?.intOrNull
-    val color = props["color"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) }
+    val color = resolveKetoyColorOrNull(props["color"]?.jsonPrimitive?.contentOrNull)
     val contentDescription = props["contentDescription"]?.jsonPrimitive?.contentOrNull
     val modifier = parseModifier(props)
 
@@ -326,11 +326,11 @@ internal fun RenderIconButton(component: UIComponent) {
     val modifier = parseModifier(props)
     val enabled = props["enabled"]?.jsonPrimitive?.booleanOrNull ?: true
     val iconSize = props["iconSize"]?.jsonPrimitive?.intOrNull
-    val iconColor = props["iconColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) }
-    val containerColor = props["containerColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) }
-    val contentColor = props["contentColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) }
-    val disabledContainerColor = props["disabledContainerColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) }
-    val disabledContentColor = props["disabledContentColor"]?.jsonPrimitive?.contentOrNull?.let { parseColor(it) }
+    val iconColor = resolveKetoyColorOrNull(props["iconColor"]?.jsonPrimitive?.contentOrNull)
+    val containerColor = resolveKetoyColorOrNull(props["containerColor"]?.jsonPrimitive?.contentOrNull)
+    val contentColor = resolveKetoyColorOrNull(props["contentColor"]?.jsonPrimitive?.contentOrNull)
+    val disabledContainerColor = resolveKetoyColorOrNull(props["disabledContainerColor"]?.jsonPrimitive?.contentOrNull)
+    val disabledContentColor = resolveKetoyColorOrNull(props["disabledContentColor"]?.jsonPrimitive?.contentOrNull)
     val contentDescription = props["contentDescription"]?.jsonPrimitive?.contentOrNull
 
     val colors = IconButtonDefaults.iconButtonColors(

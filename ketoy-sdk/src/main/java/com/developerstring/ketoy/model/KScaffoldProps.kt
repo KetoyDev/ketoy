@@ -207,3 +207,48 @@ data class KIconButtonColors(
     val disabledContainerColor: String? = null,
     val disabledContentColor: String? = null
 )
+
+// ─────────────────────────────────────────────────────────────
+//  NavigationBarItem properties
+// ─────────────────────────────────────────────────────────────
+
+@Serializable
+data class KNavigationBarItemProps(
+    val selected: Boolean = false,
+    val onClick: String? = null,
+    val modifier: KModifier? = null,
+    val enabled: Boolean? = null,
+    val alwaysShowLabel: Boolean? = null,
+    val icon: List<KNode>? = null,
+    val selectedIcon: List<KNode>? = null,
+    val label: List<KNode>? = null,
+    val colors: KNavigationBarItemColors? = null
+)
+
+@Serializable
+data class KNavigationBarItemColors(
+    val selectedIconColor: String? = null,
+    val selectedTextColor: String? = null,
+    val indicatorColor: String? = null,
+    val unselectedIconColor: String? = null,
+    val unselectedTextColor: String? = null,
+    val disabledIconColor: String? = null,
+    val disabledTextColor: String? = null
+)
+
+// ─────────────────────────────────────────────────────────────
+//  ModalBottomSheet properties
+// ─────────────────────────────────────────────────────────────
+
+@Serializable
+data class KModalBottomSheetProps(
+    val modifier: KModifier? = null,
+    val onDismissRequest: String? = null,
+    val sheetState: String? = null,
+    val shape: String? = null,
+    val containerColor: String? = null,
+    val contentColor: String? = null,
+    val tonalElevation: Int? = null,
+    val scrimColor: String? = null,
+    val dragHandle: List<KNode>? = null
+)

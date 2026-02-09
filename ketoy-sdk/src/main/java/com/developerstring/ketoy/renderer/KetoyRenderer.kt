@@ -6,6 +6,9 @@ import com.developerstring.ketoy.core.ActionRegistry
 import com.developerstring.ketoy.core.KetoyVariableRegistry
 import com.developerstring.ketoy.model.KetoyVariable
 import com.developerstring.ketoy.registry.KComponentRegistry
+import com.developerstring.ketoy.theme.KetoyColorScheme
+import com.developerstring.ketoy.theme.KetoyThemeProvider
+import com.developerstring.ketoy.widget.KetoyWidgetRegistry
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 
@@ -21,15 +24,32 @@ data class UIComponent(
 
 /**
  * Primary entry-point: parses a JSON string and renders the resulting tree.
+ *
+ * @param value  The JSON-encoded UI tree.
+ * @param colorScheme  Optional [KetoyColorScheme] to power `@theme/` colour
+ *   references.  When `null` (the default), [KetoyThemeProvider] will
+ *   automatically derive one from the current [MaterialTheme].
  */
 @Composable
-fun JSONStringToUI(value: String) {
+fun JSONStringToUI(
+    value: String,
+    colorScheme: KetoyColorScheme? = null,
+) {
     val jsonConfig = Json {
         ignoreUnknownKeys = true
         encodeDefaults = false
     }
     val component = jsonConfig.decodeFromString<UIComponent>(value)
-    RenderComponent(component)
+
+    if (colorScheme != null) {
+        KetoyThemeProvider(colorScheme = colorScheme) {
+            RenderComponent(component)
+        }
+    } else {
+        KetoyThemeProvider {
+            RenderComponent(component)
+        }
+    }
 }
 
 /**
@@ -69,6 +89,8 @@ fun RenderComponent(component: UIComponent) {
         "navigationrail"       -> RenderNavigationRail(component)
         "navigationrailitem"   -> RenderNavigationRailItem(component)
         "appbaraction"         -> RenderAppBarAction(component)
+        "navigationbaritem"    -> {} // rendered by NavigationBar parent in RowScope
+        "modalbottomsheet"     -> RenderModalBottomSheet(component)
 
         // Data constructs
         "dataclass" -> {
@@ -77,7 +99,7 @@ fun RenderComponent(component: UIComponent) {
             val fields = props["fields"]?.jsonObject ?: JsonObject(emptyMap())
             fields.forEach { (fieldName, value) ->
                 val variableId = "${id}_$fieldName"
-                val fieldValue = value.jsonPrimitive?.content ?: value.toString()
+                val fieldValue = if (value is JsonPrimitive) value.content else value.toString()
                 KetoyVariableRegistry.register(KetoyVariable.Immutable(variableId, fieldValue))
             }
         }
@@ -92,10 +114,15 @@ fun RenderComponent(component: UIComponent) {
             KetoyVariableRegistry.register(KetoyVariable.Immutable("${id}_enumName", enumName))
         }
 
-        // Fallback – check custom registry
+        // Fallback – check custom widget parsers first, then legacy registry
         else -> {
             val name = component.type
-            if (KComponentRegistry.get(name) != null) {
+            val widgetParser = KetoyWidgetRegistry.resolveParser(name)
+                ?: KetoyWidgetRegistry.resolveParser(name.lowercase())
+
+            if (widgetParser != null) {
+                RenderCustomWidgetParser(widgetParser, component)
+            } else if (KComponentRegistry.get(name) != null) {
                 RenderRegisteredComponent(name, component)
             } else {
                 Text("Unknown component: ${component.type}")
@@ -113,4 +140,19 @@ fun RenderContentSlotFromJson(contentArray: JsonArray) {
         val contentComponent = Json.decodeFromJsonElement<UIComponent>(contentElement)
         RenderComponent(contentComponent)
     }
+}
+
+/**
+ * Renders a widget using a registered [KetoyWidgetParser].
+ * This enables the Stac-like custom widget extension system.
+ */
+@Composable
+@Suppress("UNCHECKED_CAST")
+internal fun <T> RenderCustomWidgetParser(
+    parser: com.developerstring.ketoy.widget.KetoyWidgetParser<T>,
+    component: UIComponent
+) {
+    val json = component.props ?: JsonObject(emptyMap())
+    val model = parser.getModel(json)
+    parser.parse(model)
 }

@@ -54,6 +54,24 @@ class KNavigationScope : KScope() {
         ))
     }
 
+    fun KNavigationBarItem(
+        selected: Boolean, onClick: () -> Unit = {},
+        modifier: KModifier? = null, enabled: Boolean? = null,
+        alwaysShowLabel: Boolean? = null,
+        colors: KNavigationBarItemColors? = null,
+        icon: (KUniversalScope.() -> Unit)? = null,
+        selectedIcon: (KUniversalScope.() -> Unit)? = null,
+        label: (KUniversalScope.() -> Unit)? = null
+    ) {
+        val actionId = ActionRegistry.register(onClick)
+        val ic = icon?.let { KUniversalScope().apply(it).children }
+        val sic = selectedIcon?.let { KUniversalScope().apply(it).children }
+        val lc = label?.let { KUniversalScope().apply(it).children }
+        addChild(KNavigationBarItemNode(
+            KNavigationBarItemProps(selected, actionId, modifier, enabled, alwaysShowLabel, ic, sic, lc, colors)
+        ))
+    }
+
     fun KCustomNavigationItem(
         selected: Boolean, onClick: () -> Unit = {},
         modifier: KModifier? = null, enabled: Boolean? = null,

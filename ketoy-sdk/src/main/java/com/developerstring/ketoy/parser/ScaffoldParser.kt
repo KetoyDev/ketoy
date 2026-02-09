@@ -48,11 +48,11 @@ fun parseWindowInsets(windowInsetsObject: JsonObject): WindowInsets {
 @Composable
 fun parseTopAppBarColors(colorsObject: JsonObject): TopAppBarColors {
     return TopAppBarDefaults.topAppBarColors(
-        containerColor = parseColor(colorsObject["containerColor"]?.jsonPrimitive?.content),
-        scrolledContainerColor = parseColor(colorsObject["scrolledContainerColor"]?.jsonPrimitive?.content),
-        navigationIconContentColor = parseColor(colorsObject["navigationIconContentColor"]?.jsonPrimitive?.content),
-        titleContentColor = parseColor(colorsObject["titleContentColor"]?.jsonPrimitive?.content),
-        actionIconContentColor = parseColor(colorsObject["actionIconContentColor"]?.jsonPrimitive?.content)
+        containerColor = resolveKetoyColor(colorsObject["containerColor"]?.jsonPrimitive?.content),
+        scrolledContainerColor = resolveKetoyColor(colorsObject["scrolledContainerColor"]?.jsonPrimitive?.content),
+        navigationIconContentColor = resolveKetoyColor(colorsObject["navigationIconContentColor"]?.jsonPrimitive?.content),
+        titleContentColor = resolveKetoyColor(colorsObject["titleContentColor"]?.jsonPrimitive?.content),
+        actionIconContentColor = resolveKetoyColor(colorsObject["actionIconContentColor"]?.jsonPrimitive?.content)
     )
 }
 
@@ -74,14 +74,14 @@ fun parseTopAppBarScrollBehavior(scrollBehaviorObject: JsonObject): TopAppBarScr
 @Composable
 fun parseNavigationDrawerItemColors(colorsObject: JsonObject): NavigationDrawerItemColors {
     return NavigationDrawerItemDefaults.colors(
-        selectedContainerColor = parseColor(colorsObject["selectedContainerColor"]?.jsonPrimitive?.content),
-        unselectedContainerColor = parseColor(colorsObject["unselectedContainerColor"]?.jsonPrimitive?.content),
-        selectedIconColor = parseColor(colorsObject["selectedIconColor"]?.jsonPrimitive?.content),
-        unselectedIconColor = parseColor(colorsObject["unselectedIconColor"]?.jsonPrimitive?.content),
-        selectedTextColor = parseColor(colorsObject["selectedTextColor"]?.jsonPrimitive?.content),
-        unselectedTextColor = parseColor(colorsObject["unselectedTextColor"]?.jsonPrimitive?.content),
-        selectedBadgeColor = parseColor(colorsObject["selectedBadgeColor"]?.jsonPrimitive?.content),
-        unselectedBadgeColor = parseColor(colorsObject["unselectedBadgeColor"]?.jsonPrimitive?.content)
+        selectedContainerColor = resolveKetoyColor(colorsObject["selectedContainerColor"]?.jsonPrimitive?.content),
+        unselectedContainerColor = resolveKetoyColor(colorsObject["unselectedContainerColor"]?.jsonPrimitive?.content),
+        selectedIconColor = resolveKetoyColor(colorsObject["selectedIconColor"]?.jsonPrimitive?.content),
+        unselectedIconColor = resolveKetoyColor(colorsObject["unselectedIconColor"]?.jsonPrimitive?.content),
+        selectedTextColor = resolveKetoyColor(colorsObject["selectedTextColor"]?.jsonPrimitive?.content),
+        unselectedTextColor = resolveKetoyColor(colorsObject["unselectedTextColor"]?.jsonPrimitive?.content),
+        selectedBadgeColor = resolveKetoyColor(colorsObject["selectedBadgeColor"]?.jsonPrimitive?.content),
+        unselectedBadgeColor = resolveKetoyColor(colorsObject["unselectedBadgeColor"]?.jsonPrimitive?.content)
     )
 }
 
@@ -90,10 +90,25 @@ fun parseNavigationDrawerItemColors(colorsObject: JsonObject): NavigationDrawerI
 @Composable
 fun parseIconButtonColors(colorsObject: JsonObject): IconButtonColors {
     return IconButtonDefaults.iconButtonColors(
-        containerColor = parseColor(colorsObject["containerColor"]?.jsonPrimitive?.content),
-        contentColor = parseColor(colorsObject["contentColor"]?.jsonPrimitive?.content),
-        disabledContainerColor = parseColor(colorsObject["disabledContainerColor"]?.jsonPrimitive?.content),
-        disabledContentColor = parseColor(colorsObject["disabledContentColor"]?.jsonPrimitive?.content)
+        containerColor = resolveKetoyColor(colorsObject["containerColor"]?.jsonPrimitive?.content),
+        contentColor = resolveKetoyColor(colorsObject["contentColor"]?.jsonPrimitive?.content),
+        disabledContainerColor = resolveKetoyColor(colorsObject["disabledContainerColor"]?.jsonPrimitive?.content),
+        disabledContentColor = resolveKetoyColor(colorsObject["disabledContentColor"]?.jsonPrimitive?.content)
+    )
+}
+
+// ─── NavigationBarItem Colours ────────────────────────────────────
+
+@Composable
+fun parseNavigationBarItemColors(colorsObject: JsonObject): NavigationBarItemColors {
+    return NavigationBarItemDefaults.colors(
+        selectedIconColor = resolveKetoyColor(colorsObject["selectedIconColor"]?.jsonPrimitive?.content),
+        selectedTextColor = resolveKetoyColor(colorsObject["selectedTextColor"]?.jsonPrimitive?.content),
+        indicatorColor = resolveKetoyColor(colorsObject["indicatorColor"]?.jsonPrimitive?.content),
+        unselectedIconColor = resolveKetoyColor(colorsObject["unselectedIconColor"]?.jsonPrimitive?.content),
+        unselectedTextColor = resolveKetoyColor(colorsObject["unselectedTextColor"]?.jsonPrimitive?.content),
+        disabledIconColor = resolveKetoyColor(colorsObject["disabledIconColor"]?.jsonPrimitive?.content),
+        disabledTextColor = resolveKetoyColor(colorsObject["disabledTextColor"]?.jsonPrimitive?.content)
     )
 }
 
