@@ -26,6 +26,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.developerstring.ketoy.navigation.*
+import kotlinx.serialization.Serializable
 
 /**
  * A custom side-drawer that occupies ~2/3 of the screen width.
@@ -38,7 +40,7 @@ fun AppSideDrawer(
     visible: Boolean,
     currentRoute: String?,
     onDismiss: () -> Unit,
-    onNavigate: (route: String) -> Unit,
+    onNavigate: (route: Any) -> Unit,
     onAction: (label: String) -> Unit
 ) {
     AnimatedVisibility(
@@ -130,10 +132,10 @@ fun AppSideDrawer(
 
                 // ─── Main navigation ────────────────────────────
                 DrawerSectionTitle("Navigation")
-                DrawerMenuItem(Icons.Outlined.Home, "Home", selected = currentRoute == "home") { onNavigate("home") }
-                DrawerMenuItem(Icons.Outlined.Insights, "Analytics", selected = currentRoute == "analytics") { onNavigate("analytics") }
-                DrawerMenuItem(Icons.Outlined.CreditCard, "Cards", selected = currentRoute == "cards") { onNavigate("cards") }
-                DrawerMenuItem(Icons.Outlined.Person, "Profile", selected = currentRoute == "profile") { onNavigate("profile") }
+                DrawerMenuItem(Icons.Outlined.Home, "Home", selected = currentRoute?.contains("HomeRoute") == true) { onNavigate(HomeRoute) }
+                DrawerMenuItem(Icons.Outlined.Insights, "Analytics", selected = currentRoute?.contains("AnalyticsRoute") == true) { onNavigate(AnalyticsRoute) }
+                DrawerMenuItem(Icons.Outlined.CreditCard, "Cards", selected = currentRoute?.contains("CardsRoute") == true) { onNavigate(CardsRoute) }
+                DrawerMenuItem(Icons.Outlined.Person, "Profile", selected = currentRoute?.contains("ProfileRoute") == true) { onNavigate(ProfileRoute) }
 
                 HorizontalDivider(modifier = Modifier.padding(horizontal = 24.dp, vertical = 8.dp))
 
