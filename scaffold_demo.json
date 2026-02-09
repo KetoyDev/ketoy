@@ -1,0 +1,474 @@
+{
+  "type": "KScaffold",
+  "props": {
+    "modifier": {
+      "fillMaxSize": 1.0,
+      "background": "#F5F5F5"
+    },
+    "containerColor": "#FFFFFF",
+    "contentColor": "#000000",
+    "floatingActionButtonPosition": "End",
+    "topBar": {
+      "type": "KTopAppBar",
+      "props": {
+        "type": "Small",
+        "colors": {
+          "containerColor": "#2196F3",
+          "titleContentColor": "#FFFFFF",
+          "navigationIconContentColor": "#FFFFFF",
+          "actionIconContentColor": "#FFFFFF"
+        },
+        "title": {
+          "type": "KText",
+          "props": {
+            "text": "Ketoy Scaffold JSON Demo",
+            "fontSize": 20,
+            "fontWeight": "Medium",
+            "color": "#FFFFFF"
+          }
+        },
+        "navigationIcon": {
+          "type": "KAppBarAction",
+          "props": {
+            "onClick": "navigation_click"
+          },
+          "children": [
+            {
+              "type": "KText",
+              "props": {
+                "text": "☰",
+                "fontSize": 18,
+                "color": "#FFFFFF"
+              }
+            }
+          ]
+        },
+        "actions": [
+          {
+            "type": "KAppBarAction",
+            "props": {
+              "onClick": "search_click"
+            },
+            "children": [
+              {
+                "type": "KText",
+                "props": {
+                  "text": "🔍",
+                  "fontSize": 16,
+                  "color": "#FFFFFF"
+                }
+              }
+            ]
+          },
+          {
+            "type": "KAppBarAction",
+            "props": {
+              "onClick": "more_click"
+            },
+            "children": [
+              {
+                "type": "KText",
+                "props": {
+                  "text": "⋮",
+                  "fontSize": 16,
+                  "color": "#FFFFFF"
+                }
+              }
+            ]
+          }
+        ]
+      }
+    },
+    "bottomBar": {
+      "type": "KNavigationBar",
+      "props": {
+        "containerColor": "#FFFFFF",
+        "contentColor": "#2196F3"
+      },
+      "children": [
+        {
+          "type": "KNavigationBarItem",
+          "props": {
+            "selected": true,
+            "onClick": "home_click",
+            "colors": {
+              "selectedIconColor": "#2196F3",
+              "selectedTextColor": "#2196F3",
+              "unselectedIconColor": "#757575",
+              "unselectedTextColor": "#757575"
+            },
+            "icon": {
+              "type": "KText",
+              "props": {
+                "text": "🏠",
+                "fontSize": 20
+              }
+            },
+            "label": {
+              "type": "KText",
+              "props": {
+                "text": "Home",
+                "fontSize": 12
+              }
+            }
+          }
+        },
+        {
+          "type": "KNavigationBarItem",
+          "props": {
+            "selected": false,
+            "onClick": "search_bottom_click",
+            "icon": {
+              "type": "KText",
+              "props": {
+                "text": "🔍",
+                "fontSize": 20
+              }
+            },
+            "label": {
+              "type": "KText",
+              "props": {
+                "text": "Search",
+                "fontSize": 12
+              }
+            }
+          }
+        },
+        {
+          "type": "KNavigationBarItem",
+          "props": {
+            "selected": false,
+            "onClick": "profile_click",
+            "icon": {
+              "type": "KText",
+              "props": {
+                "text": "👤",
+                "fontSize": 20
+              }
+            },
+            "label": {
+              "type": "KText",
+              "props": {
+                "text": "Profile",
+                "fontSize": 12
+              }
+            }
+          }
+        },
+        {
+          "type": "KNavigationBarItem",
+          "props": {
+            "selected": false,
+            "onClick": "settings_click",
+            "icon": {
+              "type": "KText",
+              "props": {
+                "text": "⚙️",
+                "fontSize": 20
+              }
+            },
+            "label": {
+              "type": "KText",
+              "props": {
+                "text": "Settings",
+                "fontSize": 12
+              }
+            }
+          }
+        }
+      ]
+    },
+    "floatingActionButton": {
+      "type": "KFloatingActionButton",
+      "props": {
+        "onClick": "fab_click",
+        "type": "Regular",
+        "containerColor": "#2196F3",
+        "contentColor": "#FFFFFF",
+        "elevation": {
+          "defaultElevation": 6,
+          "pressedElevation": 12,
+          "hoveredElevation": 8
+        }
+      },
+      "children": [
+        {
+          "type": "KText",
+          "props": {
+            "text": "✚",
+            "fontSize": 20,
+            "color": "#FFFFFF"
+          }
+        }
+      ]
+    },
+    "snackbarHost": {
+      "type": "KSnackBarHost",
+      "props": {}
+    }
+  },
+  "children": [
+    {
+      "type": "KColumn",
+      "props": {
+        "modifier": {
+          "fillMaxSize": 1.0,
+          "padding": {
+            "all": 16
+          }
+        },
+        "verticalArrangement": "SpaceBetween"
+      },
+      "children": [
+        {
+          "type": "KCard",
+          "props": {
+            "modifier": {
+              "fillMaxWidth": 1.0,
+              "padding": {
+                "vertical": 8
+              }
+            },
+            "containerColor": "#FFFFFF",
+            "elevation": 4,
+            "shape": "Rounded12"
+          },
+          "children": [
+            {
+              "type": "KColumn",
+              "props": {
+                "modifier": {
+                  "padding": {
+                    "all": 16
+                  }
+                },
+                "verticalArrangement": "Center"
+              },
+              "children": [
+                {
+                  "type": "KText",
+                  "props": {
+                    "text": "Welcome to Ketoy JSON!",
+                    "fontSize": 24,
+                    "fontWeight": "Bold",
+                    "color": "#000000"
+                  }
+                },
+                {
+                  "type": "KSpacer",
+                  "props": {
+                    "height": 8
+                  }
+                },
+                {
+                  "type": "KText",
+                  "props": {
+                    "text": "This demo shows complete Scaffold functionality using JSON configuration.",
+                    "fontSize": 16,
+                    "color": "#757575",
+                    "textAlign": "Center"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "KColumn",
+          "props": {
+            "modifier": {
+              "fillMaxWidth": 1.0,
+              "weight": 1.0
+            },
+            "verticalArrangement": "SpaceEvenly"
+          },
+          "children": [
+            {
+              "type": "KCard",
+              "props": {
+                "modifier": {
+                  "fillMaxWidth": 1.0,
+                  "padding": {
+                    "vertical": 4
+                  }
+                },
+                "containerColor": "#E3F2FD",
+                "elevation": 2,
+                "shape": "Rounded8"
+              },
+              "children": [
+                {
+                  "type": "KColumn",
+                  "props": {
+                    "modifier": {
+                      "padding": {
+                        "all": 12
+                      }
+                    }
+                  },
+                  "children": [
+                    {
+                      "type": "KText",
+                      "props": {
+                        "text": "📱 JSON TopAppBar",
+                        "fontSize": 18,
+                        "fontWeight": "Medium",
+                        "color": "#2196F3"
+                      }
+                    },
+                    {
+                      "type": "KText",
+                      "props": {
+                        "text": "• Small type with custom colors\\n• Navigation and action buttons\\n• All configured via JSON\\n• Click actions mapped",
+                        "fontSize": 14,
+                        "color": "#000000"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "KCard",
+              "props": {
+                "modifier": {
+                  "fillMaxWidth": 1.0,
+                  "padding": {
+                    "vertical": 4
+                  }
+                },
+                "containerColor": "#E8F5E8",
+                "elevation": 2,
+                "shape": "Rounded8"
+              },
+              "children": [
+                {
+                  "type": "KColumn",
+                  "props": {
+                    "modifier": {
+                      "padding": {
+                        "all": 12
+                      }
+                    }
+                  },
+                  "children": [
+                    {
+                      "type": "KText",
+                      "props": {
+                        "text": "🧭 JSON NavigationBar",
+                        "fontSize": 18,
+                        "fontWeight": "Medium",
+                        "color": "#4CAF50"
+                      }
+                    },
+                    {
+                      "type": "KText",
+                      "props": {
+                        "text": "• 4 navigation items in JSON\\n• Selected state configuration\\n• Custom icons from JSON\\n• Color theming support",
+                        "fontSize": 14,
+                        "color": "#000000"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "KCard",
+              "props": {
+                "modifier": {
+                  "fillMaxWidth": 1.0,
+                  "padding": {
+                    "vertical": 4
+                  }
+                },
+                "containerColor": "#F3E5F5",
+                "elevation": 2,
+                "shape": "Rounded8"
+              },
+              "children": [
+                {
+                  "type": "KColumn",
+                  "props": {
+                    "modifier": {
+                      "padding": {
+                        "all": 12
+                      }
+                    }
+                  },
+                  "children": [
+                    {
+                      "type": "KText",
+                      "props": {
+                        "text": "🎯 JSON FloatingActionButton",
+                        "fontSize": 18,
+                        "fontWeight": "Medium",
+                        "color": "#9C27B0"
+                      }
+                    },
+                    {
+                      "type": "KText",
+                      "props": {
+                        "text": "• End position from JSON\\n• Custom elevation values\\n• Color configuration\\n• Regular type specified",
+                        "fontSize": 14,
+                        "color": "#000000"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "KRow",
+          "props": {
+            "modifier": {
+              "fillMaxWidth": 1.0,
+              "padding": {
+                "vertical": 8
+              }
+            },
+            "horizontalArrangement": "SpaceEvenly"
+          },
+          "children": [
+            {
+              "type": "KButton",
+              "props": {
+                "onClick": "show_snackbar",
+                "containerColor": "#FF9800",
+                "shape": "Rounded8"
+              },
+              "children": [
+                {
+                  "type": "KText",
+                  "props": {
+                    "text": "JSON SnackBar",
+                    "color": "#FFFFFF"
+                  }
+                }
+              ]
+            },
+            {
+              "type": "KButton",
+              "props": {
+                "onClick": "extended_fab",
+                "containerColor": "#009688",
+                "shape": "Rounded8"
+              },
+              "children": [
+                {
+                  "type": "KText",
+                  "props": {
+                    "text": "Extended JSON",
+                    "color": "#FFFFFF"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}

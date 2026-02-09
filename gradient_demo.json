@@ -1,0 +1,562 @@
+{
+  "type": "Row",
+  "props": {
+    "modifier": {
+      "fillMaxSize": 1.0,
+      "margin": {
+        "horizontal": 20
+      }
+    },
+    "verticalArrangement": "center",
+    "horizontalAlignment": "centerHorizontally"
+  },
+  "children": [
+    {
+      "type": "Card",
+      "props": {
+        "modifier": {
+          "fillMaxWidth": 0.95,
+          "rotation": 0.0
+        },
+        "shape": "rounded_corners_20_40_10_30",
+        "containerColor": "#FFe1eaf7",
+        "elevation": 10,
+        "border": {
+          "width": 2,
+          "color": "#FF2196F3"
+        }
+      },
+      "children": [
+        {
+          "type": "Column",
+          "props": {
+            "modifier": {
+              "margin": {
+                "all": 30
+              }
+            }
+          },
+          "children": [
+            {
+              "type": "Text",
+              "props": {
+                "text": "Hello Ketoyies!",
+                "fontSize": 24,
+                "fontWeight": "bold",
+                "color": "#FF2196F3"
+              }
+            },
+            {
+              "type": "Spacer",
+              "props": {
+                "height": 20
+              }
+            },
+            {
+              "type": "Text",
+              "props": {
+                "text": "Welcome to Server Based UI Development, \nby Ketoy!",
+                "textAlign": "center"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Spacer",
+      "props": {
+        "height": 20
+      }
+    },
+    {
+      "type": "Text",
+      "props": {
+        "text": "Magic with Buttons 🪄",
+        "modifier": {
+          "margin": {
+            "start": 20
+          }
+        },
+        "fontSize": 20,
+        "fontWeight": "bold"
+      }
+    },
+    {
+      "type": "Spacer",
+      "props": {
+        "height": 20
+      }
+    },
+    {
+      "type": "Row",
+      "props": {
+        "modifier": {
+          "fillMaxWidth": 0.9
+        },
+        "horizontalArrangement": "spaceEvenly"
+      },
+      "children": [
+        {
+          "type": "Button",
+          "props": {
+            "onClick": "action_0",
+            "containerColor": "#FF2196F3"
+          },
+          "children": [
+            {
+              "type": "Text",
+              "props": {
+                "text": "One",
+                "color": "#FFFFFFFF"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Button",
+          "props": {
+            "onClick": "action_1",
+            "containerColor": "#FF9E9E9E"
+          },
+          "children": [
+            {
+              "type": "Text",
+              "props": {
+                "text": "Two",
+                "color": "#FF000000"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Button",
+          "props": {
+            "onClick": "action_2",
+            "containerColor": "#FFFF9800"
+          },
+          "children": [
+            {
+              "type": "Text",
+              "props": {
+                "text": "Three",
+                "color": "#FFFFFFFF"
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Spacer",
+      "props": {
+        "height": 16
+      }
+    },
+    {
+      "type": "Card",
+      "props": {
+        "modifier": {
+          "fillMaxWidth": 1.0,
+          "height": 230
+        },
+        "shape": "rounded_20",
+        "elevation": 10
+      },
+      "children": [
+        {
+          "type": "Box",
+          "props": {
+            "modifier": {
+              "fillMaxSize": 1.0
+            },
+            "contentAlignment": "bottomCenter"
+          },
+          "children": [
+            {
+              "type": "Image",
+              "props": {
+                "source": {
+                  "type": "res",
+                  "value": "img"
+                },
+                "modifier": {
+                  "fillMaxSize": 1.0
+                },
+                "contentDescription": "App logo",
+                "scaleType": "fillBounds"
+              }
+            },
+            {
+              "type": "Column",
+              "children": [
+                {
+                  "type": "Box",
+                  "props": {
+                    "modifier": {
+                      "fillMaxWidth": 1.0,
+                      "height": 100,
+                      "gradient": {
+                        "type": "linear",
+                        "colors": [
+                          "#00000000",
+                          "#FF212121"
+                        ],
+                        "direction": "vertical"
+                      }
+                    },
+                    "contentAlignment": "bottomCenter"
+                  },
+                  "children": [
+                    {
+                      "type": "Row",
+                      "props": {
+                        "modifier": {
+                          "fillMaxSize": 1.0,
+                          "margin": {
+                            "bottom": 10
+                          }
+                        },
+                        "horizontalArrangement": "spaceAround",
+                        "verticalAlignment": "bottom"
+                      },
+                      "children": [
+                        {
+                          "type": "Column",
+                          "children": [
+                            {
+                              "type": "Text",
+                              "props": {
+                                "text": "2 Day tour to Japan",
+                                "fontSize": 16,
+                                "fontWeight": "bold",
+                                "color": "#FFFFFFFF"
+                              }
+                            },
+                            {
+                              "type": "Spacer",
+                              "props": {
+                                "height": 10
+                              }
+                            },
+                            {
+                              "type": "Card",
+                              "props": {
+                                "modifier": {
+                                  "width": 90,
+                                  "height": 30
+                                },
+                                "shape": "rounded_100",
+                                "containerColor": "#FF2196F3",
+                                "elevation": 1
+                              },
+                              "children": [
+                                {
+                                  "type": "Row",
+                                  "props": {
+                                    "modifier": {
+                                      "fillMaxSize": 1.0
+                                    },
+                                    "horizontalArrangement": "center",
+                                    "verticalAlignment": "centerVertically"
+                                  },
+                                  "children": [
+                                    {
+                                      "type": "Text",
+                                      "props": {
+                                        "text": "Book Now",
+                                        "fontSize": 12,
+                                        "color": "#FFFFFFFF"
+                                      }
+                                    }
+                                  ]
+                                }
+                              ]
+                            }
+                          ]
+                        },
+                        {
+                          "type": "Column",
+                          "props": {
+                            "horizontalAlignment": "centerHorizontally"
+                          },
+                          "children": [
+                            {
+                              "type": "Text",
+                              "props": {
+                                "text": "1,500$ /-",
+                                "fontSize": 14,
+                                "fontWeight": "bold",
+                                "color": "#FFFFFFFF"
+                              }
+                            },
+                            {
+                              "type": "Spacer",
+                              "props": {
+                                "height": 10
+                              }
+                            },
+                            {
+                              "type": "Text",
+                              "props": {
+                                "text": "50% off",
+                                "fontSize": 14,
+                                "fontWeight": "bold",
+                                "color": "#ff8cff7a"
+                              }
+                            }
+                          ]
+                        }
+                      ]
+                    }
+                  ]
+                },
+                {
+                  "type": "Box",
+                  "props": {
+                    "modifier": {
+                      "fillMaxWidth": 1.0,
+                      "height": 30,
+                      "background": "#FF2196F3"
+                    },
+                    "contentAlignment": "center"
+                  },
+                  "children": [
+                    {
+                      "type": "Text",
+                      "props": {
+                        "text": "Best international trip experience, at low cost!",
+                        "fontSize": 12,
+                        "fontWeight": "medium",
+                        "color": "#FFFFFFFF"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "type": "Spacer",
+      "props": {
+        "height": 16
+      }
+    },
+    {
+      "type": "Image",
+      "props": {
+        "source": {
+          "type": "url",
+          "value": "https://picsum.photos/200/150?random=1"
+        },
+        "modifier": {
+          "width": 200,
+          "height": 150,
+          "padding": {
+            "all": 8
+          }
+        },
+        "contentDescription": "Random image from URL",
+        "scaleType": "centerCrop"
+      }
+    },
+    {
+      "type": "Spacer",
+      "props": {
+        "height": 30
+      }
+    },
+    {
+      "type": "Text",
+      "props": {
+        "text": "🆕 New DSL Features Demo",
+        "modifier": {
+          "padding": {
+            "vertical": 10
+          }
+        },
+        "fontSize": 20,
+        "fontWeight": "bold",
+        "color": "#FF9C27B0"
+      }
+    },
+    {
+      "type": "Text",
+      "props": {
+        "text": "🧩 Custom Components Demo",
+        "modifier": {
+          "padding": {
+            "vertical": 10
+          }
+        },
+        "fontSize": 20,
+        "fontWeight": "bold",
+        "color": "#FF2196F3"
+      }
+    },
+    {
+      "type": "Component",
+      "props": {
+        "name": "UserCard",
+        "componentName": "UserCard",
+        "properties": {
+          "name": "Aditya Shinde",
+          "email": "aditya@ketoy.dev",
+          "isOnline": true
+        },
+        "props": {
+          "name": "Aditya Shinde",
+          "email": "aditya@ketoy.dev",
+          "isOnline": true
+        }
+      }
+    },
+    {
+      "type": "Component",
+      "props": {
+        "name": "UserCard",
+        "componentName": "UserCard",
+        "properties": {
+          "name": "John Doe",
+          "email": "john@example.com",
+          "isOnline": false
+        },
+        "props": {
+          "name": "John Doe",
+          "email": "john@example.com",
+          "isOnline": false
+        }
+      }
+    },
+    {
+      "type": "Spacer",
+      "props": {
+        "height": 20
+      }
+    },
+    {
+      "type": "Row",
+      "props": {
+        "modifier": {
+          "fillMaxWidth": 1.0
+        },
+        "horizontalArrangement": "spaceEvenly"
+      },
+      "children": [
+        {
+          "type": "Component",
+          "props": {
+            "name": "StatsCard",
+            "componentName": "StatsCard",
+            "properties": {
+              "title": "Users",
+              "value": "1.2K",
+              "subtitle": "+12%",
+              "color": "#4CAF50"
+            },
+            "props": {
+              "title": "Users",
+              "value": "1.2K",
+              "subtitle": "+12%",
+              "color": "#4CAF50"
+            }
+          }
+        },
+        {
+          "type": "Component",
+          "props": {
+            "name": "StatsCard",
+            "componentName": "StatsCard",
+            "properties": {
+              "title": "Revenue",
+              "value": "$45K",
+              "subtitle": "+8.5%",
+              "color": "#2196F3"
+            },
+            "props": {
+              "title": "Revenue",
+              "value": "$45K",
+              "subtitle": "+8.5%",
+              "color": "#2196F3"
+            }
+          }
+        }
+      ]
+    },
+    {
+      "type": "Spacer",
+      "props": {
+        "height": 20
+      }
+    },
+    {
+      "type": "Row",
+      "props": {
+        "modifier": {
+          "fillMaxWidth": 1.0
+        },
+        "horizontalArrangement": "spaceEvenly"
+      },
+      "children": [
+        {
+          "type": "Component",
+          "props": {
+            "name": "ActionButton",
+            "componentName": "ActionButton",
+            "properties": {
+              "text": "Save",
+              "icon": "💾",
+              "variant": "primary",
+              "size": "medium"
+            },
+            "props": {
+              "text": "Save",
+              "icon": "💾",
+              "variant": "primary",
+              "size": "medium"
+            }
+          }
+        },
+        {
+          "type": "Component",
+          "props": {
+            "name": "ActionButton",
+            "componentName": "ActionButton",
+            "properties": {
+              "text": "Cancel",
+              "variant": "secondary",
+              "size": "medium"
+            },
+            "props": {
+              "text": "Cancel",
+              "variant": "secondary",
+              "size": "medium"
+            }
+          }
+        },
+        {
+          "type": "Component",
+          "props": {
+            "name": "ActionButton",
+            "componentName": "ActionButton",
+            "properties": {
+              "text": "Delete",
+              "icon": "🗑️",
+              "variant": "danger",
+              "size": "small"
+            },
+            "props": {
+              "text": "Delete",
+              "icon": "🗑️",
+              "variant": "danger",
+              "size": "small"
+            }
+          }
+        }
+      ]
+    }
+  ]
+}

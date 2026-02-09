@@ -1,0 +1,343 @@
+{
+  "type": "Scaffold",
+  "props": {
+    "modifier": {
+      "fillMaxSize": true
+    },
+    "containerColor": "#FFFFFFFF",
+    "contentColor": "#FF000000",
+    "floatingActionButtonPosition": "end",
+    "topBar": {
+      "title": "Ketoy JSON Scaffold",
+      "type": "small",
+      "colors": {
+        "containerColor": "#FF2196F3",
+        "titleContentColor": "#FFFFFFFF",
+        "navigationIconContentColor": "#FFFFFFFF",
+        "actionIconContentColor": "#FFFFFFFF"
+      },
+      "actions": [
+        {
+          "onClick": "search_action",
+          "icon": "🔍",
+          "contentDescription": "Search"
+        },
+        {
+          "onClick": "menu_action",
+          "icon": "⋮",
+          "contentDescription": "Menu"
+        }
+      ]
+    },
+    "bottomBar": {
+      "containerColor": "#FF2196F3",
+      "contentColor": "#FFFFFFFF",
+      "tonalElevation": 8
+    },
+    "floatingActionButton": {
+      "onClick": "fab_action",
+      "containerColor": "#FFFF9800",
+      "contentColor": "#FFFFFFFF",
+      "type": "regular",
+      "icon": "+"
+    },
+    "snackbarHost": {
+      "snackbar": {
+        "message": "Welcome to Ketoy JSON Scaffold!",
+        "action": {
+          "label": "OK",
+          "onClick": "snackbar_action"
+        },
+        "duration": "long",
+        "containerColor": "#AA4CAF50"
+      }
+    }
+  },
+  "children": [
+    {
+      "type": "Column",
+      "props": {
+        "modifier": {
+          "fillMaxSize": true,
+          "padding": {
+            "all": 16
+          }
+        },
+        "verticalArrangement": "spaceBetween",
+        "horizontalAlignment": "centerHorizontally"
+      },
+      "children": [
+        {
+          "type": "Card",
+          "props": {
+            "modifier": {
+              "fillMaxWidth": true,
+              "padding": {
+                "bottom": 16
+              }
+            },
+            "containerColor": "#1A2196F3",
+            "elevation": 4,
+            "shape": "rounded_12"
+          },
+          "children": [
+            {
+              "type": "Column",
+              "props": {
+                "modifier": {
+                  "padding": {
+                    "all": 16
+                  }
+                },
+                "horizontalAlignment": "centerHorizontally"
+              },
+              "children": [
+                {
+                  "type": "Text",
+                  "props": {
+                    "text": "🏗️ JSON Scaffold Demo",
+                    "fontSize": 24,
+                    "fontWeight": "bold",
+                    "color": "#FF2196F3",
+                    "textAlign": "center"
+                  }
+                },
+                {
+                  "type": "Spacer",
+                  "props": {
+                    "height": 8
+                  }
+                },
+                {
+                  "type": "Text",
+                  "props": {
+                    "text": "Complete Scaffold implementation from JSON with all Material Design 3 components",
+                    "fontSize": 14,
+                    "color": "#FF9E9E9E",
+                    "textAlign": "center"
+                  }
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Column",
+          "props": {
+            "modifier": {
+              "fillMaxWidth": true
+            },
+            "verticalArrangement": "center"
+          },
+          "children": [
+            {
+              "type": "Card",
+              "props": {
+                "modifier": {
+                  "fillMaxWidth": true,
+                  "padding": {
+                    "vertical": 4
+                  }
+                },
+                "containerColor": "#1A4CAF50",
+                "elevation": 2,
+                "shape": "rounded_8"
+              },
+              "children": [
+                {
+                  "type": "Row",
+                  "props": {
+                    "modifier": {
+                      "fillMaxWidth": true,
+                      "padding": {
+                        "all": 12
+                      }
+                    },
+                    "verticalAlignment": "centerVertically"
+                  },
+                  "children": [
+                    {
+                      "type": "Text",
+                      "props": {
+                        "text": "✓ JSON to Scaffold conversion",
+                        "fontSize": 14,
+                        "color": "#FF4CAF50"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "Card",
+              "props": {
+                "modifier": {
+                  "fillMaxWidth": true,
+                  "padding": {
+                    "vertical": 4
+                  }
+                },
+                "containerColor": "#1AFF9800",
+                "elevation": 2,
+                "shape": "rounded_8"
+              },
+              "children": [
+                {
+                  "type": "Row",
+                  "props": {
+                    "modifier": {
+                      "fillMaxWidth": true,
+                      "padding": {
+                        "all": 12
+                      }
+                    },
+                    "verticalAlignment": "centerVertically"
+                  },
+                  "children": [
+                    {
+                      "type": "Text",
+                      "props": {
+                        "text": "✓ All Scaffold properties supported",
+                        "fontSize": 14,
+                        "color": "#FFFF9800"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "Card",
+              "props": {
+                "modifier": {
+                  "fillMaxWidth": true,
+                  "padding": {
+                    "vertical": 4
+                  }
+                },
+                "containerColor": "#1A9C27B0",
+                "elevation": 2,
+                "shape": "rounded_8"
+              },
+              "children": [
+                {
+                  "type": "Row",
+                  "props": {
+                    "modifier": {
+                      "fillMaxWidth": true,
+                      "padding": {
+                        "all": 12
+                      }
+                    },
+                    "verticalAlignment": "centerVertically"
+                  },
+                  "children": [
+                    {
+                      "type": "Text",
+                      "props": {
+                        "text": "✓ Action callbacks and interaction",
+                        "fontSize": 14,
+                        "color": "#FF9C27B0"
+                      }
+                    }
+                  ]
+                }
+              ]
+            },
+            {
+              "type": "Card",
+              "props": {
+                "modifier": {
+                  "fillMaxWidth": true,
+                  "padding": {
+                    "vertical": 4
+                  }
+                },
+                "containerColor": "#1AF44336",
+                "elevation": 2,
+                "shape": "rounded_8"
+              },
+              "children": [
+                {
+                  "type": "Row",
+                  "props": {
+                    "modifier": {
+                      "fillMaxWidth": true,
+                      "padding": {
+                        "all": 12
+                      }
+                    },
+                    "verticalAlignment": "centerVertically"
+                  },
+                  "children": [
+                    {
+                      "type": "Text",
+                      "props": {
+                        "text": "✓ Material Design 3 theming",
+                        "fontSize": 14,
+                        "color": "#FFF44336"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        },
+        {
+          "type": "Card",
+          "props": {
+            "modifier": {
+              "fillMaxWidth": true,
+              "padding": {
+                "top": 16
+              }
+            },
+            "containerColor": "#0D9E9E9E",
+            "elevation": 2,
+            "shape": "rounded_12"
+          },
+          "children": [
+            {
+              "type": "Column",
+              "props": {
+                "modifier": {
+                  "padding": {
+                    "all": 16
+                  }
+                },
+                "horizontalAlignment": "centerHorizontally"
+              },
+              "children": [
+                {
+                  "type": "Text",
+                  "props": {
+                    "text": "🚀 Ready to Use!",
+                    "fontSize": 18,
+                    "fontWeight": "bold",
+                    "color": "#FF000000"
+                  }
+                },
+                {
+                  "type": "Spacer",
+                  "props": {
+                    "height": 8
+                  }
+                },
+                {
+                  "type": "Text",
+                  "props": {
+                    "text": "Your Ketoy Scaffold system is now fully functional with DSL and JSON support!",
+                    "fontSize": 14,
+                    "color": "#FF666666",
+                    "textAlign": "center"
+                  }
+                }
+              ]
+            }
+          ]
+        }
+      ]
+    }
+  ]
+}
