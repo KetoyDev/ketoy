@@ -1,0 +1,146 @@
+{
+  "type": "Column",
+  "props": {
+    "modifier": { "padding": 16 },
+    "verticalArrangement": "spacedBy12"
+  },
+  "children": [
+    {
+      "type": "Text",
+      "props": {
+        "text": "Icon Demo",
+        "fontSize": 22,
+        "fontWeight": "bold"
+      }
+    },
+
+    {
+      "type": "Text",
+      "props": { "text": "─── Filled Icons (default style) ───", "fontSize": 14 }
+    },
+    {
+      "type": "Row",
+      "props": { "horizontalArrangement": "spacedBy16" },
+      "children": [
+        { "type": "Icon", "props": { "icon": "home", "size": 28 } },
+        { "type": "Icon", "props": { "icon": "search", "size": 28 } },
+        { "type": "Icon", "props": { "icon": "settings", "size": 28 } },
+        { "type": "Icon", "props": { "icon": "favorite", "size": 28, "color": "#FF0000" } },
+        { "type": "Icon", "props": { "icon": "star", "size": 28, "color": "#FFD700" } }
+      ]
+    },
+
+    {
+      "type": "Text",
+      "props": { "text": "─── Outlined Icons ───", "fontSize": 14 }
+    },
+    {
+      "type": "Row",
+      "props": { "horizontalArrangement": "spacedBy16" },
+      "children": [
+        { "type": "Icon", "props": { "icon": "home", "size": 28, "style": "outlined" } },
+        { "type": "Icon", "props": { "icon": "search", "size": 28, "style": "outlined" } },
+        { "type": "Icon", "props": { "icon": "settings", "size": 28, "style": "outlined" } },
+        { "type": "Icon", "props": { "icon": "favorite_border", "size": 28, "style": "outlined", "color": "#FF0000" } },
+        { "type": "Icon", "props": { "icon": "star_border", "size": 28, "style": "outlined", "color": "#FFD700" } }
+      ]
+    },
+
+    {
+      "type": "Text",
+      "props": { "text": "─── Rounded Icons ───", "fontSize": 14 }
+    },
+    {
+      "type": "Row",
+      "props": { "horizontalArrangement": "spacedBy16" },
+      "children": [
+        { "type": "Icon", "props": { "icon": "home", "size": 28, "style": "rounded" } },
+        { "type": "Icon", "props": { "icon": "email", "size": 28, "style": "rounded" } },
+        { "type": "Icon", "props": { "icon": "notifications", "size": 28, "style": "rounded" } },
+        { "type": "Icon", "props": { "icon": "person", "size": 28, "style": "rounded" } },
+        { "type": "Icon", "props": { "icon": "lock", "size": 28, "style": "rounded" } }
+      ]
+    },
+
+    {
+      "type": "Spacer",
+      "props": { "modifier": { "height": 8 } }
+    },
+
+    {
+      "type": "Text",
+      "props": { "text": "─── Icon Buttons ───", "fontSize": 14 }
+    },
+    {
+      "type": "Row",
+      "props": { "horizontalArrangement": "spacedBy8" },
+      "children": [
+        {
+          "type": "IconButton",
+          "props": {
+            "icon": "menu",
+            "onClick": "onMenuClick",
+            "contentDescription": "Open menu"
+          }
+        },
+        {
+          "type": "IconButton",
+          "props": {
+            "icon": "favorite",
+            "onClick": "onFavoriteClick",
+            "iconColor": "#FF0000",
+            "iconSize": 28,
+            "contentDescription": "Favorite"
+          }
+        },
+        {
+          "type": "IconButton",
+          "props": {
+            "icon": "share",
+            "onClick": "onShareClick",
+            "contentDescription": "Share"
+          }
+        },
+        {
+          "type": "IconButton",
+          "props": {
+            "icon": "delete",
+            "onClick": "onDeleteClick",
+            "iconStyle": "outlined",
+            "contentDescription": "Delete"
+          }
+        },
+        {
+          "type": "IconButton",
+          "props": {
+            "icon": "more_vert",
+            "onClick": "onMoreClick",
+            "enabled": false,
+            "contentDescription": "More options"
+          }
+        }
+      ]
+    },
+
+    {
+      "type": "Spacer",
+      "props": { "modifier": { "height": 8 } }
+    },
+
+    {
+      "type": "Text",
+      "props": { "text": "─── Image with Icon source ───", "fontSize": 14 }
+    },
+    {
+      "type": "Image",
+      "props": {
+        "source": {
+          "type": "icon",
+          "value": "cloud_upload"
+        },
+        "modifier": { "width": 48, "height": 48 },
+        "contentDescription": "Upload icon"
+      }
+    }
+  ]
+}
