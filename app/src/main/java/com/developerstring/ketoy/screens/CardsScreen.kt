@@ -1,66 +1,161 @@
 package com.developerstring.ketoy.screens
 
-import android.widget.Toast
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
-import com.developerstring.ketoy.components.TimedKetoyScreen
-import com.developerstring.ketoy.dsl.*
-import com.developerstring.ketoy.model.*
-import com.developerstring.ketoy.screens.AppColors.onSurface
-import com.developerstring.ketoy.screens.AppColors.onSurfaceVariant
-import com.developerstring.ketoy.screens.AppColors.primary
 import com.developerstring.ketoy.util.*
 
-@Composable
-fun CardsScreen() {
-    val context = LocalContext.current
-    fun toast(msg: String) = Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+/**
+ * Cards screen — wallet-style card carousel with gradient cards,
+ * card actions (freeze, select), and KetoyFunctionRegistry calls.
+ */
+fun buildCardsScreen(
+    selectedCardIndex: Int,
+    isDark: Boolean
+): com.developerstring.ketoy.model.KNode = ketoyRoot {
 
-    TimedKetoyScreen(screenName = "Cards") { buildCardsUI { toast(it) } }
-}
+    val c = AppColors
 
-private fun buildCardsUI(toast: (String) -> Unit): KNode {
-    return KColumn(modifier = kModifier(fillMaxSize = 1f)) {
-        KLazyColumn(
-            modifier = kModifier(fillMaxSize = 1f),
-            verticalArrangement = "spacedBy_16",
-            contentPadding = kPadding(horizontal = 16, vertical = 16)
+    data class CardData(
+        val name: String, val lastFour: String, val balance: String,
+        val expiry: String, val gradients: List<String>
+    )
+
+    val cards = listOf(
+        CardData("Visa Platinum", "•••• •••• •••• 4592", "\$12,450.00", "09/27",
+            listOf("#6750A4", "#9A82DB")),
+        CardData("Mastercard Gold", "•••• •••• •••• 7831", "\$8,320.50", "03/26",
+            listOf("#7D5260", "#B58392")),
+        CardData("Amex Blue", "•••• •••• •••• 1204", "\$3,792.30", "11/28",
+            listOf("#1B7D46", "#4CAF50"))
+    )
+
+    KColumn(
+        modifier = kModifier(
+            fillMaxSize = 1f,
+            padding = kPadding(top = 16),
+            background = if (isDark) "#1C1B1F" else "#FFFBFE"
+        ),
+        verticalArrangement = "spacedBy_0"
+    ) {
+
+        // ── Header ────────────────────────────────────────
+        KRow(
+            modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20)),
+            horizontalArrangement = KArrangements.SpaceBetween,
+            verticalAlignment = KAlignments.CenterVertically
         ) {
-            item {
-                KText("My Cards", fontSize = 24, fontWeight = KFontWeights.Bold, color = onSurface)
-                KText("Manage your payment methods", fontSize = 14, color = onSurfaceVariant)
-                KSpacer(height = 12)
+            KText("My Cards", fontSize = 24, fontWeight = KFontWeights.Bold, color = c.onSurface(isDark))
+            KIconButton(
+                icon = KIcons.Add,
+                iconColor = c.primary(isDark),
+                iconSize = 26,
+                onClick = { KFunctionCall("showToast", "message" to "Add card flow") },
+                actionId = "cards_add"
+            ) {}
+        }
 
-                // Card 1
+        KSpacer(height = 20)
+
+        // ── Card carousel ─────────────────────────────────
+        KColumn(
+            modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20)),
+            verticalArrangement = "spacedBy_16"
+        ) {
+            cards.forEachIndexed { index, card ->
+                val isSelected = index == selectedCardIndex
+
                 walletCard(
-                    cardName = "Platinum Visa", lastFour = "•••• 4829",
-                    balance = "$18,240.50", expiry = "12/28",
-                    gradientColors = listOf("#6750A4", "#9A82DB", "#D0BCFF")
-                )
-                KSpacer(height = 12)
-
-                // Card 2
-                walletCard(
-                    cardName = "Gold Mastercard", lastFour = "•••• 7631",
-                    balance = "$6,322.30", expiry = "08/27",
-                    gradientColors = listOf("#7D5260", "#B88894", "#FFD8E4")
+                    cardName = card.name,
+                    lastFour = card.lastFour,
+                    balance = card.balance,
+                    expiry = card.expiry,
+                    gradientColors = if (isSelected) card.gradients else listOf("#787880", "#A0A0A8"),
+                    isDark = isDark
                 )
 
-                KSpacer(height = 20)
+                // Card action buttons (only for selected)
+                if (isSelected) {
+                    KRow(
+                        modifier = kModifier(fillMaxWidth = 1f),
+                        horizontalArrangement = KArrangements.SpaceEvenly
+                    ) {
+                        quickAction(
+                            KIcons.Lock, "Freeze", c.errorContainer(isDark), c.red(isDark),
+                            isDark = isDark, actionId = "cards_freeze_$index"
+                        ) { KFunctionCall("freezeCard", "cardName" to card.name) }
 
-                // Quick actions for cards
-                KText("Card Actions", fontSize = 18, fontWeight = KFontWeights.SemiBold, color = onSurface)
-                KSpacer(height = 8)
+                        quickAction(
+                            KIcons.Settings, "Settings", c.secondaryContainer(isDark), c.onSecondaryContainer(isDark),
+                            isDark = isDark, actionId = "cards_settings_$index"
+                        ) { KFunctionCall("showToast", "message" to "${card.name} settings") }
 
-                KRow(modifier = kModifier(fillMaxWidth = 1f), horizontalArrangement = KArrangements.SpaceEvenly) {
-                    quickAction(KIcons.Lock, "Freeze", "#E8DEF8", primary) { toast("Card frozen") }
-                    quickAction(KIcons.Settings, "Limits", "#FFD8E4", "#7D5260") { toast("Set limits") }
-                    quickAction(KIcons.CreditCard, "Details", "#A8F5C4", "#1B7D46") { toast("Card details") }
-                    quickAction(KIcons.Add, "New Card", "#F9DEDC", "#BA1A1A") { toast("Add new card") }
+                        quickAction(
+                            KIcons.Visibility, "Details", c.primaryContainer(isDark), c.primary(isDark),
+                            isDark = isDark, actionId = "cards_details_$index"
+                        ) { KFunctionCall("showToast", "message" to "Card details for ${card.name}") }
+                    }
                 }
-
-                KSpacer(height = 72)
             }
         }
+
+        KSpacer(height = 24)
+
+        // ── Card selector chips ───────────────────────────
+        KRow(
+            modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20)),
+            horizontalArrangement = KArrangements.Center
+        ) {
+            KRow(horizontalArrangement = "spacedBy_8") {
+                cards.forEachIndexed { index, card ->
+                    val chipBg = if (index == selectedCardIndex) c.primary(isDark) else c.surfaceContainerLow(isDark)
+                    val chipColor = if (index == selectedCardIndex) c.onPrimary(isDark) else c.onSurfaceVariant(isDark)
+
+                    KCard(
+                        modifier = kModifier(height = 36),
+                        containerColor = chipBg,
+                        shape = KShapes.rounded(50),
+                        elevation = 0,
+                        onClick = { KFunctionCall("selectCard", "index" to index) },
+                        actionId = "cards_select_$index"
+                    ) {
+                        KBox(
+                            modifier = kModifier(fillMaxHeight = 1f, padding = kPadding(horizontal = 16)),
+                            contentAlignment = KAlignments.Center
+                        ) {
+                            KText("Card ${index + 1}", fontSize = 13, fontWeight = KFontWeights.Medium, color = chipColor)
+                        }
+                    }
+                }
+            }
+        }
+
+        KSpacer(height = 24)
+
+        // ── Recent card activity ──────────────────────────
+        KRow(
+            modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20)),
+            horizontalArrangement = KArrangements.SpaceBetween,
+            verticalAlignment = KAlignments.CenterVertically
+        ) {
+            KText("Card Activity", fontSize = 17, fontWeight = KFontWeights.SemiBold, color = c.onSurface(isDark))
+            KButton(
+                containerColor = "#00000000", elevation = 0,
+                onClick = { KFunctionCall("showToast", "message" to "View all card activity") },
+                actionId = "cards_view_all"
+            ) {
+                KText("View All", fontSize = 13, fontWeight = KFontWeights.Medium, color = c.primary(isDark))
+            }
+        }
+
+        KSpacer(height = 8)
+
+        KColumn(
+            modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20, bottom = 16)),
+            verticalArrangement = "spacedBy_8"
+        ) {
+            KComponent("TransactionRow", mapOf("title" to "Apple Store", "subtitle" to "Today", "amount" to "- \$999.00", "isIncome" to false))
+            KComponent("TransactionRow", mapOf("title" to "Refund - Amazon", "subtitle" to "Yesterday", "amount" to "+ \$42.50", "isIncome" to true))
+            KComponent("TransactionRow", mapOf("title" to "Gas Station", "subtitle" to "Feb 2", "amount" to "- \$55.00", "isIncome" to false))
+        }
+
+        KSpacer(height = 20)
     }
 }

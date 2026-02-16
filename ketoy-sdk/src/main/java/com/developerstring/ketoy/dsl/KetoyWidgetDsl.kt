@@ -8,8 +8,8 @@ import kotlinx.serialization.json.JsonObject
 /**
  * DSL entry-point for defining custom widget parsers inline.
  *
- * This provides a concise Kotlin-idiomatic way to register custom widgets,
- * equivalent to defining Stac parsers and registering them during initialization.
+ * Provides a concise Kotlin-idiomatic way to register custom widgets
+ * and parsers during initialization.
  *
  * ## Example
  * ```kotlin

@@ -1,11 +1,66 @@
 package com.developerstring.ketoy.theme
 
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.ColorScheme
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.staticCompositionLocalOf
 import androidx.compose.ui.graphics.Color
+
+// ═══════════════════════════════════════════════════════════════
+//  Theme Mode — how Ketoy decides which colour scheme to use
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Controls how Ketoy resolves dark/light theme colours.
+ *
+ * ## Usage
+ * ```kotlin
+ * // Follow system setting (default)
+ * KetoyThemeProvider(themeMode = KetoyThemeMode.System) { ... }
+ *
+ * // Always light
+ * KetoyThemeProvider(themeMode = KetoyThemeMode.Light) { ... }
+ *
+ * // Custom dark & light schemes
+ * KetoyThemeProvider(
+ *     themeMode = KetoyThemeMode.Custom(
+ *         lightScheme = myLightScheme,
+ *         darkScheme  = myDarkScheme
+ *     )
+ * ) { ... }
+ * ```
+ */
+sealed class KetoyThemeMode {
+    /** Follow the system dark/light setting (reads [MaterialTheme.colorScheme]). */
+    data object System : KetoyThemeMode()
+
+    /** Force light theme. */
+    data object Light : KetoyThemeMode()
+
+    /** Force dark theme. */
+    data object Dark : KetoyThemeMode()
+
+    /**
+     * Provide custom light and dark [KetoyColorScheme]s.
+     * Ketoy switches between them based on the system setting.
+     */
+    data class Custom(
+        val lightScheme: KetoyColorScheme,
+        val darkScheme: KetoyColorScheme,
+    ) : KetoyThemeMode()
+}
+
+// ═══════════════════════════════════════════════════════════════
+//  Composition local for current dark-theme state
+// ═══════════════════════════════════════════════════════════════
+
+/**
+ * Whether Ketoy is currently rendering in dark mode.
+ * Readable anywhere inside a [KetoyThemeProvider] subtree.
+ */
+val LocalKetoyDarkTheme = staticCompositionLocalOf { false }
 
 /**
  * Ketoy's own colour scheme that maps semantic tokens (e.g. `"primary"`)
@@ -164,15 +219,49 @@ val LocalKetoyColors = staticCompositionLocalOf {
  * }
  * ```
  *
- * @param colorScheme  The colour scheme to expose. Defaults to
- *   [KetoyColorScheme.fromMaterial] using [MaterialTheme.colorScheme].
+ * **Usage (theme mode — dark/light switching):**
+ * ```kotlin
+ * KetoyThemeProvider(
+ *     themeMode = KetoyThemeMode.Custom(
+ *         lightScheme = myLightScheme,
+ *         darkScheme  = myDarkScheme
+ *     )
+ * ) {
+ *     JSONStringToUI(json)
+ * }
+ * ```
+ *
+ * @param colorScheme  Explicit colour scheme override.  Takes priority
+ *   over [themeMode] when non-null.
+ * @param themeMode    How to pick the colour scheme when [colorScheme]
+ *   is null. Defaults to [KetoyThemeMode.System].
  */
 @Composable
 fun KetoyThemeProvider(
-    colorScheme: KetoyColorScheme = KetoyColorScheme.fromMaterial(MaterialTheme.colorScheme),
+    colorScheme: KetoyColorScheme? = null,
+    themeMode: KetoyThemeMode = KetoyThemeMode.System,
     content: @Composable () -> Unit,
 ) {
-    CompositionLocalProvider(LocalKetoyColors provides colorScheme) {
+    val isDark = isSystemInDarkTheme()
+
+    val resolved = colorScheme ?: when (themeMode) {
+        is KetoyThemeMode.System -> KetoyColorScheme.fromMaterial(MaterialTheme.colorScheme)
+        is KetoyThemeMode.Light  -> KetoyColorScheme.fromMaterial(MaterialTheme.colorScheme)
+        is KetoyThemeMode.Dark   -> KetoyColorScheme.fromMaterial(MaterialTheme.colorScheme)
+        is KetoyThemeMode.Custom -> if (isDark) themeMode.darkScheme else themeMode.lightScheme
+    }
+
+    val darkFlag = when {
+        colorScheme != null     -> isDark
+        themeMode is KetoyThemeMode.Light -> false
+        themeMode is KetoyThemeMode.Dark  -> true
+        else                    -> isDark
+    }
+
+    CompositionLocalProvider(
+        LocalKetoyColors provides resolved,
+        LocalKetoyDarkTheme provides darkFlag,
+    ) {
         content()
     }
 }

@@ -1,33 +1,18 @@
 package com.developerstring.ketoy.dsl
 
-import com.developerstring.ketoy.navigation.KetoyRoute
 import com.developerstring.ketoy.screen.KetoyScreen
 import com.developerstring.ketoy.screen.KetoyScreenRegistry
-import com.developerstring.ketoy.screen.ScreenMetadata
-import com.developerstring.ketoy.widget.KetoyActionParser
-import com.developerstring.ketoy.widget.KetoyWidgetParser
 
 /**
  * DSL scope for configuring screens during Ketoy initialization.
  *
- * Supports both **string routes** and **type-safe `@Serializable` routes**.
- *
- * ## String routes
  * ```kotlin
  * ketoyScreens {
- *     screen("home") { fromJson(homeJson) }
- *     screen("profile") { fromComposable { ProfileScreen() } }
- * }
- * ```
- *
- * ## Type-safe routes
- * ```kotlin
- * @Serializable data object Home : KetoyRoute
- * @Serializable data class Detail(val id: String) : KetoyRoute
- *
- * ketoyScreens {
- *     screen<Home> { fromComposable { HomeScreen() } }
- *     screen<Detail> { fromComposable { DetailScreen() } }
+ *     screen("home") {
+ *         displayName("Home")
+ *         fromJson(homeJson)
+ *     }
+ *     screen("profile") { dsl { KColumn { KText("Profile") } } }
  * }
  * ```
  */
@@ -36,51 +21,49 @@ class KetoyScreensScope {
     @PublishedApi
     internal val screens = mutableListOf<KetoyScreen>()
 
-    /**
-     * Define a screen with a string route name.
-     */
-    fun screen(routeName: String, block: ScreenBuilder.() -> Unit) {
-        val builder = ScreenBuilder(routeName)
+    /** Define a screen with a string screen name. */
+    fun screen(screenName: String, block: ScreenBuilder.() -> Unit) {
+        val builder = ScreenBuilder(screenName)
         builder.block()
         builder.build()?.let { screens.add(it) }
     }
 
-    /**
-     * Define a screen with a type-safe `@Serializable` route class.
-     *
-     * ```kotlin
-     * screen<Home> { fromComposable { HomeScreen() } }
-     * ```
-     */
-    inline fun <reified T : KetoyRoute> screen(
-        noinline block: TypeSafeScreenBuilder<T>.() -> Unit
-    ) {
-        val builder = TypeSafeScreenBuilder(T::class)
-        builder.block()
-        builder.build()?.let { screens.add(it) }
-    }
-
-    /**
-     * Register a pre-built [KetoyScreen].
-     */
+    /** Register a pre-built [KetoyScreen]. */
     fun screen(ketoyScreen: KetoyScreen) {
         screens.add(ketoyScreen)
     }
 }
 
 /**
- * Builder for configuring a single Ketoy screen (string route).
+ * Builder for configuring a single Ketoy screen.
  */
-class ScreenBuilder(private val routeName: String) {
+class ScreenBuilder(private val screenName: String) {
 
     private var jsonContent: String? = null
+    private var dslBuilder: (KUniversalScope.() -> Unit)? = null
     private var composableBuilder: (@androidx.compose.runtime.Composable () -> Unit)? = null
     private var assetPath: String? = null
-    private var metadata: ScreenMetadata = ScreenMetadata()
+    private var displayName: String? = null
+    private var description: String = ""
+    private var version: String = "1.0.0"
+
+    /** Set a human-friendly display name for this screen. */
+    fun displayName(name: String) { displayName = name }
+
+    /** Set a description for this screen. */
+    fun description(desc: String) { description = desc }
+
+    /** Set a version for this screen. */
+    fun version(ver: String) { version = ver }
 
     /** Define this screen's content from a JSON string. */
     fun fromJson(json: String) {
         jsonContent = json
+    }
+
+    /** Define this screen's content via Ketoy DSL. */
+    fun dsl(builder: KUniversalScope.() -> Unit) {
+        dslBuilder = builder
     }
 
     /** Define this screen's content from a Composable lambda. */
@@ -93,94 +76,29 @@ class ScreenBuilder(private val routeName: String) {
         assetPath = path
     }
 
-    /** Set screen metadata. */
-    fun metadata(block: ScreenMetadataBuilder.() -> Unit) {
-        val builder = ScreenMetadataBuilder()
-        builder.block()
-        metadata = builder.build()
-    }
-
     internal fun build(): KetoyScreen? {
+        val dn = displayName ?: screenName.replace("_", " ").replaceFirstChar { it.uppercaseChar() }
         return when {
-            jsonContent != null -> KetoyScreen.fromJson(routeName, jsonContent!!, metadata)
-            composableBuilder != null -> KetoyScreen.fromComposable(routeName, metadata, composableBuilder!!)
-            assetPath != null -> KetoyScreen.fromAsset(routeName, assetPath!!, metadata)
+            jsonContent != null -> KetoyScreen.fromJson(screenName, jsonContent!!, displayName = dn, description = description, version = version)
+            composableBuilder != null -> KetoyScreen.fromComposable(screenName, displayName = dn, description = description, version = version, composable = composableBuilder!!)
+            assetPath != null -> KetoyScreen.fromAsset(screenName, assetPath!!, displayName = dn, description = description, version = version)
+            dslBuilder != null -> KetoyScreen.create(screenName, displayName = dn, description = description, version = version, dslBuilder = dslBuilder!!)
             else -> null
         }
     }
 }
-
-/**
- * Builder for configuring a screen with a type-safe `@Serializable` route.
- */
-class TypeSafeScreenBuilder<T : KetoyRoute>(
-    private val routeClass: kotlin.reflect.KClass<T>
-) {
-
-    private var jsonContent: String? = null
-    private var composableBuilder: (@androidx.compose.runtime.Composable () -> Unit)? = null
-    private var assetPath: String? = null
-    private var metadata: ScreenMetadata = ScreenMetadata()
-
-    /** Define this screen's content from a JSON string. */
-    fun fromJson(json: String) {
-        jsonContent = json
-    }
-
-    /** Define this screen's content from a Composable lambda. */
-    fun fromComposable(content: @androidx.compose.runtime.Composable () -> Unit) {
-        composableBuilder = content
-    }
-
-    /** Define this screen's content from a local asset path. */
-    fun fromAsset(path: String) {
-        assetPath = path
-    }
-
-    /** Set screen metadata. */
-    fun metadata(block: ScreenMetadataBuilder.() -> Unit) {
-        val builder = ScreenMetadataBuilder()
-        builder.block()
-        metadata = builder.build()
-    }
-
-    @PublishedApi
-    internal fun build(): KetoyScreen? {
-        return when {
-            jsonContent != null -> KetoyScreen.fromJson(routeClass, jsonContent!!, metadata)
-            composableBuilder != null -> KetoyScreen.fromComposable(routeClass, metadata, composableBuilder!!)
-            assetPath != null -> KetoyScreen.fromAsset(routeClass, assetPath!!, metadata)
-            else -> null
-        }
-    }
-}
-
-/**
- * Builder for [ScreenMetadata].
- */
-class ScreenMetadataBuilder {
-    var title: String = ""
-    var requiresAuth: Boolean = false
-    var transitionType: String = "default"
-    var tags: List<String> = emptyList()
-
-    internal fun build() = ScreenMetadata(
-        title = title,
-        requiresAuth = requiresAuth,
-        transitionType = transitionType,
-        tags = tags
-    )
-}
-
-// ── Top-level DSL functions ─────────────────────────────────────
 
 /**
  * DSL entry-point for defining and registering Ketoy screens.
  *
  * ```kotlin
  * ketoyScreens {
- *     screen("home") { fromJson(homeJson) }
- *     screen<Profile> { fromComposable { ProfileScreen() } }
+ *     screen("home") {
+ *         displayName("Home")
+ *         description("Main landing screen")
+ *         fromJson(homeJson)
+ *     }
+ *     screen("profile") { dsl { KColumn { KText("Profile") } } }
  * }
  * ```
  */

@@ -7,7 +7,7 @@ import kotlinx.serialization.json.JsonObject
  * Base interface for Ketoy action parsers.
  *
  * An action parser handles a specific type of JSON action (e.g. navigate,
- * showDialog, apiCall). This mirrors Stac's `StacActionParser<T>`.
+ * showDialog, apiCall).
  *
  * ## Creating a custom action parser
  * ```kotlin

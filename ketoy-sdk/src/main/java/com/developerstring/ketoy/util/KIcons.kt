@@ -13,9 +13,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 // ─────────────────────────────────────────────────────────────
 //  KIcons – Material3 icon registry
 //
-//  Maps icon names (strings) → ImageVector.
-//  Mirrors the approach used by stac.dev for Flutter, where each
-//  icon is referenced by a simple string key in JSON/DSL:
+//  Maps icon names (strings) → ImageVector, where each icon is
+//  referenced by a simple string key in JSON/DSL:
 //
 //    DSL  →  KIcon(icon = KIcons.Home)
 //    DSL  →  KIcon(icon = KIcons.Outlined.Home)

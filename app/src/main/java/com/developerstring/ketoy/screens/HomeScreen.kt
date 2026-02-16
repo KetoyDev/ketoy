@@ -1,331 +1,166 @@
 package com.developerstring.ketoy.screens
 
-import android.widget.Toast
-import androidx.compose.runtime.Composable
-import androidx.compose.ui.platform.LocalContext
-import com.developerstring.ketoy.components.TimedKetoyScreen
-import com.developerstring.ketoy.dsl.*
-import com.developerstring.ketoy.model.*
-import com.developerstring.ketoy.screens.AppColors.green
-import com.developerstring.ketoy.screens.AppColors.greenContainer
-import com.developerstring.ketoy.screens.AppColors.onErrorContainer
-import com.developerstring.ketoy.screens.AppColors.onPrimary
-import com.developerstring.ketoy.screens.AppColors.onSurface
-import com.developerstring.ketoy.screens.AppColors.onSurfaceVariant
-import com.developerstring.ketoy.screens.AppColors.primary
-import com.developerstring.ketoy.screens.AppColors.primaryContainer
-import com.developerstring.ketoy.screens.AppColors.red
-import com.developerstring.ketoy.screens.AppColors.secondaryContainer
-import com.developerstring.ketoy.screens.AppColors.surfaceContainerLow
-import com.developerstring.ketoy.screens.AppColors.tertiaryContainer
-import com.developerstring.ketoy.screens.AppColors.errorContainer
 import com.developerstring.ketoy.util.*
 
-@Composable
-fun HomeScreen() {
-    val context = LocalContext.current
-    fun toast(msg: String) = Toast.makeText(context, msg, Toast.LENGTH_SHORT).show()
+/**
+ * Home screen — the main dashboard showing balance overview,
+ * quick-actions, custom components (AvatarBadge, BalanceDisplay),
+ * KetoyFunctionRegistry calls, and recent transactions.
+ */
+fun buildHomeScreen(
+    userName: String,
+    totalBalance: String,
+    income: String,
+    expenses: String,
+    savings: String,
+    notificationCount: Int,
+    isDark: Boolean,
+    transactions: List<Triple<String, String, String>> // title, subtitle, amount+(+/-)
+): com.developerstring.ketoy.model.KNode = ketoyRoot {
 
-    TimedKetoyScreen(screenName = "Home") { buildHomeUI { toast(it) } }
-}
+    val c = AppColors
 
-private fun buildHomeUI(toast: (String) -> Unit): KNode {
-    return KColumn(modifier = kModifier(fillMaxSize = 1f)) {
-        KLazyColumn(
-            modifier = kModifier(fillMaxSize = 1f),
-            verticalArrangement = "spacedBy_16",
-            contentPadding = kPadding(horizontal = 16, vertical = 16)
+    // ── Top bar: avatar + greeting + notifications ─────────
+    KColumn(
+        modifier = kModifier(
+            fillMaxSize = 1f,
+            padding = kPadding(top = 16),
+            background = if (isDark) "#1C1B1F" else "#FFFBFE"
+        ),
+        verticalArrangement = "spacedBy_0"
+    ) {
+
+        // Header row
+        KRow(
+            modifier = kModifier(
+                fillMaxWidth = 1f,
+                padding = kPadding(horizontal = 20)
+            ),
+            horizontalArrangement = KArrangements.SpaceBetween,
+            verticalAlignment = KAlignments.CenterVertically
         ) {
-            item {
-                // ── Greeting
-                KRow(
-                    modifier = kModifier(fillMaxWidth = 1f),
-                    horizontalArrangement = KArrangements.SpaceBetween,
-                    verticalAlignment = KAlignments.CenterVertically
-                ) {
-                    KColumn(verticalArrangement = "spacedBy_2") {
-                        KText("Welcome back", fontSize = 14, color = onSurfaceVariant)
-                        KText(
-                            "Aditya",
-                            fontSize = 24,
-                            fontWeight = KFontWeights.Bold,
-                            color = onSurface
-                        )
-                    }
-                    KBox(
-                        modifier = kModifier(
-                            size = 48,
-                            background = primaryContainer,
-                            shape = KShapes.Circle
-                        ),
-                        contentAlignment = KAlignments.Center
-                    ) {
-                        KIcon(icon = KIcons.AccountCircle, size = 36, color = primary)
-                    }
+            KRow(
+                horizontalArrangement = "spacedBy_14",
+                verticalAlignment = KAlignments.CenterVertically
+            ) {
+                KComponent("AvatarBadge", mapOf("initials" to userName.take(2), "badgeCount" to notificationCount, "size" to 48))
+                KColumn(verticalArrangement = "spacedBy_2") {
+                    KText("Good morning,", fontSize = 13, color = c.onSurfaceVariant(isDark))
+                    KText(userName, fontSize = 20, fontWeight = KFontWeights.Bold, color = c.onSurface(isDark))
                 }
+            }
 
-                KSpacer(height = 8)
+            KIconButton(
+                icon = KIcons.NotificationsNone,
+                iconColor = c.onSurface(isDark),
+                iconSize = 26,
+                onClick = { KFunctionCall("clearNotifications") },
+                actionId = "home_clear_notifs"
+            ) {}
+        }
 
-                // ── Balance card — no containerColor so the gradient child isn't layered
-                KCard(
-                    modifier = kModifier(fillMaxWidth = 1f),
-                    shape = KShapes.Rounded24,
-                    elevation = 6,
-                ) {
-                    KColumn(
-                        modifier = kModifier(
-                            fillMaxWidth = 1f,
-                            gradient = KGradients.linear(
-                                listOf("#6750A4", "#7F67BE", "#9A82DB"),
-                                KGradients.Directions.Diagonal
-                            ),
-                        ),
-                    ) {
+        KSpacer(height = 20)
 
-                        KColumn(
-                            modifier = kModifier(fillMaxWidth = 1f, padding = KPadding(all = 24),),
-                            verticalArrangement = "spacedBy_4"
-                        ) {
-
-                            KRow(
-                                modifier = kModifier(fillMaxWidth = 1f),
-                                horizontalArrangement = KArrangements.SpaceBetween,
-                                verticalAlignment = KAlignments.CenterVertically
-                            ) {
-                                KText("Total Balance", fontSize = 14, color = "#D0BCFF")
-                                KIcon(icon = KIcons.Visibility, size = 20, color = "#D0BCFF")
-                            }
-                            KText(
-                                "$24,562.80",
-                                fontSize = 38,
-                                fontWeight = KFontWeights.Bold,
-                                color = onPrimary
-                            )
-                            KSpacer(height = 12)
-
-                            KRow(
-                                modifier = kModifier(fillMaxWidth = 1f),
-                                horizontalArrangement = KArrangements.SpaceBetween
-                            ) {
-                                KRow(
-                                    horizontalArrangement = "spacedBy_6",
-                                    verticalAlignment = KAlignments.CenterVertically
-                                ) {
-                                    KBox(
-                                        modifier = kModifier(
-                                            size = 32,
-                                            background = "#FFFFFF20",
-                                            shape = KShapes.Circle
-                                        ), contentAlignment = KAlignments.Center
-                                    ) {
-                                        KIcon(
-                                            icon = KIcons.TrendingUp,
-                                            size = 18,
-                                            color = "#A8F5C4"
-                                        )
-                                    }
-                                    KColumn {
-                                        KText("Income", fontSize = 11, color = "#D0BCFF")
-                                        KText(
-                                            "+$8,240",
-                                            fontSize = 15,
-                                            fontWeight = KFontWeights.Bold,
-                                            color = onPrimary
-                                        )
-                                    }
-                                }
-                                KRow(
-                                    horizontalArrangement = "spacedBy_6",
-                                    verticalAlignment = KAlignments.CenterVertically
-                                ) {
-                                    KBox(
-                                        modifier = kModifier(
-                                            size = 32,
-                                            background = "#FFFFFF20",
-                                            shape = KShapes.Circle
-                                        ), contentAlignment = KAlignments.Center
-                                    ) {
-                                        KIcon(
-                                            icon = KIcons.TrendingDown,
-                                            size = 18,
-                                            color = "#FFB4AB"
-                                        )
-                                    }
-                                    KColumn {
-                                        KText("Expenses", fontSize = 11, color = "#D0BCFF")
-                                        KText(
-                                            "-$3,820",
-                                            fontSize = 15,
-                                            fontWeight = KFontWeights.Bold,
-                                            color = onPrimary
-                                        )
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-
-                KSpacer(height = 4)
-
-                // ── Quick actions
-                KRow(
-                    modifier = kModifier(fillMaxWidth = 1f),
-                    horizontalArrangement = KArrangements.SpaceEvenly
-                ) {
-                    quickAction(
-                        KIcons.Send,
-                        "Send",
-                        primaryContainer,
-                        primary
-                    ) { toast("Send Money") }
-                    quickAction(
-                        KIcons.CallReceived,
-                        "Receive",
-                        secondaryContainer,
-                        "#4A4458"
-                    ) { toast("Receive Money") }
-                    quickAction(
-                        KIcons.Receipt,
-                        "Bills",
-                        tertiaryContainer,
-                        "#7D5260"
-                    ) { toast("Pay Bills") }
-                    quickAction(
-                        KIcons.CreditCard,
-                        "Top Up",
-                        greenContainer,
-                        green
-                    ) { toast("Top Up") }
-                }
-
-                KSpacer(height = 4)
-
-                // ── Stats
-                KText(
-                    "Quick Stats",
-                    fontSize = 18,
-                    fontWeight = KFontWeights.SemiBold,
-                    color = onSurface
+        // ── Balance card (custom component) ───────────────
+        KBox(modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20))) {
+            KComponent(
+                "BalanceDisplay",
+                mapOf(
+                    "label" to "Total Balance",
+                    "amount" to totalBalance,
+                    "trend" to "+12.5% this month",
+                    "trendPositive" to true
                 )
-                KSpacer(height = 8)
-                KRow(
-                    modifier = kModifier(fillMaxWidth = 1f),
-                    horizontalArrangement = "spacedBy_12"
-                ) {
-                    statCard(
-                        kModifier(weight = 1f),
-                        KIcons.Savings,
-                        "Savings",
-                        "$18,240",
-                        "+12%",
-                        primaryContainer,
-                        primary,
-                        green
+            )
+        }
+
+        KSpacer(height = 20)
+
+        // ── Quick actions row ─────────────────────────────
+        KRow(
+            modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20)),
+            horizontalArrangement = KArrangements.SpaceEvenly
+        ) {
+            quickAction(
+                KIcons.Send, "Send", c.primaryContainer(isDark), c.primary(isDark),
+                isDark = isDark, actionId = "home_send"
+            ) { KFunctionCall("sendMoney", "amount" to 50.0, "recipient" to "Alex") }
+
+            quickAction(
+                KIcons.Download, "Receive", c.secondaryContainer(isDark), c.onSecondaryContainer(isDark),
+                isDark = isDark, actionId = "home_receive"
+            ) { KFunctionCall("showToast", "message" to "Receive link copied") }
+
+            quickAction(
+                KIcons.SwapHoriz, "Swap", c.tertiaryContainer(isDark), c.onTertiaryContainer(isDark),
+                isDark = isDark, actionId = "home_swap"
+            ) { KFunctionCall("showToast", "message" to "Swap feature coming soon") }
+
+            quickAction(
+                KIcons.MoreHoriz, "More", c.surfaceContainerLow(isDark), c.onSurfaceVariant(isDark),
+                isDark = isDark, actionId = "home_more"
+            ) { KFunctionCall("showToast", "message" to "More options") }
+        }
+
+        KSpacer(height = 24)
+
+        // ── Stat cards row (income / expenses) ────────────
+        KRow(
+            modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20)),
+            horizontalArrangement = "spacedBy_12"
+        ) {
+            statCard(
+                modifier = kModifier(weight = 1f),
+                icon = KIcons.TrendingUp, label = "Income", value = income,
+                trend = "+8.2%",
+                iconBg = c.greenContainer(isDark), iconColor = c.green(isDark),
+                trendColor = c.green(isDark), isDark = isDark
+            )
+            statCard(
+                modifier = kModifier(weight = 1f),
+                icon = KIcons.TrendingDown, label = "Expenses", value = expenses,
+                trend = "-3.1%",
+                iconBg = c.errorContainer(isDark), iconColor = c.red(isDark),
+                trendColor = c.red(isDark), isDark = isDark
+            )
+        }
+
+        KSpacer(height = 24)
+
+        // ── Recent transactions header ────────────────────
+        KRow(
+            modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20)),
+            horizontalArrangement = KArrangements.SpaceBetween,
+            verticalAlignment = KAlignments.CenterVertically
+        ) {
+            KText("Recent Transactions", fontSize = 17, fontWeight = KFontWeights.SemiBold, color = c.onSurface(isDark))
+            KButton(
+                containerColor = "#00000000", elevation = 0,
+                onClick = { KFunctionCall("showToast", "message" to "View all transactions") },
+                actionId = "home_see_all"
+            ) {
+                KText("See All", fontSize = 13, fontWeight = KFontWeights.Medium, color = c.primary(isDark))
+            }
+        }
+
+        KSpacer(height = 8)
+
+        // ── Transaction list (custom components) ──────────
+        KColumn(
+            modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20, bottom = 16)),
+            verticalArrangement = "spacedBy_8"
+        ) {
+            for ((title, subtitle, amount) in transactions.take(5)) {
+                val isIncome = amount.startsWith("+")
+                KComponent(
+                    "TransactionRow",
+                    mapOf(
+                        "title" to title,
+                        "subtitle" to subtitle,
+                        "amount" to amount,
+                        "isIncome" to isIncome
                     )
-                    statCard(
-                        kModifier(weight = 1f),
-                        KIcons.ShoppingCart,
-                        "This Month",
-                        "$2,380",
-                        "-8%",
-                        errorContainer,
-                        onErrorContainer,
-                        red
-                    )
-                }
-
-                KSpacer(height = 4)
-
-                // ── Recent transactions header
-                KRow(
-                    modifier = kModifier(fillMaxWidth = 1f),
-                    horizontalArrangement = KArrangements.SpaceBetween,
-                    verticalAlignment = KAlignments.CenterVertically
-                ) {
-                    KText(
-                        "Recent Transactions",
-                        fontSize = 18,
-                        fontWeight = KFontWeights.SemiBold,
-                        color = onSurface
-                    )
-                    KButton(
-                        containerColor = KColors.Transparent,
-                        onClick = { toast("See all transactions") }) {
-                        KText(
-                            "See All",
-                            fontSize = 13,
-                            fontWeight = KFontWeights.Medium,
-                            color = primary
-                        )
-                        KIcon(icon = KIcons.ChevronRight, size = 18, color = primary)
-                    }
-                }
-                KSpacer(height = 4)
-
-                // ── Transactions
-                transactionItem(
-                    KIcons.ShoppingCart,
-                    "#E8DEF8",
-                    primary,
-                    "Grocery Store",
-                    "Today, 2:30 PM",
-                    "- $45.20",
-                    red,
-                    surfaceContainerLow
-                ) { toast("Grocery details") }
-                transactionItem(
-                    KIcons.AttachMoney,
-                    greenContainer,
-                    green,
-                    "Salary Deposit",
-                    "Yesterday",
-                    "+ $3,200",
-                    green,
-                    surfaceContainerLow
-                ) { toast("Salary details") }
-                transactionItem(
-                    KIcons.LocalCafe,
-                    tertiaryContainer,
-                    "#7D5260",
-                    "Coffee Shop",
-                    "Yesterday",
-                    "- $6.50",
-                    red,
-                    surfaceContainerLow
-                ) { toast("Coffee details") }
-                transactionItem(
-                    KIcons.Movie,
-                    errorContainer,
-                    red,
-                    "Netflix Subscription",
-                    "Feb 1",
-                    "- $15.99",
-                    red,
-                    surfaceContainerLow
-                ) { toast("Netflix details") }
-                transactionItem(
-                    KIcons.Phone,
-                    secondaryContainer,
-                    "#4A4458",
-                    "App Store",
-                    "Jan 30",
-                    "- $9.99",
-                    red,
-                    surfaceContainerLow
-                ) { toast("App Store details") }
-                transactionItem(
-                    KIcons.SwapHoriz,
-                    greenContainer,
-                    green,
-                    "Transfer from Alex",
-                    "Jan 28",
-                    "+ $150.00",
-                    green,
-                    surfaceContainerLow
-                ) { toast("Transfer details") }
-
-                KSpacer(height = 72)
+                )
             }
         }
     }

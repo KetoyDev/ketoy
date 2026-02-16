@@ -1,0 +1,8 @@
+{
+    "type": "Text",
+    "props": {
+        "text": "History",
+        "fontSize": 24,
+        "fontWeight": "bold"
+    }
+}

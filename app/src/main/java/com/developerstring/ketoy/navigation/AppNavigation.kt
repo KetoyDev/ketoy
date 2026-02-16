@@ -18,6 +18,9 @@ data object CardsRoute : KetoyRoute
 @Serializable
 data object ProfileRoute : KetoyRoute
 
+@Serializable
+data object HistoryRoute : KetoyRoute
+
 // ─── Bottom nav item descriptor (UI metadata only) ──────────────
 
 data class BottomNavItem<T : KetoyRoute>(
@@ -31,5 +34,6 @@ val bottomNavItems = listOf(
     BottomNavItem(HomeRoute, "Home", KIcons.Outlined.Home, KIcons.Filled.Home),
     BottomNavItem(AnalyticsRoute, "Analytics", KIcons.Outlined.Insights, KIcons.Filled.Insights),
     BottomNavItem(CardsRoute, "Cards", KIcons.Outlined.CreditCard, KIcons.Filled.CreditCard),
+    BottomNavItem(HistoryRoute, "History", KIcons.Outlined.Schedule, KIcons.Filled.Schedule),
     BottomNavItem(ProfileRoute, "Profile", KIcons.Outlined.Person, KIcons.Filled.Person),
 )

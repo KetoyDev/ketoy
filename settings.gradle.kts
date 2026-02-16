@@ -22,3 +22,5 @@ dependencyResolutionManagement {
 rootProject.name = "Ketoy"
 include(":app")
 include(":ketoy-sdk")
+include(":ketoy-devtools")
+include(":ketoy-devtools-server")

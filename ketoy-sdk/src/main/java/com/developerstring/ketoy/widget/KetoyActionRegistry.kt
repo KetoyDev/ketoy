@@ -3,8 +3,8 @@ package com.developerstring.ketoy.widget
 /**
  * Global registry for [KetoyActionParser] instances.
  *
- * Mirrors Stac's action registry. When a JSON action is triggered,
- * the executor looks up the parser by `actionType` and invokes it.
+ * When a JSON action is triggered, the executor looks up the parser
+ * by `actionType` and invokes it.
  */
 object KetoyActionRegistry {
 
