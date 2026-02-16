@@ -25,10 +25,28 @@ import com.developerstring.ketoy.core.ActionRegistry
 import com.developerstring.ketoy.core.KetoyVariableRegistry
 import com.developerstring.ketoy.model.KImageSource
 import com.developerstring.ketoy.model.KScaleType
+import com.developerstring.ketoy.navigation.LocalKetoyNavController
 import com.developerstring.ketoy.parser.*
 import com.developerstring.ketoy.util.KIcons
 import com.developerstring.ketoy.util.resolveIcon
 import kotlinx.serialization.json.*
+
+// ─── onClick helper ───────────────────────────────────────────────
+
+/**
+ * Resolve an onClick prop – supports both legacy action IDs
+ * (from DSL) and JSON action objects (from server).
+ *
+ * Automatically provides the [KetoyNavController] from
+ * [LocalKetoyNavController] so JSON navigation actions work.
+ */
+@Composable
+private fun rememberOnClick(props: JsonObject): (() -> Unit)? {
+    val context = LocalContext.current
+    val navController = LocalKetoyNavController.current
+    val element = props["onClick"]
+    return OnClickResolver.resolve(element, context, navController)
+}
 
 // ─── Text ─────────────────────────────────────────────────────────
 
@@ -69,7 +87,7 @@ internal fun RenderText(component: UIComponent) {
 internal fun RenderButton(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
     val modifierProps = props["modifier"]?.jsonObject
-    val onClickActionId = props["onClick"]?.jsonPrimitive?.content
+    val onClickAction = rememberOnClick(props)
 
     val hasCustomBackground = modifierProps?.get("background")?.let { el ->
         if (el is JsonPrimitive) {
@@ -81,9 +99,7 @@ internal fun RenderButton(component: UIComponent) {
     if (hasCustomBackground) {
         val modifier = parseModifier(props)
         Box(
-            modifier = modifier.clickable {
-                onClickActionId?.let { ActionRegistry.get(it)?.invoke() }
-            },
+            modifier = modifier.clickable { onClickAction?.invoke() },
             contentAlignment = Alignment.Center
         ) {
             Row(
@@ -107,7 +123,7 @@ internal fun RenderButton(component: UIComponent) {
         val shape = props["shape"]?.jsonPrimitive?.contentOrNull?.let { parseShape(it) }
 
         Button(
-            onClick = { onClickActionId?.let { ActionRegistry.get(it)?.invoke() } },
+            onClick = { onClickAction?.invoke() },
             modifier = buttonModifier,
             colors = if (containerColor != null) ButtonDefaults.buttonColors(containerColor = containerColor)
                      else ButtonDefaults.buttonColors(),
@@ -149,7 +165,8 @@ internal fun RenderCard(component: UIComponent) {
         val c = resolveKetoyColorOrNull(borderObj["color"]?.jsonPrimitive?.contentOrNull) ?: Color.Gray
         BorderStroke(w.dp, c)
     }
-    val onClick = props["onClick"]?.jsonPrimitive?.contentOrNull
+    val onClickAction = rememberOnClick(props)
+    val hasOnClick = props["onClick"] != null
     val enabled = props["enabled"]?.jsonPrimitive?.booleanOrNull ?: true
     val modifier = parseModifier(props)
 
@@ -181,8 +198,8 @@ internal fun RenderCard(component: UIComponent) {
     )
     val cardElevation = CardDefaults.cardElevation(defaultElevation = elevation.dp)
 
-    if (onClick != null && enabled) {
-        Card(onClick = { }, modifier = modifier, enabled = enabled, shape = shape,
+    if (hasOnClick && enabled) {
+        Card(onClick = { onClickAction?.invoke() }, modifier = modifier, enabled = enabled, shape = shape,
             colors = cardColors, elevation = cardElevation, border = border) {
             component.children?.forEach { child -> RenderComponent(child) }
         }
@@ -322,7 +339,7 @@ internal fun RenderIconButton(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
     val iconName = props["icon"]?.jsonPrimitive?.contentOrNull ?: ""
     val style = props["iconStyle"]?.jsonPrimitive?.contentOrNull ?: KIcons.STYLE_FILLED
-    val onClick = props["onClick"]?.jsonPrimitive?.contentOrNull
+    val onClickAction = rememberOnClick(props)
     val modifier = parseModifier(props)
     val enabled = props["enabled"]?.jsonPrimitive?.booleanOrNull ?: true
     val iconSize = props["iconSize"]?.jsonPrimitive?.intOrNull
@@ -341,7 +358,7 @@ internal fun RenderIconButton(component: UIComponent) {
     )
 
     IconButton(
-        onClick = { onClick?.let { ActionRegistry.get(it)?.invoke() } },
+        onClick = { onClickAction?.invoke() },
         modifier = modifier,
         enabled = enabled,
         colors = colors

@@ -151,7 +151,7 @@ object KetoyNavigationExecutor {
     private fun registerInlineJsonScreen(route: String, jsonContent: String) {
         com.developerstring.ketoy.screen.KetoyScreenRegistry.register(
             com.developerstring.ketoy.screen.KetoyScreen.fromJson(
-                routeName = route,
+                screenName = route,
                 json = jsonContent
             )
         )

@@ -16,13 +16,15 @@ class KAppBarScope : KUniversalScope() {
     fun KAppBarAction(
         onClick: () -> Unit = {}, modifier: KModifier? = null,
         enabled: Boolean? = null, colors: KIconButtonColors? = null,
-        interactionSource: KInteractionSource? = null,
+        interactionSource: KInteractionSource? = null, actionId: String? = null,
         content: KUniversalScope.() -> Unit
     ) {
         val scope = KUniversalScope().apply(content)
-        val actionId = ActionRegistry.register(onClick)
+        val resolvedId = if (actionId != null) {
+            ActionRegistry.registerAction(actionId, onClick); actionId
+        } else ActionRegistry.register(onClick)
         addChild(KAppBarActionNode(
-            KAppBarActionProps(actionId, modifier, enabled, colors, interactionSource),
+            KAppBarActionProps(resolvedId, modifier, enabled, colors, interactionSource),
             scope.children
         ))
     }
@@ -41,16 +43,19 @@ class KNavigationScope : KScope() {
         selected: Boolean, onClick: () -> Unit = {},
         modifier: KModifier? = null, enabled: Boolean? = null,
         colors: KNavigationDrawerItemColors? = null, shape: String? = null,
+        actionId: String? = null,
         icon: (KUniversalScope.() -> Unit)? = null,
         label: (KUniversalScope.() -> Unit)? = null,
         badge: (KUniversalScope.() -> Unit)? = null
     ) {
-        val actionId = ActionRegistry.register(onClick)
+        val resolvedId = if (actionId != null) {
+            ActionRegistry.registerAction(actionId, onClick); actionId
+        } else ActionRegistry.register(onClick)
         val ic = icon?.let { KUniversalScope().apply(it).children }
         val lc = label?.let { KUniversalScope().apply(it).children }
         val bc = badge?.let { KUniversalScope().apply(it).children }
         addChild(KNavigationDrawerItemNode(
-            KNavigationDrawerItemProps(selected, actionId, ic, modifier, enabled, lc, bc, colors, shape)
+            KNavigationDrawerItemProps(selected, resolvedId, ic, modifier, enabled, lc, bc, colors, shape)
         ))
     }
 
@@ -58,17 +63,19 @@ class KNavigationScope : KScope() {
         selected: Boolean, onClick: () -> Unit = {},
         modifier: KModifier? = null, enabled: Boolean? = null,
         alwaysShowLabel: Boolean? = null,
-        colors: KNavigationBarItemColors? = null,
+        colors: KNavigationBarItemColors? = null, actionId: String? = null,
         icon: (KUniversalScope.() -> Unit)? = null,
         selectedIcon: (KUniversalScope.() -> Unit)? = null,
         label: (KUniversalScope.() -> Unit)? = null
     ) {
-        val actionId = ActionRegistry.register(onClick)
+        val resolvedId = if (actionId != null) {
+            ActionRegistry.registerAction(actionId, onClick); actionId
+        } else ActionRegistry.register(onClick)
         val ic = icon?.let { KUniversalScope().apply(it).children }
         val sic = selectedIcon?.let { KUniversalScope().apply(it).children }
         val lc = label?.let { KUniversalScope().apply(it).children }
         addChild(KNavigationBarItemNode(
-            KNavigationBarItemProps(selected, actionId, modifier, enabled, alwaysShowLabel, ic, sic, lc, colors)
+            KNavigationBarItemProps(selected, resolvedId, modifier, enabled, alwaysShowLabel, ic, sic, lc, colors)
         ))
     }
 
@@ -79,16 +86,19 @@ class KNavigationScope : KScope() {
         containerColor: String? = null, contentColor: String? = null,
         selectedContainerColor: String? = null, selectedContentColor: String? = null,
         indicatorColor: String? = null, rippleColor: String? = null,
+        actionId: String? = null,
         icon: (KUniversalScope.() -> Unit)? = null,
         selectedIcon: (KUniversalScope.() -> Unit)? = null,
         label: (KUniversalScope.() -> Unit)? = null
     ) {
-        val actionId = ActionRegistry.register(onClick)
+        val resolvedId = if (actionId != null) {
+            ActionRegistry.registerAction(actionId, onClick); actionId
+        } else ActionRegistry.register(onClick)
         val ic = icon?.let { KUniversalScope().apply(it).children }
         val sic = selectedIcon?.let { KUniversalScope().apply(it).children }
         val lc = label?.let { KUniversalScope().apply(it).children }
         addChild(KCustomNavigationItemNode(
-            KCustomNavigationItemProps(selected, actionId, ic, sic, modifier, enabled, lc, alwaysShowLabel,
+            KCustomNavigationItemProps(selected, resolvedId, ic, sic, modifier, enabled, lc, alwaysShowLabel,
                 containerColor, contentColor, selectedContainerColor, selectedContentColor, indicatorColor, rippleColor)
         ))
     }
@@ -120,17 +130,19 @@ class KNavigationRailScope : KScope() {
     fun KNavigationRailItem(
         selected: Boolean, onClick: () -> Unit = {},
         modifier: KModifier? = null, enabled: Boolean? = null,
-        alwaysShowLabel: Boolean? = null,
+        alwaysShowLabel: Boolean? = null, actionId: String? = null,
         icon: (KUniversalScope.() -> Unit)? = null,
         selectedIcon: (KUniversalScope.() -> Unit)? = null,
         label: (KUniversalScope.() -> Unit)? = null
     ) {
-        val actionId = ActionRegistry.register(onClick)
+        val resolvedId = if (actionId != null) {
+            ActionRegistry.registerAction(actionId, onClick); actionId
+        } else ActionRegistry.register(onClick)
         val ic = icon?.let { KUniversalScope().apply(it).children }
         val sic = selectedIcon?.let { KUniversalScope().apply(it).children }
         val lc = label?.let { KUniversalScope().apply(it).children }
         addChild(KNavigationRailItemNode(
-            KNavigationRailItemProps(selected, actionId, ic, sic, modifier, enabled, lc, alwaysShowLabel)
+            KNavigationRailItemProps(selected, resolvedId, ic, sic, modifier, enabled, lc, alwaysShowLabel)
         ))
     }
 }

@@ -46,6 +46,9 @@ dependencies {
     // Ketoy SDK
     implementation(project(":ketoy-sdk"))
 
+    // Ketoy Dev Tools (debug only — hot-reload preview)
+    debugImplementation(project(":ketoy-devtools"))
+
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)

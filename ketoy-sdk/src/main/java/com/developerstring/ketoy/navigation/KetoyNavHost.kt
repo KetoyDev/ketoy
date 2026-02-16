@@ -18,8 +18,8 @@ import com.developerstring.ketoy.screen.KetoyScreenRegistry
  *
  * Access via `LocalKetoyNavController.current` anywhere inside a [KetoyNavHost].
  */
-val LocalKetoyNavController = staticCompositionLocalOf<KetoyNavController> {
-    error("No KetoyNavController provided. Wrap your content in KetoyNavHost.")
+val LocalKetoyNavController = staticCompositionLocalOf<KetoyNavController?> {
+    null
 }
 
 /**

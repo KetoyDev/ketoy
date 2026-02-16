@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.developerstring.ketoy.devtools" >
+
+    <uses-sdk android:minSdkVersion="26" />
+
+    <uses-permission android:name="android.permission.INTERNET" />
+    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
+    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
+
+    <application>
+
+        <!-- Ketoy Dev Preview Activity — launchable via deep link ketoy://dev -->
+        <activity
+            android:name="com.developerstring.ketoy.devtools.KetoyDevActivity"
+            android:exported="true"
+            android:label="Ketoy Dev Preview" >
+            <intent-filter>
+                <action android:name="android.intent.action.VIEW" />
+
+                <category android:name="android.intent.category.DEFAULT" />
+
+                <data
+                    android:host="dev"
+                    android:scheme="ketoy" />
+            </intent-filter>
+        </activity>
+    </application>
+
+</manifest>

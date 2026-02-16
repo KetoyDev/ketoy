@@ -15,15 +15,14 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * Primary composable for rendering a Ketoy screen by route name.
+ * Primary composable for rendering a Ketoy screen by screen name.
  *
- * This is the Compose equivalent of Stac's `Stac(routeName: '/home')` widget.
- * It looks up a registered [KetoyScreen] and renders its content, with
+ * Looks up a registered [KetoyScreen] and renders its content, with
  * support for loading and error states.
  *
  * ## From a registered screen
  * ```kotlin
- * KetoyView(routeName = "home")
+ * KetoyView(screenName = "home")
  * ```
  *
  * ## From JSON string
@@ -36,32 +35,30 @@ import kotlinx.coroutines.withContext
  * KetoyView.fromAsset("screens/home.json")
  * ```
  *
- * @param routeName    The route identifying the screen in [KetoyScreenRegistry].
+ * @param screenName   The name identifying the screen in [KetoyScreenRegistry].
  * @param modifier     Optional Modifier.
  * @param loadingContent Composable shown while loading (e.g. async screens).
  * @param errorContent   Composable shown when the screen cannot be found or loaded.
  */
 @Composable
 fun KetoyView(
-    routeName: String,
+    screenName: String,
     modifier: Modifier = Modifier,
     loadingContent: @Composable () -> Unit = { DefaultLoadingContent() },
     errorContent: @Composable (String) -> Unit = { msg -> DefaultErrorContent(msg) }
 ) {
     Box(modifier = modifier) {
-        val screen = KetoyScreenRegistry.get(routeName)
+        val screen = KetoyScreenRegistry.get(screenName)
         if (screen != null) {
             screen.Content()
         } else {
-            errorContent("Screen not found: $routeName")
+            errorContent("Screen not found: $screenName")
         }
     }
 }
 
 /**
  * Render a Ketoy screen from a raw JSON string.
- *
- * Equivalent to Stac's `Stac.fromJson(json, context)`.
  */
 @Composable
 fun KetoyViewFromJson(
@@ -75,8 +72,6 @@ fun KetoyViewFromJson(
 
 /**
  * Render a Ketoy screen from a local asset JSON file.
- *
- * Equivalent to Stac's `Stac.fromAssets(assetPath)`.
  */
 @Composable
 fun KetoyViewFromAsset(
@@ -111,8 +106,6 @@ fun KetoyViewFromAsset(
 
 /**
  * Render a Ketoy screen from a network URL.
- *
- * Equivalent to Stac's `Stac.fromNetwork(request)`.
  */
 @Composable
 fun KetoyViewFromNetwork(

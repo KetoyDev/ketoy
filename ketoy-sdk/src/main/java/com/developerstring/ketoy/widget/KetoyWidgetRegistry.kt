@@ -5,9 +5,8 @@ import kotlinx.serialization.json.JsonObject
 /**
  * Global registry for custom [KetoyWidgetParser] instances.
  *
- * Mirrors Stac's `StacRegistry` – when the renderer encounters a JSON
- * `"type"` it doesn't recognise as a built-in widget, it checks this
- * registry for a matching custom parser.
+ * When the renderer encounters a JSON `"type"` it doesn't recognise as
+ * a built-in widget, it checks this registry for a matching custom parser.
  *
  * ## Registration
  * ```kotlin

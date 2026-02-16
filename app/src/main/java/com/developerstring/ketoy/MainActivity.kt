@@ -5,174 +5,240 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Menu
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.dp
-import androidx.navigation.NavGraph.Companion.findStartDestination
-import androidx.navigation.compose.*
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.navigation.NavDestination.Companion.hasRoute
+import androidx.navigation.compose.currentBackStackEntryAsState
+import androidx.navigation.compose.rememberNavController
+import com.developerstring.ketoy.components.AppCustomComponents
 import com.developerstring.ketoy.components.AppSideDrawer
-import com.developerstring.ketoy.core.toJson
-import com.developerstring.ketoy.dsl.KScaffold
-import com.developerstring.ketoy.dsl.KUniversalScope
-import com.developerstring.ketoy.model.KModifier as KMod
-import com.developerstring.ketoy.model.KTopAppBarColors
+import com.developerstring.ketoy.components.TimedKetoyScreen
+import com.developerstring.ketoy.devtools.KetoyDevWrapper
 import com.developerstring.ketoy.navigation.*
-import com.developerstring.ketoy.renderer.JSONStringToUI
 import com.developerstring.ketoy.screens.*
+import com.developerstring.ketoy.theme.KetoyThemeMode
+import com.developerstring.ketoy.theme.KetoyThemeProvider
 import com.developerstring.ketoy.ui.theme.KetoyTheme
-import com.developerstring.ketoy.util.KColors
-import com.developerstring.ketoy.util.KIcons
-import com.developerstring.ketoy.util.KTopAppBarType
+import com.developerstring.ketoy.util.resolveIcon
+import com.developerstring.ketoy.viewmodel.MainViewModel
 
+/**
+ * Main entry point — wires Ketoy SDK, ViewModel, custom components,
+ * function registry, navigation, and theme together.
+ */
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
-        Ketoy.initialize()
+
+        // ── SDK initialisation ────────────────────────────
+        Ketoy.initialize(context = applicationContext)
+
+        // ── Custom composable components ──────────────────
+        AppCustomComponents.registerAll()
 
         setContent {
-            KetoyTheme {
-                MainApp()
+            val vm: MainViewModel = viewModel()
+
+            // Register ViewModel functions with the SDK
+            LaunchedEffect(Unit) { vm.registerFunctions() }
+
+            // Observe dark mode from ViewModel
+            val isDark = vm.isDarkMode
+
+            KetoyTheme(darkTheme = isDark) {
+                KetoyThemeProvider(
+                    themeMode = if (isDark) KetoyThemeMode.Dark else KetoyThemeMode.Light
+                ) {
+                    KetoyDevWrapper {
+                        MainApp(vm, isDark)
+                    }
+                }
             }
         }
     }
+}
 
-    private fun toast(msg: String) = Toast.makeText(this, msg, Toast.LENGTH_SHORT).show()
+// ═══════════════════════════════════════════════════════════════
+//  Main scaffold with bottom nav, side drawer, and toast observer
+// ═══════════════════════════════════════════════════════════════
 
-    @Composable
-    fun MainApp() {
-        val innerNavController = rememberNavController()
-        var showDrawer by remember { mutableStateOf(false) }
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun MainApp(vm: MainViewModel, isDark: Boolean) {
+    val context = LocalContext.current
+    val navController = rememberNavController()
+    val backStackEntry by navController.currentBackStackEntryAsState()
 
-        // Track current route for bottom-nav selection
-        val navBackStackEntry by innerNavController.currentBackStackEntryAsState()
-        val currentRoute = navBackStackEntry?.destination?.route
+    // ── Toast observer ────────────────────────────────────
+    val toastMsg = vm.toastMessage
+    LaunchedEffect(toastMsg) {
+        toastMsg?.let {
+            Toast.makeText(context, it, Toast.LENGTH_SHORT).show()
+            vm.consumeToast()
+        }
+    }
 
-        // ── Build Ketoy TopAppBar via DSL ─────────────────────
-        val topBarJson = remember {
-            KUniversalScope().apply {
-                KTopAppBar(
-                    type = KTopAppBarType.CenterAligned,
-                    colors = KTopAppBarColors(
-                        containerColor = KColors.Primary,
-                        titleContentColor = KColors.OnPrimary,
-                        navigationIconContentColor = KColors.OnPrimary,
-                        actionIconContentColor = KColors.OnPrimary
-                    ),
-                    title = {
-                        KText(text = "Ketoy Demo")
-                    },
+    // ── Side drawer state ─────────────────────────────────
+    var drawerVisible by remember { mutableStateOf(false) }
+
+    Box(modifier = Modifier.fillMaxSize()) {
+
+        Scaffold(
+            modifier = Modifier.fillMaxSize(),
+            topBar = {
+                TopAppBar(
+                    title = { },
                     navigationIcon = {
-                        KAppBarAction(onClick = { showDrawer = !showDrawer }) {
-                            KIcon(icon = KIcons.Menu)
+                        IconButton(onClick = { drawerVisible = true }) {
+                            Icon(Icons.Filled.Menu, contentDescription = "Menu")
                         }
                     },
-                    actions = {
-                        KAppBarAction(onClick = { toast("Notifications") }) {
-                            KIcon(icon = KIcons.Notifications, style = KIcons.STYLE_OUTLINED)
-                        }
-                        KAppBarAction(onClick = { toast("Search") }) {
-                            KIcon(icon = KIcons.Search, style = KIcons.STYLE_OUTLINED)
-                        }
-                    }
-                )
-            }.children.first().toJson()
-        }
-
-        // ── Build Ketoy NavigationBar via DSL (reactive to route) ──
-        val bottomBarJson = KUniversalScope().apply {
-            KNavigationBar {
-                bottomNavItems.forEach { item ->
-                    val isSelected = currentRoute?.contains(
-                        item.route::class.simpleName ?: ""
-                    ) == true
-                    KNavigationBarItem(
-                        selected = isSelected,
-                        onClick = {
-                            innerNavController.navigate(item.route) {
-                                popUpTo(innerNavController.graph.findStartDestination().id) {
-                                    saveState = true
-                                }
-                                launchSingleTop = true
-                                restoreState = true
-                            }
-                        },
-                        icon = {
-                            KIcon(icon = item.icon)
-                        },
-                        selectedIcon = {
-                            KIcon(icon = item.selectedIcon)
-                        },
-                        label = {
-                            KText(text = item.label)
-                        }
+                    colors = TopAppBarDefaults.topAppBarColors(
+                        containerColor = MaterialTheme.colorScheme.surface
                     )
-                }
-            }
-        }.children.first().toJson()
+                )
+            },
+            bottomBar = {
+                NavigationBar {
+                    bottomNavItems.forEach { item ->
+                        val selected = backStackEntry?.destination?.let { dest ->
+                            when (item.route) {
+                                is HomeRoute -> dest.hasRoute<HomeRoute>()
+                                is AnalyticsRoute -> dest.hasRoute<AnalyticsRoute>()
+                                is CardsRoute -> dest.hasRoute<CardsRoute>()
+                                is HistoryRoute -> dest.hasRoute<HistoryRoute>()
+                                is ProfileRoute -> dest.hasRoute<ProfileRoute>()
+                                else -> false
+                            }
+                        } ?: false
 
-        // ── Build Ketoy FAB via DSL ───────────────────────────
-        val fabJson = remember {
-            KUniversalScope().apply {
-                KFloatingActionButton(
-                    onClick = { toast("New Transaction") },
-                    containerColor = KColors.Primary,
-                    contentColor = KColors.OnPrimary
-                ) {
-                    KIcon(icon = KIcons.Add)
-                }
-            }.children.first().toJson()
-        }
-
-        Box(modifier = Modifier.fillMaxSize()) {
-
-            // ── Main Scaffold (using Ketoy-rendered slots) ──
-            Scaffold(
-                modifier = Modifier.fillMaxSize(),
-                topBar = { JSONStringToUI(topBarJson) },
-                bottomBar = { JSONStringToUI(bottomBarJson) },
-                floatingActionButton = {
-                    if (!showDrawer) {
-                        JSONStringToUI(fabJson)
+                        NavigationBarItem(
+                            selected = selected,
+                            onClick = {
+                                navController.navigate(item.route) {
+                                    popUpTo(navController.graph.startDestinationId) { saveState = true }
+                                    launchSingleTop = true
+                                    restoreState = true
+                                }
+                            },
+                            icon = {
+                                val iconRef = if (selected) item.selectedIcon else item.icon
+                                val imageVector = resolveIcon(iconRef)
+                                if (imageVector != null) {
+                                    Icon(
+                                        imageVector = imageVector,
+                                        contentDescription = item.label
+                                    )
+                                }
+                            },
+                            label = { Text(item.label) }
+                        )
                     }
                 }
-            ) { innerPadding ->
+            }
+        ) { innerPadding ->
 
-                // ── KetoyNavHost with @Serializable type-safe routes ──
-                KetoyNavHost(
-                    startRoute = HomeRoute,
-                    navController = innerNavController,
-                    modifier = Modifier.padding(innerPadding)
-                ) {
-                    screen<HomeRoute>      { _ -> HomeScreen() }
-                    screen<AnalyticsRoute> { _ -> AnalyticsScreen() }
-                    screen<CardsRoute>     { _ -> CardsScreen() }
-                    screen<ProfileRoute>   { _ -> ProfileScreen() }
+            // ── Navigation host ───────────────────────────
+            KetoyNavHost(
+                startRoute = HomeRoute,
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding),
+                navController = navController
+            ) {
+
+                screen<HomeRoute> {
+                    TimedKetoyScreen("Home") {
+                        buildHomeScreen(
+                            userName = vm.userName,
+                            totalBalance = "\$${"%,.2f".format(vm.totalBalance)}",
+                            income = "\$${"%,.2f".format(vm.income)}",
+                            expenses = "\$${"%,.2f".format(vm.expenses)}",
+                            savings = "\$${"%,.2f".format(vm.savings)}",
+                            notificationCount = vm.notificationCount,
+                            isDark = isDark,
+                            transactions = vm.transactions.map {
+                                Triple(it.title, it.subtitle, it.amount)
+                            }
+                        )
+                    }
+                }
+
+                screen<AnalyticsRoute> {
+                    TimedKetoyScreen("Analytics") {
+                        buildAnalyticsScreen(
+                            income = "\$${"%,.2f".format(vm.income)}",
+                            expenses = "\$${"%,.2f".format(vm.expenses)}",
+                            savings = "\$${"%,.2f".format(vm.savings)}",
+                            isDark = isDark
+                        )
+                    }
+                }
+
+                screen<CardsRoute> {
+                    TimedKetoyScreen("Cards") {
+                        buildCardsScreen(
+                            selectedCardIndex = vm.selectedCardIndex,
+                            isDark = isDark
+                        )
+                    }
+                }
+
+                screen<HistoryRoute> {
+                    TimedKetoyScreen("History") {
+                        buildHistoryScreen(
+                            transactions = vm.transactions.map {
+                                Triple(it.title, it.subtitle, it.amount)
+                            },
+                            isDark = isDark
+                        )
+                    }
+                }
+
+                screen<ProfileRoute> {
+                    TimedKetoyScreen("Profile") {
+                        buildProfileScreen(
+                            userName = vm.userName,
+                            isDark = isDark
+                        )
+                    }
                 }
             }
-            
-            // ── Custom side drawer overlay ──────────────
-            AppSideDrawer(
-                visible = showDrawer,
-                currentRoute = currentRoute,
-                onDismiss = { showDrawer = false },
-                onNavigate = { route ->
-                    innerNavController.navigate(route) {
-                        popUpTo(innerNavController.graph.findStartDestination().id) {
-                            saveState = true
-                        }
-                        launchSingleTop = true
-                        restoreState = true
-                    }
-                    showDrawer = false
-                },
-                onAction = { label ->
-                    toast(label)
-                    showDrawer = false
-                }
-            )
         }
+
+        // ── Side drawer overlay ───────────────────────────
+        AppSideDrawer(
+            visible = drawerVisible,
+            currentRoute = backStackEntry?.destination?.route,
+            onDismiss = { drawerVisible = false },
+            onNavigate = { route ->
+                drawerVisible = false
+                navController.navigate(route) {
+                    popUpTo(navController.graph.startDestinationId) { saveState = true }
+                    launchSingleTop = true
+                    restoreState = true
+                }
+            },
+            onAction = { label ->
+                drawerVisible = false
+                when (label) {
+                    "Dark Mode" -> vm.isDarkMode.let { /* toggle handled by drawer */ }
+                    "Log Out" -> com.developerstring.ketoy.registry.KetoyFunctionRegistry.call("logout")
+                    else -> Toast.makeText(context, label, Toast.LENGTH_SHORT).show()
+                }
+            }
+        )
     }
 }

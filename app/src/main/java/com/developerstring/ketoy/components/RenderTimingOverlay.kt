@@ -1,5 +1,6 @@
 package com.developerstring.ketoy.components
 
+import android.widget.Toast
 import androidx.compose.animation.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
@@ -12,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Speed
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.ContentCopy
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -21,6 +23,7 @@ import androidx.compose.ui.draw.drawWithContent
 import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -28,6 +31,7 @@ import androidx.compose.ui.unit.sp
 import com.developerstring.ketoy.core.toJson
 import com.developerstring.ketoy.model.KNode
 import com.developerstring.ketoy.renderer.JSONStringToUI
+import com.developerstring.ketoy.theme.LocalKetoyDarkTheme
 
 // ═══════════════════════════════════════════════════════════════
 //  Data class holding timing results for each pipeline phase
@@ -50,27 +54,30 @@ fun TimedKetoyScreen(
     screenName: String,
     buildUi: () -> KNode
 ) {
-    val compositionStartNanos = remember { System.nanoTime() }
+    // Key all remember blocks on isDark so theme changes trigger a full rebuild
+    val isDark = LocalKetoyDarkTheme.current
+
+    val compositionStartNanos = remember(isDark) { System.nanoTime() }
 
     // Phase 1 — DSL Build
-    val dslStart = remember { System.nanoTime() }
-    val node = remember { buildUi() }
-    val dslEnd = remember { System.nanoTime() }
+    val dslStart = remember(isDark) { System.nanoTime() }
+    val node = remember(isDark) { buildUi() }
+    val dslEnd = remember(isDark) { System.nanoTime() }
 
     // Phase 2 — JSON Serialization
-    val jsonStart = remember { System.nanoTime() }
-    val json = remember { node.toJson() }
-    val jsonEnd = remember { System.nanoTime() }
+    val jsonStart = remember(isDark) { System.nanoTime() }
+    val json = remember(isDark) { node.toJson() }
+    val jsonEnd = remember(isDark) { System.nanoTime() }
 
     // Pre-compute timings for Phase 1 & 2
-    val dslMs = remember { (dslEnd - dslStart) / 1_000_000.0 }
-    val jsonMs = remember { (jsonEnd - jsonStart) / 1_000_000.0 }
-    val jsonSize = remember { json.toByteArray(Charsets.UTF_8).size }
+    val dslMs = remember(isDark) { (dslEnd - dslStart) / 1_000_000.0 }
+    val jsonMs = remember(isDark) { (jsonEnd - jsonStart) / 1_000_000.0 }
+    val jsonSize = remember(isDark) { json.toByteArray(Charsets.UTF_8).size }
 
     // Phase 3 — Compose rendering + first-draw tracking
-    val renderStart = remember { System.nanoTime() }
-    var firstDrawNanos by remember { mutableStateOf<Long?>(null) }
-    var timings by remember { mutableStateOf<PipelineTimings?>(null) }
+    val renderStart = remember(isDark) { System.nanoTime() }
+    var firstDrawNanos by remember(isDark) { mutableStateOf<Long?>(null) }
+    var timings by remember(isDark) { mutableStateOf<PipelineTimings?>(null) }
 
     Box(modifier = Modifier.fillMaxSize()) {
 
@@ -106,6 +113,7 @@ fun TimedKetoyScreen(
 
         // ── Timing overlay — collapsed FAB or expanded panel ──
         var expanded by remember { mutableStateOf(false) }
+        val context = LocalContext.current
 
         if (timings != null) {
             // Expanded panel
@@ -129,6 +137,39 @@ fun TimedKetoyScreen(
             ) {
                 timings?.let { t -> TimingFab(t.totalMs) { expanded = true } }
             }
+        }
+
+        // ── Copy JSON FAB button at bottom-right ──
+        FloatingActionButton(
+            onClick = {
+                try {
+                    val fileName = "${screenName.lowercase().replace(" ", "_")}_ui.json"
+                    val file = java.io.File(context.filesDir, fileName)
+                    
+                    // Convert to escaped string format for API calls
+                    val escapedJson = json.replace("\"", "\\\"")
+                    file.writeText(escapedJson)
+                    
+                    Toast.makeText(
+                        context, 
+                        "JSON string saved to:\n${file.absolutePath}", 
+                        Toast.LENGTH_LONG
+                    ).show()
+                    android.util.Log.d("KetoyJSON", "Saved to: ${file.absolutePath}")
+                } catch (e: Exception) {
+                    Toast.makeText(context, "Failed to save: ${e.message}", Toast.LENGTH_SHORT).show()
+                }
+            },
+            modifier = Modifier
+                .align(Alignment.BottomEnd)
+                .padding(end = 16.dp, bottom = 16.dp),
+            containerColor = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        ) {
+            Icon(
+                imageVector = Icons.Filled.ContentCopy,
+                contentDescription = "Copy JSON"
+            )
         }
     }
 }

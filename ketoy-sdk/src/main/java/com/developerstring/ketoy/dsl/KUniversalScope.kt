@@ -4,6 +4,7 @@ import com.developerstring.ketoy.core.ActionRegistry
 import com.developerstring.ketoy.core.KetoyVariableRegistry
 import com.developerstring.ketoy.model.*
 import com.developerstring.ketoy.registry.KComponentRegistry
+import com.developerstring.ketoy.registry.KetoyFunctionRegistry
 import com.developerstring.ketoy.util.KColors
 import com.developerstring.ketoy.util.KFabPosition
 import com.developerstring.ketoy.util.KFabType
@@ -41,15 +42,23 @@ open class KUniversalScope : KScope() {
 
     // ── Button ──────────────────────────────────────────
 
+    /**
+     * @param actionId Optional custom action ID. When set, this ID appears
+     *   in the serialised JSON so server-side updates can reference it by name
+     *   (e.g. `"onClick": "buy_button"`). When `null` an auto-generated ID is used.
+     */
     fun KButton(
         modifier: KModifier? = null, onClick: () -> Unit = {},
         enabled: Boolean? = null, containerColor: String? = null,
         contentColor: String? = null, elevation: Int? = null,
-        shape: String? = null, content: KUniversalScope.() -> Unit = {}
+        shape: String? = null, actionId: String? = null,
+        content: KUniversalScope.() -> Unit = {}
     ) {
-        val actionId = ActionRegistry.register(onClick)
+        val resolvedId = if (actionId != null) {
+            ActionRegistry.registerAction(actionId, onClick); actionId
+        } else ActionRegistry.register(onClick)
         val scope = KUniversalScope().apply(content)
-        addChild(KButtonNode(KButtonProps(modifier, actionId, enabled, containerColor, contentColor, elevation, shape), scope.children))
+        addChild(KButtonNode(KButtonProps(modifier, resolvedId, enabled, containerColor, contentColor, elevation, shape), scope.children))
     }
 
     // ── Column ──────────────────────────────────────────
@@ -202,12 +211,15 @@ open class KUniversalScope : KScope() {
         iconStyle: String? = null, containerColor: String? = null,
         contentColor: String? = null, disabledContainerColor: String? = null,
         disabledContentColor: String? = null, contentDescription: String? = null,
+        actionId: String? = null,
         content: KUniversalScope.() -> Unit = {}
     ) {
-        val actionId = ActionRegistry.register(onClick)
+        val resolvedId = if (actionId != null) {
+            ActionRegistry.registerAction(actionId, onClick); actionId
+        } else ActionRegistry.register(onClick)
         val scope = KUniversalScope().apply(content)
         addChild(KIconButtonNode(
-            KIconButtonProps(icon, modifier, actionId, enabled, iconSize, iconColor, iconStyle,
+            KIconButtonProps(icon, modifier, resolvedId, enabled, iconSize, iconColor, iconStyle,
                 containerColor, contentColor, disabledContainerColor, disabledContentColor, contentDescription),
             scope.children
         ))
@@ -227,13 +239,15 @@ open class KUniversalScope : KScope() {
         iconSize: Int? = null, iconColor: String? = null,
         containerColor: String? = null, contentColor: String? = null,
         disabledContainerColor: String? = null, disabledContentColor: String? = null,
-        contentDescription: String? = null,
+        contentDescription: String? = null, actionId: String? = null,
         content: KUniversalScope.() -> Unit = {}
     ) {
-        val actionId = ActionRegistry.register(onClick)
+        val resolvedId = if (actionId != null) {
+            ActionRegistry.registerAction(actionId, onClick); actionId
+        } else ActionRegistry.register(onClick)
         val scope = KUniversalScope().apply(content)
         addChild(KIconButtonNode(
-            KIconButtonProps(icon.name, modifier, actionId, enabled, iconSize, iconColor, icon.style,
+            KIconButtonProps(icon.name, modifier, resolvedId, enabled, iconSize, iconColor, icon.style,
                 containerColor, contentColor, disabledContainerColor, disabledContentColor, contentDescription),
             scope.children
         ))
@@ -241,17 +255,25 @@ open class KUniversalScope : KScope() {
 
     // ── Card ────────────────────────────────────────────
 
+    /**
+     * @param actionId Optional custom action ID for the card's onClick.
+     */
     fun KCard(
         modifier: KModifier? = null, shape: String? = null,
         containerColor: String? = null, contentColor: String? = null,
         elevation: Int? = null, border: KBorder? = null,
         onClick: (() -> Unit)? = null, enabled: Boolean? = null,
+        actionId: String? = null,
         content: KUniversalScope.() -> Unit
     ) {
+        val resolvedOnClick = if (onClick != null) {
+            if (actionId != null) {
+                ActionRegistry.registerAction(actionId, onClick); actionId
+            } else ActionRegistry.register(onClick)
+        } else null
         val node = KCardNode(KCardProps(
             modifier, shape ?: KShapes.Rounded12, containerColor, contentColor,
-            elevation ?: 1, border,
-            if (onClick != null) "cardClick" else null, enabled
+            elevation ?: 1, border, resolvedOnClick, enabled
         ))
         val scope = KUniversalScope().apply(content)
         node.children.addAll(scope.children)
@@ -310,6 +332,53 @@ open class KUniversalScope : KScope() {
             }
         }
         KComponent(name = name, properties = properties, modifier = modifier)
+    }
+
+    // ── Function call (for onClick / server-driven actions) ──
+
+    /**
+     * Create an onClick action that calls a registered [KetoyFunctionRegistry] function.
+     *
+     * Returns the action ID string for use in onClick props. The function is
+     * invoked at render time when the user taps the component.
+     *
+     * ```kotlin
+     * KButton(
+     *     onClick = { KetoyFunctionRegistry.call("addToCart", mapOf("id" to "123")) },
+     *     actionId = "add_to_cart_btn"
+     * ) {
+     *     KText("Add to Cart")
+     * }
+     * ```
+     *
+     * Or use [KFunctionCall] to generate an onClick that maps directly
+     * to a registered function, which serialises to JSON so the server
+     * can trigger the same function:
+     *
+     * ```kotlin
+     * val onClickId = KFunctionCall("addToCart", "id" to "SKU-123", "quantity" to 2)
+     * ```
+     */
+    fun KFunctionCall(
+        functionName: String,
+        vararg arguments: Pair<String, Any>
+    ): String {
+        val args = mapOf(*arguments)
+        return ActionRegistry.register {
+            KetoyFunctionRegistry.call(functionName, args)
+        }
+    }
+
+    /**
+     * Create an onClick action from a function name + argument map.
+     */
+    fun KFunctionCall(
+        functionName: String,
+        arguments: Map<String, Any> = emptyMap()
+    ): String {
+        return ActionRegistry.register {
+            KetoyFunctionRegistry.call(functionName, arguments)
+        }
     }
 
     // ── Scaffold ────────────────────────────────────────
@@ -397,11 +466,14 @@ open class KUniversalScope : KScope() {
         shape: String? = null, containerColor: String? = null,
         contentColor: String? = null, elevation: KFloatingActionButtonElevation? = null,
         interactionSource: KInteractionSource? = null, type: String? = null,
+        actionId: String? = null,
         content: KUniversalScope.() -> Unit
     ) {
         val scope = KUniversalScope().apply(content)
-        val actionId = ActionRegistry.register(onClick)
-        addChild(KFloatingActionButtonNode(KFloatingActionButtonProps(modifier, actionId, shape ?: KShapes.Circle, containerColor, contentColor, elevation, interactionSource, type ?: KFabType.Regular), scope.children))
+        val resolvedId = if (actionId != null) {
+            ActionRegistry.registerAction(actionId, onClick); actionId
+        } else ActionRegistry.register(onClick)
+        addChild(KFloatingActionButtonNode(KFloatingActionButtonProps(modifier, resolvedId, shape ?: KShapes.Circle, containerColor, contentColor, elevation, interactionSource, type ?: KFabType.Regular), scope.children))
     }
 
     // ── SnackBar ────────────────────────────────────────
@@ -426,15 +498,17 @@ open class KUniversalScope : KScope() {
         onDismissRequest: () -> Unit = {}, modifier: KModifier? = null,
         shape: String? = null, containerColor: String? = null,
         contentColor: String? = null, tonalElevation: Int? = null,
-        scrimColor: String? = null,
+        scrimColor: String? = null, actionId: String? = null,
         dragHandle: (KUniversalScope.() -> Unit)? = null,
         content: KUniversalScope.() -> Unit
     ) {
-        val actionId = ActionRegistry.register(onDismissRequest)
+        val resolvedId = if (actionId != null) {
+            ActionRegistry.registerAction(actionId, onDismissRequest); actionId
+        } else ActionRegistry.register(onDismissRequest)
         val body = KUniversalScope().apply(content)
         val dragNodes = dragHandle?.let { KUniversalScope().apply(it).children }
         addChild(KModalBottomSheetNode(
-            KModalBottomSheetProps(modifier, actionId, null, shape, containerColor, contentColor, tonalElevation, scrimColor, dragNodes),
+            KModalBottomSheetProps(modifier, resolvedId, null, shape, containerColor, contentColor, tonalElevation, scrimColor, dragNodes),
             body.children
         ))
     }
@@ -474,10 +548,14 @@ open class KUniversalScope : KScope() {
 
     fun KEnum(
         id: String, enumName: String, values: List<String>,
-        selectedValue: String = "", onSelectionChange: (() -> Unit)? = null
+        selectedValue: String = "", onSelectionChange: (() -> Unit)? = null,
+        actionId: String? = null
     ) {
-        val actionId = onSelectionChange?.let { ActionRegistry.register(it) }
-        addChild(KEnumNode(KEnumProps(id, enumName, values, selectedValue, actionId)))
+        val resolvedId = onSelectionChange?.let { cb ->
+            if (actionId != null) { ActionRegistry.registerAction(actionId, cb); actionId }
+            else ActionRegistry.register(cb)
+        }
+        addChild(KEnumNode(KEnumProps(id, enumName, values, selectedValue, resolvedId)))
         KetoyVariableRegistry.register(KetoyVariable.Mutable("$id.selectedValue", selectedValue))
         KetoyVariableRegistry.register(KetoyVariable.Immutable("$id.values", values))
         KetoyVariableRegistry.register(KetoyVariable.Immutable("$id.enumName", enumName))

@@ -144,7 +144,7 @@ fun RenderContentSlotFromJson(contentArray: JsonArray) {
 
 /**
  * Renders a widget using a registered [KetoyWidgetParser].
- * This enables the Stac-like custom widget extension system.
+ * Enables the custom widget extension system.
  */
 @Composable
 @Suppress("UNCHECKED_CAST")

@@ -7,9 +7,10 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.developerstring.ketoy.core.ActionRegistry
+import com.developerstring.ketoy.navigation.LocalKetoyNavController
 import com.developerstring.ketoy.parser.*
 import kotlinx.serialization.json.*
+import androidx.compose.ui.platform.LocalContext
 
 // ═══════════════════════════════════════════════════════════════════
 //  Scaffold
@@ -191,7 +192,9 @@ internal fun RenderNavigationBar(component: UIComponent) {
 internal fun RowScope.RenderNavigationBarItem(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
     val selected = props["selected"]?.jsonPrimitive?.booleanOrNull ?: false
-    val onClick = props["onClick"]?.jsonPrimitive?.contentOrNull
+    val context = LocalContext.current
+    val navController = LocalKetoyNavController.current
+    val onClickAction = OnClickResolver.resolve(props["onClick"], context, navController)
     val modifier = parseModifier(props)
     val enabled = props["enabled"]?.jsonPrimitive?.booleanOrNull ?: true
     val alwaysShowLabel = props["alwaysShowLabel"]?.jsonPrimitive?.booleanOrNull ?: true
@@ -205,7 +208,7 @@ internal fun RowScope.RenderNavigationBarItem(component: UIComponent) {
 
     NavigationBarItem(
         selected = selected,
-        onClick = { onClick?.let { ActionRegistry.get(it)?.invoke() } },
+        onClick = { onClickAction?.invoke() },
         icon = {
             if (selected && selectedIconContent != null) {
                 selectedIconContent.forEach { RenderComponent(Json.decodeFromJsonElement(it)) }
@@ -231,7 +234,9 @@ internal fun RowScope.RenderNavigationBarItem(component: UIComponent) {
 internal fun RenderNavigationDrawerItem(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
     val selected = props["selected"]?.jsonPrimitive?.booleanOrNull ?: false
-    val onClick = props["onClick"]?.jsonPrimitive?.contentOrNull
+    val context = LocalContext.current
+    val navController = LocalKetoyNavController.current
+    val onClickAction = OnClickResolver.resolve(props["onClick"], context, navController)
     val modifier = parseModifier(props)
     val colors = props["colors"]?.jsonObject?.let { parseNavigationDrawerItemColors(it) }
         ?: NavigationDrawerItemDefaults.colors()
@@ -243,7 +248,7 @@ internal fun RenderNavigationDrawerItem(component: UIComponent) {
     NavigationDrawerItem(
         label = { labelContent?.forEach { RenderComponent(Json.decodeFromJsonElement(it)) } },
         selected = selected,
-        onClick = { onClick?.let { ActionRegistry.get(it)?.invoke() } },
+        onClick = { onClickAction?.invoke() },
         modifier = modifier,
         icon = iconContent?.let { arr ->
             { arr.forEach { RenderComponent(Json.decodeFromJsonElement(it)) } }
@@ -263,7 +268,9 @@ internal fun RenderNavigationDrawerItem(component: UIComponent) {
 internal fun RenderCustomNavigationItem(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
     val selected = props["selected"]?.jsonPrimitive?.booleanOrNull ?: false
-    val onClick = props["onClick"]?.jsonPrimitive?.contentOrNull
+    val context = LocalContext.current
+    val navController = LocalKetoyNavController.current
+    val onClickAction = OnClickResolver.resolve(props["onClick"], context, navController)
     val modifier = parseModifier(props)
     val enabled = props["enabled"]?.jsonPrimitive?.booleanOrNull ?: true
     val alwaysShowLabel = props["alwaysShowLabel"]?.jsonPrimitive?.booleanOrNull ?: true
@@ -278,7 +285,7 @@ internal fun RenderCustomNavigationItem(component: UIComponent) {
     val labelContent = props["label"]?.jsonArray
 
     Button(
-        onClick = { onClick?.let { ActionRegistry.get(it)?.invoke() } },
+        onClick = { onClickAction?.invoke() },
         modifier = modifier,
         enabled = enabled,
         colors = ButtonDefaults.buttonColors(
@@ -317,7 +324,9 @@ internal fun RenderCustomNavigationItem(component: UIComponent) {
 @Composable
 internal fun RenderFloatingActionButton(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
-    val onClick = props["onClick"]?.jsonPrimitive?.contentOrNull
+    val context = LocalContext.current
+    val navController = LocalKetoyNavController.current
+    val onClickAction = OnClickResolver.resolve(props["onClick"], context, navController)
     val modifier = parseModifier(props)
     val shape = props["shape"]?.jsonPrimitive?.contentOrNull?.let { parseShape(it) }
         ?: FloatingActionButtonDefaults.shape
@@ -329,26 +338,25 @@ internal fun RenderFloatingActionButton(component: UIComponent) {
         ?: FloatingActionButtonDefaults.elevation()
     val type = props["type"]?.jsonPrimitive?.contentOrNull ?: "regular"
 
-    val onClickAction: () -> Unit = { onClick?.let { ActionRegistry.get(it)?.invoke() } }
     val content: @Composable () -> Unit = {
         component.children?.forEach { child -> RenderComponent(child) }
     }
 
     when (type) {
         "small" -> SmallFloatingActionButton(
-            onClick = onClickAction, modifier = modifier,
+            onClick = { onClickAction?.invoke() }, modifier = modifier,
             shape = shape, containerColor = containerColor,
             contentColor = contentColor, elevation = elevation,
             content = content
         )
         "large" -> LargeFloatingActionButton(
-            onClick = onClickAction, modifier = modifier,
+            onClick = { onClickAction?.invoke() }, modifier = modifier,
             shape = shape, containerColor = containerColor,
             contentColor = contentColor, elevation = elevation,
             content = content
         )
         "extended" -> ExtendedFloatingActionButton(
-            onClick = onClickAction, modifier = modifier,
+            onClick = { onClickAction?.invoke() }, modifier = modifier,
             shape = shape, containerColor = containerColor,
             contentColor = contentColor, elevation = elevation,
             text = {
@@ -361,7 +369,7 @@ internal fun RenderFloatingActionButton(component: UIComponent) {
             }
         )
         else -> FloatingActionButton(
-            onClick = onClickAction, modifier = modifier,
+            onClick = { onClickAction?.invoke() }, modifier = modifier,
             shape = shape, containerColor = containerColor,
             contentColor = contentColor, elevation = elevation,
             content = content
@@ -440,14 +448,16 @@ internal fun RenderSnackBarHost(component: UIComponent) {
 @Composable
 internal fun RenderAppBarAction(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
-    val onClick = props["onClick"]?.jsonPrimitive?.contentOrNull
     val modifier = parseModifier(props)
     val enabled = props["enabled"]?.jsonPrimitive?.booleanOrNull ?: true
     val colors = props["colors"]?.jsonObject?.let { parseIconButtonColors(it) }
         ?: IconButtonDefaults.iconButtonColors()
+    val context = LocalContext.current
+    val navController = LocalKetoyNavController.current
+    val resolvedClick = OnClickResolver.resolve(props["onClick"], context, navController)
 
     IconButton(
-        onClick = { onClick?.let { ActionRegistry.get(it)?.invoke() } },
+        onClick = { resolvedClick?.invoke() },
         modifier = modifier,
         enabled = enabled,
         colors = colors
@@ -493,7 +503,6 @@ internal fun RenderNavigationRail(component: UIComponent) {
 internal fun RenderNavigationRailItem(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
     val selected = props["selected"]?.jsonPrimitive?.booleanOrNull ?: false
-    val onClick = props["onClick"]?.jsonPrimitive?.contentOrNull
     val modifier = parseModifier(props)
     val enabled = props["enabled"]?.jsonPrimitive?.booleanOrNull ?: true
     val alwaysShowLabel = props["alwaysShowLabel"]?.jsonPrimitive?.booleanOrNull ?: true
@@ -501,10 +510,13 @@ internal fun RenderNavigationRailItem(component: UIComponent) {
     val iconContent = props["icon"]?.jsonArray
     val selectedIconContent = props["selectedIcon"]?.jsonArray
     val labelContent = props["label"]?.jsonArray
+    val context = LocalContext.current
+    val navController = LocalKetoyNavController.current
+    val resolvedClick = OnClickResolver.resolve(props["onClick"], context, navController)
 
     NavigationRailItem(
         selected = selected,
-        onClick = { onClick?.let { ActionRegistry.get(it)?.invoke() } },
+        onClick = { resolvedClick?.invoke() },
         icon = {
             if (selected && selectedIconContent != null) {
                 selectedIconContent.forEach { RenderComponent(Json.decodeFromJsonElement(it)) }
@@ -530,7 +542,6 @@ internal fun RenderNavigationRailItem(component: UIComponent) {
 internal fun RenderModalBottomSheet(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
     val modifier = parseModifier(props)
-    val onDismissAction = props["onDismissRequest"]?.jsonPrimitive?.contentOrNull
     val shape = props["shape"]?.jsonPrimitive?.contentOrNull?.let { parseShape(it) }
         ?: BottomSheetDefaults.ExpandedShape
     val containerColor = resolveKetoyColorOrNull(props["containerColor"]?.jsonPrimitive?.contentOrNull)
@@ -542,11 +553,14 @@ internal fun RenderModalBottomSheet(component: UIComponent) {
     val scrimColor = resolveKetoyColorOrNull(props["scrimColor"]?.jsonPrimitive?.contentOrNull)
         ?: BottomSheetDefaults.ScrimColor
     val dragHandleContent = props["dragHandle"]?.jsonArray
+    val context = LocalContext.current
+    val navController = LocalKetoyNavController.current
+    val resolvedDismiss = OnClickResolver.resolve(props["onDismissRequest"], context, navController)
 
     val sheetState = rememberModalBottomSheetState()
 
     ModalBottomSheet(
-        onDismissRequest = { onDismissAction?.let { ActionRegistry.get(it)?.invoke() } },
+        onDismissRequest = { resolvedDismiss?.invoke() },
         modifier = modifier,
         sheetState = sheetState,
         shape = shape,

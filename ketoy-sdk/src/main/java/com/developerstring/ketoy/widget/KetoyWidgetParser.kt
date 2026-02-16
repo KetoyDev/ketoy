@@ -7,8 +7,7 @@ import kotlinx.serialization.json.JsonObject
  * Base interface for all Ketoy widget parsers.
  *
  * A widget parser bridges the gap between a JSON widget definition and
- * its rendered Compose UI. This is the Compose equivalent of Stac's
- * `StacParser<T>` – each parser:
+ * its rendered Compose UI. Each parser:
  *
  * 1. Declares a unique [type] string matching the JSON `"type"` field.
  * 2. Deserialises the JSON [JsonObject] into a model via [getModel].
