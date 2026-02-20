@@ -19,8 +19,15 @@
 - [What is Ketoy?](#what-is-ketoy)
 - [Architecture](#architecture)
 - [Getting Started](#getting-started)
+  - [Modules Overview](#modules-overview)
+    - [`ketoy-sdk` — Core SDUI Library](#ketoy-sdk--core-sdui-library)
+    - [`ketoy-devtools` — Hot-Reload Android Library](#ketoy-devtools--hot-reload-android-library)
+    - [`ketoy-devtools-server` — JVM Dev Server](#ketoy-devtools-server--jvm-dev-server)
+    - [Gradle Plugin Tasks](#gradle-plugin-tasks)
 - [Screen System](#screen-system)
 - [Navigation](#navigation)
+  - [Nav Graph Export & Live Reload](#navigation-graph-export--live-reload)
+  - [Demo: Test Live Screen-to-Screen Navigation](#demo-test-live-screen-to-screen-navigation)
 - [DSL Reference](#dsl-reference)
 - [Custom Action IDs](#custom-action-ids)
 - [Action System](#action-system)
@@ -57,7 +64,7 @@ Ketoy lets you define your Android UI using a type-safe **Kotlin DSL**, serialis
 | **Lightweight** | Only `kotlinx-serialization` and `coil-compose` as transitive deps |
 
 ```
-┌──────────────┐      JSON       ┌──────────────┐      Compose       ┌──────────┐
+┌──────────────┐      JSON       ┌──────────────┐      Compose        ┌──────────┐
 │  K-DSL Code  │ ──────────────▶ │  Ketoy SDK   │ ──────────────────▶ │  Screen  │
 │  (or Server) │                 │  Renderer    │                     │  Pixels  │
 └──────────────┘                 └──────────────┘                     └──────────┘
@@ -92,6 +99,9 @@ ketoy-sdk/                          # Core SDUI library
 ├── navigation/
 │   ├── KetoyNavController.kt      # NavHostController wrapper
 │   ├── KetoyNavHost.kt            # Navigation host composable
+│   ├── KetoyNavGraph.kt           # Serializable nav graph model + registry
+│   ├── KetoyNavDevOverrides.kt    # Live-reloadable nav graph overrides
+│   ├── KetoyComposableRegistry.kt # Route → @Composable destination registry
 │   ├── KetoyNavigator.kt          # Static navigation action builder
 │   ├── KetoyNavigationExecutor.kt # Executes navigation actions
 │   ├── KetoyRoute.kt              # Type-safe route marker interface
@@ -112,7 +122,7 @@ ketoy-sdk/                          # Core SDUI library
 │   ├── KetoyScreen.kt             # Screen class with multi-content support & 7-step resolution
 │   ├── KetoyScreenRegistry.kt     # Global screen registry
 │   ├── KetoyScreenAnnotations.kt  # @KScreen annotation with name param
-│   └── KetoyContent.kt            # KetoyContent composable (contentId-based)
+│   └── KetoyContent.kt            # KetoyContent composable (name-based child)
 ├── theme/
 │   └── KetoyTheme.kt              # Theme modes, colour schemes, provider
 ├── util/                          # Constants, colours, shapes, icons, helpers
@@ -148,6 +158,98 @@ ketoy-devtools-server/              # JVM dev server
 ---
 
 ## Getting Started
+
+### Modules Overview
+
+Ketoy is organised into four modules, each serving a specific role in the SDUI pipeline:
+
+#### `ketoy-sdk` — Core SDUI Library
+
+The main library that powers server-driven UI. Includes:
+
+| Package | Purpose |
+|---------|---------|
+| `model/` | Serializable data classes for every UI element (`KNode`, `KModifier`, `KProps`, etc.) |
+| `dsl/` | Type-safe Kotlin DSL for building UI trees (`KColumn`, `KRow`, `KText`, `KButton`, etc.) |
+| `renderer/` | `@Composable` functions that convert `KNode` trees into native Jetpack Compose UI |
+| `parser/` | JSON value → Compose type converters (colours, shapes, arrangements, modifiers) |
+| `navigation/` | Type-safe + string-based routing, nav graph export, live-reloadable navigation |
+| `cloud/` | Remote screen fetching with 5 cache strategies, cloud nav graph sync |
+| `screen/` | Screen resolution chain (7 sources), registry, annotations, multi-content support |
+| `widget/` | Extensible widget/action parser system for custom components |
+| `registry/` | Component registry, function registry for server-callable Kotlin functions |
+| `core/` | Action registry, variable registry with template resolution, JSON utilities |
+| `theme/` | Material 3 theme system with 28 colour tokens |
+| `export/` | Production export pipeline for screens and navigation manifests |
+| `util/` | Constants, colour palette, icon helpers, shape factories, modifier builders |
+| `annotation/` | `@KComponent` and `@KScreen` annotations for discoverability |
+
+**Dependency:** `kotlinx-serialization-json`, `coil-compose`, `navigation-compose`, Material Icons
+
+#### `ketoy-devtools` — Hot-Reload Android Library
+
+Debug-only Android library that enables live UI preview during development. Include it as `debugImplementation` so it's stripped from release builds.
+
+| Class | Purpose |
+|-------|---------|
+| `KetoyDevWrapper` | Composable wrapper that intercepts screen rendering and injects live JSON from the dev server |
+| `KetoyDevClient` | WebSocket client that connects to `ketoy-devtools-server` and receives real-time updates |
+| `KetoyDevActivity` | Standalone activity for dev tools (connection management, screen list) |
+| `KetoyDevConnectScreen` | QR code scanner + manual IP entry UI for pairing with the dev server |
+| `KetoyDevOverlay` | Debug overlay showing connection status, screen name, and render timing |
+| `KetoyDevExporter` | Exports registered `@KScreen` composables to JSON for the dev server |
+| `KetoyDevStorage` | `SharedPreferences`-backed storage for dev server connection settings |
+| `KetoyDevConfig` | Configuration for dev server host, port, and auto-connect behaviour |
+
+**Dependency:** `ketoy-sdk`, `okhttp3` (WebSocket), `lifecycle-process`
+
+#### `ketoy-devtools-server` — JVM Dev Server
+
+A pure Kotlin/JVM application (no Android dependencies) that runs on your development machine. It serves screen JSON via HTTP + WebSocket and pushes updates to connected devices in real time.
+
+| Class | Purpose |
+|-------|---------|
+| `Main.kt` | CLI entry point — parses `--port`, `--watch`, `--auto-export` flags |
+| `KetoyDevServer` | Combined HTTP + WebSocket server. Serves screen JSON and pushes live updates |
+| `FileWatcher` | Monitors `ketoy-screens/` for `.json` file changes and triggers broadcasts |
+| `SourceWatcher` | Monitors Kotlin source files for `@KScreen` changes and triggers re-export + broadcast |
+| `ScreenManager` | In-memory store for screen JSON and navigation graphs, with versioning |
+| `NetworkUtils` | Local IP address detection for device pairing |
+
+**Endpoints:**
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/screens` | List all available screens |
+| `GET` | `/screens/{name}` | Get a specific screen's JSON |
+| `GET` | `/bundle` | Get all screens + nav graphs bundled |
+| `GET` | `/status` | Server health check |
+| `GET` | `/` | Dashboard HTML page |
+| `WS` | `/ws` | WebSocket for real-time push updates |
+
+**Dependency:** `kotlinx-coroutines-core`, `Java-WebSocket`
+
+#### Gradle Plugin Tasks
+
+Ketoy registers custom Gradle tasks in the root `build.gradle.kts` under the `ketoy` group. These tasks handle the full lifecycle of screen management — from local export to cloud deployment.
+
+| Task | Description |
+|------|-------------|
+| `ketoyDev` | Start dev server with auto-export (edit DSL → live app update) |
+| `ketoyServe` | Start the dev server only (watches JSON files) |
+| `ketoyExport` | Export `@KScreen` DSL screens to `ketoy-screens/` JSON files |
+| `ketoyExportProd` | Export production-ready screens + navigation to `ketoy-export/` |
+| `ketoyPush` | Upload a single screen JSON to the Ketoy cloud server |
+| `ketoyPushAll` | Upload all screens from `ketoy-screens/` at once |
+| `ketoyListScreens` | List all screens deployed for this app on the cloud |
+| `ketoyScreenVersions` | List all versions of a specific screen |
+| `ketoyScreenDetails` | Get full details of a screen including JSON content |
+| `ketoyRollback` | Rollback a screen to a previous version |
+| `ketoyDeleteScreen` | Delete a screen and all its versions from the cloud |
+
+Run `./gradlew tasks --group=ketoy` to see all available tasks.
+
+---
 
 ### 1. Add the SDK module
 
@@ -214,7 +316,7 @@ Ketoy screens provide a unified content resolution chain. Each screen tries 7 so
 
 ### Screen Metadata
 
-Screen metadata (name, display name, description, version) lives on `KetoyScreen`, **not** on individual content blocks. A single `KetoyScreen` can hold **multiple `KetoyContent` blocks**, each identified by a `contentId`.
+Screen metadata (name, display name, description, version) lives on `KetoyScreen`, **not** on individual content blocks. A single `KetoyScreen` can hold **multiple `KetoyContent` blocks**, each identified by a `name`. `KetoyContent` is a lightweight child that can be freely interleaved with native Jetpack Compose code.
 
 ### Creating Screens
 
@@ -247,13 +349,13 @@ val dashboard = KetoyScreen(
     screenName = "dashboard",
     displayName = "Dashboard",
     description = "Overview with header and body"
-).addContent(contentId = "header", nodeBuilder = { buildDashboardHeader() })
- .addContent(contentId = "body",   nodeBuilder = { buildDashboardBody() })
+).addContent(name = "header", nodeBuilder = { buildDashboardHeader() })
+ .addContent(name = "body",   nodeBuilder = { buildDashboardBody() })
 ```
 
 ### Using `@KScreen` + `KetoyContent`
 
-The recommended approach for app screens. The `@KScreen` annotation marks a composable as a Ketoy screen, and `KetoyContent` provides the content block(s):
+The recommended approach for app screens. The `@KScreen` annotation marks a composable as a Ketoy screen, and `KetoyContent` provides the DSL content block(s). Screen-level settings (`screenName`, `cloudEnabled`, `colorScheme`) live on `@KScreen`, while each `KetoyContent` is a lightweight child that can be freely interleaved with native Jetpack Compose code.
 
 #### Single content (default `"main"`)
 
@@ -262,7 +364,6 @@ The recommended approach for app screens. The `@KScreen` annotation marks a comp
 @Composable
 fun HomeScreen() {
     KetoyContent(
-        cloudEnabled = true,
         nodeBuilder = { buildHomeUI() }
     )
 }
@@ -272,30 +373,38 @@ fun buildHomeUI() = KColumn {
 }
 ```
 
-#### Multiple contents in one screen
+#### Mixed Compose + DSL (multiple KetoyContent blocks)
 
 ```kotlin
-@KScreen(name = "dashboard")
+@KScreen(name = "home")
 @Composable
-fun DashboardScreen() {
+fun HomeScreen() {
     Column {
-        KetoyContent(contentId = "header", nodeBuilder = { buildHeader() })
-        KetoyContent(contentId = "body",   nodeBuilder = { buildBody() })
+        // DSL section — hot-reloadable from dev-server / cloud
+        KetoyContent(name = "cards", nodeBuilder = { buildCards() })
+
+        // Native Compose section — not managed by Ketoy
+        Text("Expenses: $2,150.00")
+
+        // Another DSL section
+        KetoyContent(name = "transactions", nodeBuilder = { buildTransactions() })
+
+        // Native Compose buttons
+        Button(onClick = {}) { Text("Add Money") }
     }
 }
 ```
 
-When exported, a multi-content screen produces a single JSON file with all contents wrapped in metadata:
+When exported, the screen produces a single JSON file with all `KetoyContent` blocks wrapped by name:
 
 ```json
 {
-  "screenName": "dashboard",
-  "displayName": "Dashboard",
-  "description": "Overview with header and body",
+  "screenName": "home",
+  "displayName": "Home",
   "version": "1.0.0",
   "contents": {
-    "header": { "type": "Column", "children": [...] },
-    "body":   { "type": "Column", "children": [...] }
+    "cards": { "type": "Column", "children": [...] },
+    "transactions": { "type": "Column", "children": [...] }
   }
 }
 ```
@@ -421,6 +530,308 @@ val action = KetoyNavigator.navigateToJson(jsonString, style = NavigationStyle.N
 // Pop back
 val action = KetoyNavigator.popBackStack(result = mapOf("status" to "done"))
 ```
+
+### Navigation Graph Export & Live Reload
+
+Ketoy can export your app's navigation graph to JSON and live-reload it via the dev server. This lets you **reorder, add, or remove destinations** (tabs, bottom-bar items) without recompiling.
+
+#### How it works
+
+```
+ExportScreensTest            ketoy-screens/          Dev Server         App
+     │                            │                      │                │
+     │── export nav graph  ──────▶│ nav_main.json        │                │
+     │                            │                      │                │
+     │                            │──── file watcher ───▶│                │
+     │                            │                      │── WebSocket ──▶│
+     │                            │                      │   nav_update   │── update bottom bar
+```
+
+1. **Define** routes in `app/.../navigation/AppNavigation.kt`
+2. **Define** the nav graph in `ExportScreensTest`
+3. **Export** via `./gradlew ketoyExport`
+4. **Serve** via `./gradlew ketoyDev` (or `./ketoy-serve.sh`)
+5. **Connect** your app to the dev server
+6. **Edit** `ketoy-screens/nav_main.json` → changes appear instantly
+
+#### Step 1 — Define Type-Safe Routes
+
+In `app/src/main/java/.../navigation/AppNavigation.kt`:
+
+```kotlin
+@Serializable data object HomeRoute : KetoyRoute
+@Serializable data object AnalyticsRoute : KetoyRoute
+@Serializable data object CardsRoute : KetoyRoute
+@Serializable data object HistoryRoute : KetoyRoute
+@Serializable data object ProfileRoute : KetoyRoute
+
+// Bottom nav item descriptor (UI metadata)
+data class BottomNavItem<T : KetoyRoute>(
+    val route: T,
+    val label: String,
+    val icon: KIconRef,
+    val selectedIcon: KIconRef,
+)
+
+val bottomNavItems = listOf(
+    BottomNavItem(HomeRoute, "Home", KIcons.Outlined.Home, KIcons.Filled.Home),
+    BottomNavItem(AnalyticsRoute, "Analytics", KIcons.Outlined.Insights, KIcons.Filled.Insights),
+    BottomNavItem(CardsRoute, "Cards", KIcons.Outlined.CreditCard, KIcons.Filled.CreditCard),
+    BottomNavItem(HistoryRoute, "History", KIcons.Outlined.Schedule, KIcons.Filled.Schedule),
+    BottomNavItem(ProfileRoute, "Profile", KIcons.Outlined.Person, KIcons.Filled.Person),
+)
+```
+
+#### Step 2 — Define the Nav Graph for Export
+
+In `ExportScreensTest.kt`, add a nav graph definition alongside your screen exports:
+
+```kotlin
+private val navGraphs = listOf(
+    KetoyNavGraph(
+        navHostName = "main",        // must match KetoyNavHost(navHostName = "main")
+        startRoute = "home",
+        destinations = listOf(
+            KetoyNavDestination(
+                route = "home",             // string key for this destination
+                screenName = "home",        // matches ProvideKetoyScreen(screenName = ...)
+                label = "Home",
+                icon = "home",              // icon name from KIcons
+                selectedIcon = "home",
+                isStartDestination = true
+            ),
+            KetoyNavDestination(
+                route = "analytics", screenName = "analytics",
+                label = "Analytics", icon = "insights", selectedIcon = "insights"
+            ),
+            KetoyNavDestination(
+                route = "cards", screenName = "cards",
+                label = "Cards", icon = "credit_card", selectedIcon = "credit_card"
+            ),
+            KetoyNavDestination(
+                route = "history", screenName = "history_screen",
+                label = "History", icon = "schedule", selectedIcon = "schedule"
+            ),
+            KetoyNavDestination(
+                route = "profile", screenName = "profile",
+                label = "Profile", icon = "person", selectedIcon = "person"
+            ),
+        )
+    )
+)
+```
+
+#### Step 3 — Wire KetoyNavHost
+
+In your `MainActivity`, use `KetoyNavHost` with the `navHostName` parameter:
+
+```kotlin
+KetoyNavHost(
+    startRoute = HomeRoute,
+    navHostName = "main",       // links to nav_main.json
+    modifier = Modifier.fillMaxSize().padding(innerPadding),
+    navController = navController
+) {
+    screen<HomeRoute> { HomeScreen(...) }
+    screen<AnalyticsRoute> { AnalyticsScreen(...) }
+    screen<CardsRoute> { CardsScreen(...) }
+    screen<HistoryRoute> { HistoryScreen(...) }
+    screen<ProfileRoute> { ProfileScreen(...) }
+}
+```
+
+#### Step 4 — Bottom Bar with Nav Override Support
+
+The bottom bar reads from `KetoyNavDevOverrides` when connected to the dev server, falling back to hardcoded items otherwise:
+
+```kotlin
+val navOverride = KetoyNavDevOverrides.overrides["main"]
+
+NavigationBar {
+    val navDests = navOverride?.destinations
+    if (navDests != null && navDests.isNotEmpty()) {
+        // Live-reload path: render from nav_main.json
+        navDests.forEach { dest ->
+            val selected = backStackEntry?.destination
+                ?.isRouteSelected(dest.route) ?: false
+            NavigationBarItem(
+                selected = selected,
+                onClick = {
+                    resolveTypeSafeRoute(dest.route)?.let { route ->
+                        navController.navigate(route) { ... }
+                    }
+                },
+                icon = { resolveIcon(dest.icon)?.let { Icon(it, dest.label) } },
+                label = { Text(dest.label) }
+            )
+        }
+    } else {
+        // Compile-time path: hardcoded bottomNavItems
+        bottomNavItems.forEach { item -> ... }
+    }
+}
+```
+
+#### Step 5 — Route Resolution Helpers
+
+Add these to your `MainActivity.kt` to map override route strings ↔ type-safe routes:
+
+```kotlin
+/** Map nav-override route string → type-safe route object. */
+private fun resolveTypeSafeRoute(route: String): Any? = when (route) {
+    "home" -> HomeRoute
+    "analytics" -> AnalyticsRoute
+    "cards" -> CardsRoute
+    "history" -> HistoryRoute
+    "profile" -> ProfileRoute
+    else -> null
+}
+
+/** Check if a NavDestination matches an override route string. */
+private fun NavDestination.isRouteSelected(route: String): Boolean = when (route) {
+    "home" -> hasRoute<HomeRoute>()
+    "analytics" -> hasRoute<AnalyticsRoute>()
+    "cards" -> hasRoute<CardsRoute>()
+    "history" -> hasRoute<HistoryRoute>()
+    "profile" -> hasRoute<ProfileRoute>()
+    else -> false
+}
+```
+
+> **Adding a new route?** Add entries in all three places:
+> 1. `AppNavigation.kt` — `@Serializable data object NewRoute : KetoyRoute` + add to `bottomNavItems`
+> 2. `ExportScreensTest` — add a `KetoyNavDestination` to the nav graph
+> 3. `MainActivity.kt` — add cases to `resolveTypeSafeRoute()` and `isRouteSelected()`
+
+#### The nav_main.json Format
+
+After running `./gradlew ketoyExport`, the file `ketoy-screens/nav_main.json` is generated. Edit it live while the dev server is running:
+
+```json
+{
+    "navHostName": "main",
+    "startRoute": "home",
+    "destinations": [
+        {
+            "route": "home",
+            "screenName": "home",
+            "label": "Home",
+            "icon": "home",
+            "selectedIcon": "home",
+            "isStartDestination": true
+        }
+    ]
+}
+```
+
+| Field | Description |
+|---|---|
+| `navHostName` | Must match the `navHostName` param on `KetoyNavHost` |
+| `startRoute` | Default start destination route string |
+| `route` | Unique route key used for bottom-bar mapping |
+| `screenName` | Matches `ProvideKetoyScreen(screenName = ...)` for hot-reload |
+| `label` | Display text in the bottom bar |
+| `icon` / `selectedIcon` | Icon name from `KIcons` (e.g. `"home"`, `"person"`, `"credit_card"`) |
+| `isStartDestination` | Mark one destination as the start route |
+
+#### Quick Reference
+
+| Task | Command / Location |
+|---|---|
+| Define routes | `app/.../navigation/AppNavigation.kt` |
+| Define nav graph for export | `ExportScreensTest.kt` → `navGraphs` list |
+| Export nav JSON | `./gradlew ketoyExport` |
+| Live-serve nav JSON | `./gradlew ketoyDev` |
+| Edit nav live | Modify `ketoy-screens/nav_main.json` while server runs |
+| Multiple nav hosts | Add more `KetoyNavGraph` entries with different `navHostName` |
+
+### Demo: Test Live Screen-to-Screen Navigation
+
+The **Nav Demo** demonstrates Ketoy's key navigation feature: **define the nav graph in JSON** while the **screen content is native Compose**. It uses `KetoyComposableRegistry` to map JSON route strings to real `@Composable` screen functions, and `KetoyNavHost` to render them with full screen-to-screen navigation.
+
+#### How it works
+
+1. **4 Compose screens** (`DemoExploreScreen`, `DemoFavoritesScreen`, `DemoNotificationsScreen`, `DemoSettingsScreen`) are proper full-page Compose UIs with navigation buttons.
+2. **`KetoyComposableRegistry`** maps route strings (`"explore"`, `"favorites"`, etc.) to those Compose functions.
+3. **`KetoyNavHost(navHostName = "demo")`** reads `nav_demo.json` via `KetoyNavDevOverrides["demo"]` and resolves each destination to the registered composable.
+4. Screens navigate to each other using `LocalKetoyNavController.current?.navigateToRoute("route")`.
+
+#### Quick start
+
+```bash
+# 1. Export screens + nav graphs
+./gradlew ketoyExport
+
+# 2. Start the dev server
+./gradlew ketoyDev
+
+# 3. Run the app, connect to the dev server
+# 4. Open the side drawer → tap "Nav Demo"
+```
+
+You'll see the Explore screen with navigation cards leading to Favorites, Notifications, and Settings. Now edit `ketoy-screens/nav_demo.json` while the server is running:
+
+#### Things to try
+
+| Change | What to edit in `nav_demo.json` |
+|---|---|
+| **Change start screen** | Change `"startRoute": "explore"` → `"startRoute": "favorites"` |
+| **Remove a destination** | Delete one destination object from the `destinations` array |
+| **Add a destination** | Add a new destination with a registered route |
+| **Rename a screen** | Change `"label": "Settings"` → `"label": "Preferences"` |
+
+Each change appears instantly in the running app — no rebuild needed.
+
+#### Composable Destination Registry
+
+Register native Compose screens for JSON-defined routes:
+
+```kotlin
+// Register composable destinations
+KetoyComposableRegistry.register("explore") { ExploreScreen() }
+KetoyComposableRegistry.register("favorites") { FavoritesScreen() }
+
+// nav_demo.json can now reference these routes:
+// { "route": "explore", "screenName": "explore", "label": "Explore", ... }
+
+// KetoyNavHost resolves destinations in this order:
+// 1. KetoyComposableRegistry (native Compose screens)
+// 2. KetoyScreenRegistry (JSON-rendered SDUI screens)
+// 3. Fallback
+```
+
+#### Data-Driven Navigation with `LocalKetoyNavGraph`
+
+Composable screens can read the active nav graph via `LocalKetoyNavGraph` — this makes navigation targets live-editable from JSON instead of hardcoded in Kotlin:
+
+```kotlin
+@Composable
+fun MyHubScreen() {
+    val nav = LocalKetoyNavController.current
+    val navGraph = LocalKetoyNavGraph.current
+    val destinations = navGraph?.destinations?.filter { !it.isStartDestination } ?: emptyList()
+
+    // Navigation cards built from JSON — edit nav graph, UI updates live
+    destinations.forEach { dest ->
+        Button(onClick = { nav?.navigateToRoute(dest.route) }) {
+            Text(dest.label)
+        }
+    }
+}
+```
+
+This is how the demo Explore screen works: zero hardcoded route strings, all navigation targets come from `nav_demo.json`.
+
+#### Where the code lives
+
+| File | Purpose |
+|---|---|
+| `ketoy-sdk/.../KetoyComposableRegistry.kt` | Maps route strings to `@Composable` functions |
+| `app/.../screens/demo/DemoScreens.kt` | 4 Compose screens — Explore reads `LocalKetoyNavGraph` for data-driven nav |
+| `app/.../screens/DemoNavScreen.kt` | Hosts `KetoyNavHost(navHostName = "demo")` + registers composables |
+| `app/.../navigation/AppNavigation.kt` | `DemoNavRoute` — route to reach the demo screen |
+| `ExportScreensTest.kt` | Exports `nav_demo.json` (the `"demo"` nav graph) |
+| `ketoy-screens/nav_demo.json` | The file you edit for live changes |
 
 ---
 
@@ -1144,12 +1555,11 @@ Ketoy.initialize(cloudConfig = cloudConfig)
 ### Screen-Level Cloud Toggle
 
 ```kotlin
-@KScreen
+@KScreen(name = "home")
 @Composable
 fun HomeScreen() {
+    // cloudEnabled is controlled at the KetoyScreen level
     KetoyContent(
-        screenName = "home",
-        cloudEnabled = true,   // Enable cloud for this screen
         nodeBuilder = { buildHomeUI() }
     )
 }
@@ -1210,7 +1620,7 @@ Available tokens: `primary`, `onPrimary`, `primaryContainer`, `onPrimaryContaine
 
 ## DevTools & Hot Reload
 
-Ketoy includes an Expo-like hot-reload system for rapid UI development.
+Ketoy includes a built-in hot-reload system for rapid UI development.
 
 ### Setup
 
@@ -1295,6 +1705,7 @@ KETOY_PACKAGE_NAME=com.yourcompany.app
 | `./gradlew ketoyDev` | Start dev server with auto-export — edit DSL → live app update |
 | `./gradlew ketoyServe` | Start the dev server only (no auto-export) |
 | `./gradlew ketoyExport` | Export DSL screens to `ketoy-screens/` JSON files |
+| `./gradlew ketoyExportProd` | Export production-ready screens + navigation to `ketoy-export/` |
 | `./gradlew ketoyPush` | Upload a single screen JSON to the cloud server |
 | `./gradlew ketoyPushAll` | Upload **all** screens from `ketoy-screens/` at once |
 | `./gradlew ketoyListScreens` | List all screens deployed for this app |
@@ -1332,6 +1743,51 @@ Exports all `@KScreen` annotated screens to JSON files in `ketoy-screens/`.
 ```
 
 This runs the `ExportScreensTest` unit test which invokes each screen builder and writes the serialised JSON.
+
+### `ketoyExportProd` — Production Export
+
+Exports all screens and navigation graphs to `ketoy-export/` in a production-ready format. Unlike `ketoyExport` (which targets the dev server), this generates clean, deployment-ready JSON with manifests.
+
+```bash
+./gradlew ketoyExportProd
+```
+
+**Output structure:**
+
+```
+ketoy-export/
+├── home.json                   # Individual screen JSON
+├── profile.json
+├── analytics.json
+├── cards.json
+├── history_screen.json
+├── nav_main.json               # Navigation graph
+├── nav_demo.json
+├── navigation_manifest.json    # Combined nav graph manifest
+└── screen_manifest.json        # Screen index manifest
+```
+
+**Key differences from `ketoyExport`:**
+
+| Aspect | `ketoyExport` | `ketoyExportProd` |
+|--------|---------------|-------------------|
+| Output directory | `ketoy-screens/` | `ketoy-export/` |
+| Purpose | Dev server hot-reload | Production bundling / Cloud push |
+| Navigation manifests | ✖ | ✔ (`navigation_manifest.json`, `screen_manifest.json`) |
+| Variable templates | Resolved values | Keeps `{{data:...}}` placeholders |
+
+**Typical workflow:**
+
+```bash
+# Export production JSON
+./gradlew ketoyExportProd
+
+# Push all to cloud
+./gradlew ketoyPushAll -Pversion=1.0.0
+
+# Or bundle into app assets
+cp -r ketoy-export/* app/src/main/assets/screens/
+```
 
 ### `ketoyPush` — Upload a Screen
 

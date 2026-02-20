@@ -1,3 +1,13 @@
+/**
+ * Scaffold-component parser for the Ketoy SDUI engine.
+ *
+ * Contains composable and non-composable helpers that convert JSON objects
+ * into the Compose Material 3 types required by `Scaffold`, `TopAppBar`,
+ * `NavigationDrawer`, `NavigationBar`, and `FloatingActionButton` components.
+ *
+ * @see resolveKetoyColor
+ * @see parseShape
+ */
 package com.developerstring.ketoy.parser
 
 import androidx.compose.foundation.layout.WindowInsets
@@ -19,6 +29,16 @@ import kotlinx.serialization.json.*
 
 // ─── Window Insets ────────────────────────────────────────────────
 
+/**
+ * Parses a window-insets JSON object into a Compose [WindowInsets] instance.
+ *
+ * When `type` is specified, the corresponding system-defined insets are
+ * returned (e.g. `"statusBars"`, `"navigationBars"`, `"ime"`).
+ * Otherwise, explicit `left`, `top`, `right`, `bottom` dp values are used.
+ *
+ * @param windowInsetsObject the JSON descriptor.
+ * @return the resolved [WindowInsets].
+ */
 @Composable
 fun parseWindowInsets(windowInsetsObject: JsonObject): WindowInsets {
     val type = windowInsetsObject["type"]?.jsonPrimitive?.content
@@ -44,6 +64,16 @@ fun parseWindowInsets(windowInsetsObject: JsonObject): WindowInsets {
 
 // ─── TopAppBar Colours ────────────────────────────────────────────
 
+/**
+ * Parses a JSON object into [TopAppBarColors] for Material 3 top app bars.
+ *
+ * Recognised keys: `containerColor`, `scrolledContainerColor`,
+ * `navigationIconContentColor`, `titleContentColor`, `actionIconContentColor`.
+ * All values are resolved via [resolveKetoyColor].
+ *
+ * @param colorsObject the JSON descriptor.
+ * @return the configured [TopAppBarColors].
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun parseTopAppBarColors(colorsObject: JsonObject): TopAppBarColors {
@@ -58,6 +88,15 @@ fun parseTopAppBarColors(colorsObject: JsonObject): TopAppBarColors {
 
 // ─── TopAppBar Scroll Behaviour ───────────────────────────────────
 
+/**
+ * Parses a JSON object into a [TopAppBarScrollBehavior].
+ *
+ * Recognised `type` values: `"pinnedScroll"`, `"enterAlwaysScroll"`,
+ * `"exitUntilCollapsedScroll"`.
+ *
+ * @param scrollBehaviorObject the JSON descriptor.
+ * @return the matching [TopAppBarScrollBehavior], or `null` for unknown types.
+ */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun parseTopAppBarScrollBehavior(scrollBehaviorObject: JsonObject): TopAppBarScrollBehavior? {
@@ -71,6 +110,16 @@ fun parseTopAppBarScrollBehavior(scrollBehaviorObject: JsonObject): TopAppBarScr
 
 // ─── NavigationDrawerItem Colours ─────────────────────────────────
 
+/**
+ * Parses a JSON object into [NavigationDrawerItemColors].
+ *
+ * Recognised keys: `selectedContainerColor`, `unselectedContainerColor`,
+ * `selectedIconColor`, `unselectedIconColor`, `selectedTextColor`,
+ * `unselectedTextColor`, `selectedBadgeColor`, `unselectedBadgeColor`.
+ *
+ * @param colorsObject the JSON descriptor.
+ * @return the configured [NavigationDrawerItemColors].
+ */
 @Composable
 fun parseNavigationDrawerItemColors(colorsObject: JsonObject): NavigationDrawerItemColors {
     return NavigationDrawerItemDefaults.colors(
@@ -87,6 +136,15 @@ fun parseNavigationDrawerItemColors(colorsObject: JsonObject): NavigationDrawerI
 
 // ─── IconButton Colours ───────────────────────────────────────────
 
+/**
+ * Parses a JSON object into Material 3 [IconButtonColors].
+ *
+ * Recognised keys: `containerColor`, `contentColor`,
+ * `disabledContainerColor`, `disabledContentColor`.
+ *
+ * @param colorsObject the JSON descriptor.
+ * @return the configured [IconButtonColors].
+ */
 @Composable
 fun parseIconButtonColors(colorsObject: JsonObject): IconButtonColors {
     return IconButtonDefaults.iconButtonColors(
@@ -99,6 +157,16 @@ fun parseIconButtonColors(colorsObject: JsonObject): IconButtonColors {
 
 // ─── NavigationBarItem Colours ────────────────────────────────────
 
+/**
+ * Parses a JSON object into Material 3 [NavigationBarItemColors].
+ *
+ * Recognised keys: `selectedIconColor`, `selectedTextColor`, `indicatorColor`,
+ * `unselectedIconColor`, `unselectedTextColor`, `disabledIconColor`,
+ * `disabledTextColor`.
+ *
+ * @param colorsObject the JSON descriptor.
+ * @return the configured [NavigationBarItemColors].
+ */
 @Composable
 fun parseNavigationBarItemColors(colorsObject: JsonObject): NavigationBarItemColors {
     return NavigationBarItemDefaults.colors(
@@ -114,6 +182,15 @@ fun parseNavigationBarItemColors(colorsObject: JsonObject): NavigationBarItemCol
 
 // ─── FAB Elevation ────────────────────────────────────────────────
 
+/**
+ * Parses FAB elevation values from a JSON object.
+ *
+ * Recognised keys (all in dp): `defaultElevation`, `pressedElevation`,
+ * `focusedElevation`, `hoveredElevation`.
+ *
+ * @param elevationObject the JSON descriptor.
+ * @return the configured [FloatingActionButtonElevation].
+ */
 @Composable
 fun parseFabElevation(elevationObject: JsonObject): FloatingActionButtonElevation {
     return FloatingActionButtonDefaults.elevation(
@@ -126,6 +203,15 @@ fun parseFabElevation(elevationObject: JsonObject): FloatingActionButtonElevatio
 
 // ─── FAB Position ─────────────────────────────────────────────────
 
+/**
+ * Resolves a FAB position string into a Compose [FabPosition].
+ *
+ * Recognised values: `"start"`, `"center"`, `"end"`, `"endOverlay"`,
+ * `"centerDocked"`, `"endDocked"`.
+ *
+ * @param position the position string from the JSON payload.
+ * @return the corresponding [FabPosition]; defaults to [FabPosition.End].
+ */
 fun parseFabPosition(position: String?): FabPosition {
     return when (position) {
         "start" -> FabPosition.Start

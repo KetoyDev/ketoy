@@ -14,82 +14,88 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.developerstring.ketoy.dsl.KUniversalScope
 import com.developerstring.ketoy.model.KNode
-import com.developerstring.ketoy.theme.KetoyColorScheme
 
 /**
- * The composable entry point for rendering a content block within a [KetoyScreen].
+ * A **child** composable that represents one DSL content block inside
+ * a [ProvideKetoyScreen]-wrapped parent.
  *
- * Screen metadata (name, displayName, description, version) lives on the
- * parent [KetoyScreen], not here. Each `KetoyContent` is identified by a
- * [contentId] (default `"main"`), so a single `@KScreen` can contain
- * **multiple** content blocks.
+ * Screen-level settings (`screenName`, `cloudEnabled`, `colorScheme`)
+ * are **not** set here — they belong on the parent [KetoyScreen]
+ * (provided via [LocalKetoyScreen]). Each `KetoyContent` is identified
+ * by a unique [name] (default `"main"`), so a single screen can
+ * contain **multiple** DSL content blocks freely interleaved with
+ * native Jetpack Compose code.
  *
  * `KetoyContent` **self-registers** its content entry with the parent
- * [KetoyScreen] (obtained from [LocalKetoyScreen]) and delegates rendering
- * to the screen's resolution chain.
+ * [KetoyScreen] and renders the DSL-driven UI in-place using the
+ * screen’s full resolution chain.
  *
- * ## Resolution order
+ * ## Resolution order (inherited from parent [KetoyScreen])
  * 1. Dev-server override (hot-reload JSON)
- * 2. Ketoy Cloud (if cloud is configured)
- * 3. Local JSON
- * 4. Asset file
+ * 2. Ketoy Cloud (if cloud is configured on the parent)
+ * 3. Local JSON ([KetoyScreen.ContentEntry.jsonContent])
+ * 4. Asset file ([KetoyScreen.ContentEntry.assetPath])
  * 5. Composable fallback
  * 6. DSL fallback ([dslBuilder] or [nodeBuilder])
- * 7. "Empty content" placeholder
+ * 7. “Empty content” placeholder
  *
  * ## Usage — single content
  * ```kotlin
- * @KScreen(name = "home")
  * @Composable
  * fun HomeScreen() {
- *     KetoyContent(nodeBuilder = { buildHomeUI() })
+ *     ProvideKetoyScreen(screenName = "home") {
+ *         KetoyContent(nodeBuilder = { buildHomeUI() })
+ *     }
  * }
  * ```
  *
- * ## Usage — multiple contents
+ * ## Usage — mixed Compose + DSL
  * ```kotlin
- * @KScreen(name = "dashboard")
  * @Composable
  * fun DashboardScreen() {
- *     KetoyContent(contentId = "header", nodeBuilder = { buildHeader() })
- *     KetoyContent(contentId = "body")   { KText("Hello") }
+ *     ProvideKetoyScreen(screenName = "dashboard") {
+ *         KetoyContent(name = "cards", nodeBuilder = { buildCards() })
+ *         Text("Native Compose section")
+ *         KetoyContent(name = "transactions", nodeBuilder = { buildTxns() })
+ *         Button(onClick = {}) { Text("Compose Button") }
+ *     }
  * }
  * ```
  *
- * ## Standalone usage (without LocalKetoyScreen)
- *
- * If no parent [KetoyScreen] is available via [LocalKetoyScreen],
- * pass a [screenName] to auto-create and register one:
+ * ## Usage — trailing-lambda DSL
  * ```kotlin
- * KetoyContent(screenName = "history", nodeBuilder = { buildHistory() })
+ * KetoyContent("body") {
+ *     KText("Hello from DSL")
+ * }
  * ```
  *
- * @param contentId    Identifies this content block within the screen (default `"main"`).
- * @param screenName   Optional screen name — only needed when there is no parent
- *                     [KetoyScreen] in the composition (standalone usage).
- * @param cloudEnabled Whether to attempt fetching UI from Ketoy Cloud.
- * @param colorScheme  Optional color scheme override for the renderer.
- * @param nodeBuilder  A lambda returning a [KNode] tree.
- * @param dslBuilder   Inline DSL builder. If both [nodeBuilder] and [dslBuilder]
- *                     are provided, [nodeBuilder] takes priority.
+ * @param name        Identifies this content block within the screen
+ *                    (default `"main"`). Must be unique among siblings.
+ * @param nodeBuilder A lambda returning a [KNode] tree. Takes precedence
+ *                    over [dslBuilder].
+ * @param dslBuilder  Inline DSL builder using [KUniversalScope]. If both
+ *                    [nodeBuilder] and [dslBuilder] are provided, [nodeBuilder]
+ *                    is used.
+ * @throws IllegalStateException if no parent [KetoyScreen] is found via
+ *         [LocalKetoyScreen] (i.e. not inside [ProvideKetoyScreen]).
+ * @see ProvideKetoyScreen
+ * @see KetoyScreen
+ * @see LocalKetoyScreen
  */
 @Composable
 fun KetoyContent(
-    contentId: String = "main",
-    screenName: String? = null,
-    cloudEnabled: Boolean = true,
-    colorScheme: KetoyColorScheme? = null,
+    name: String = "main",
     nodeBuilder: (() -> KNode)? = null,
     dslBuilder: (KUniversalScope.() -> Unit)? = null
 ) {
-    // Resolve or create the parent screen
+    // Resolve the parent screen from LocalKetoyScreen
     val parentScreen = LocalKetoyScreen.current
-        ?: resolveOrCreateScreen(screenName, cloudEnabled)
+        ?: error("KetoyContent must be used inside a @KScreen-annotated composable (no parent KetoyScreen found via LocalKetoyScreen).")
 
     // Register this content entry with the screen
-    remember(contentId, nodeBuilder, dslBuilder) {
+    remember(name, nodeBuilder, dslBuilder) {
         parentScreen.addContent(
-            contentId = contentId,
+            name = name,
             nodeBuilder = nodeBuilder,
             dslBuilder = dslBuilder
         )
@@ -97,55 +103,37 @@ fun KetoyContent(
 
     // Render using the screen's resolution chain
     parentScreen.ContentInternal(
-        contentId = contentId,
-        colorScheme = colorScheme,
+        name = name,
+        colorScheme = parentScreen.colorScheme,
         loadingContent = { DefaultContentLoading() },
         errorContent = { msg, retry -> DefaultContentError(msg, retry) }
     )
 }
 
 /**
- * Overload with trailing-lambda for inline DSL:
+ * Convenience overload with a trailing-lambda for inline DSL.
+ *
  * ```kotlin
  * KetoyContent("body") {
  *     KText("Hello")
+ *     KButton(text = "Click me", onClick = "navigate://settings")
  * }
  * ```
+ *
+ * @param name       Content block identifier (default `"main"`).
+ * @param dslBuilder Inline DSL builder using [KUniversalScope].
+ * @see KetoyContent
  */
 @Composable
 fun KetoyContent(
-    contentId: String = "main",
-    screenName: String? = null,
-    cloudEnabled: Boolean = true,
-    colorScheme: KetoyColorScheme? = null,
+    name: String = "main",
     dslBuilder: KUniversalScope.() -> Unit
 ) {
     KetoyContent(
-        contentId = contentId,
-        screenName = screenName,
-        cloudEnabled = cloudEnabled,
-        colorScheme = colorScheme,
+        name = name,
         nodeBuilder = null,
         dslBuilder = dslBuilder
     )
-}
-
-/**
- * Resolves an existing screen from the registry or creates & registers one.
- * Used when `KetoyContent` is called without a parent `LocalKetoyScreen`.
- */
-private fun resolveOrCreateScreen(
-    screenName: String?,
-    cloudEnabled: Boolean
-): KetoyScreen {
-    val name = screenName
-        ?: error("KetoyContent requires either a parent KetoyScreen (via LocalKetoyScreen) or an explicit screenName parameter.")
-
-    return KetoyScreenRegistry.get(name)
-        ?: KetoyScreen(
-            screenName = name,
-            cloudEnabled = cloudEnabled
-        ).also { KetoyScreenRegistry.register(it) }
 }
 
 @Composable

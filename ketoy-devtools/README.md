@@ -1,6 +1,6 @@
 # Ketoy Dev Tools — Hot-Reload for Ketoy UI
 
-> **Like Expo for React Native, but for Ketoy Android apps.**
+> **Live hot-reload for Ketoy Server-Driven Android UI.**
 > Edit your UI JSON → See changes instantly on your emulator/device.
 
 ## Architecture

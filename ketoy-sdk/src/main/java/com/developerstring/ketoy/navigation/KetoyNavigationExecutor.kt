@@ -6,20 +6,33 @@ import com.developerstring.ketoy.renderer.JSONStringToUI
 import kotlinx.serialization.json.Json
 
 /**
- * Executes [KNavigateAction]s against a [KetoyNavController].
+ * Executes [KNavigateAction] instances against a [KetoyNavController].
  *
- * This is the bridge between JSON-driven navigation actions and the
- * actual Compose Navigation runtime. It handles:
- * - Route-based navigation (Ketoy screens)
- * - Inline JSON screen rendering (push a JSON widget tree)
- * - Asset-based screen rendering (push from a local JSON asset)
- * - Pop and popAll
+ * This is the bridge between JSON-driven navigation actions and the actual
+ * Jetpack Compose Navigation runtime. The executor handles all target types:
  *
- * ## Usage (from a JSON action handler)
+ * | Target         | Description                                               |
+ * |----------------|-----------------------------------------------------------|
+ * | `routeName`    | Navigates to a registered Ketoy screen by route name      |
+ * | `widgetJson`   | Registers a temporary inline JSON screen and navigates    |
+ * | `assetPath`    | Loads a JSON asset, registers it, and navigates           |
+ * | *(pop)*        | Pops the back stack or resets to root                     |
+ *
+ * ### Usage from a JSON action handler
  * ```kotlin
- * val action = Json.decodeFromString<KNavigateAction>(actionJson)
+ * // Decode and execute a navigation action from JSON
+ * val actionJson = """{ "routeName": "detail", "navigationStyle": "navigate" }"""
+ * KetoyNavigationExecutor.executeFromJson(navController, actionJson, context)
+ *
+ * // Or execute a pre-built KNavigateAction
+ * val action = KetoyNavigator.navigateToScreen("detail", mapOf("id" to "42"))
  * KetoyNavigationExecutor.execute(navController, action, context)
  * ```
+ *
+ * @see KNavigateAction
+ * @see KetoyNavigator
+ * @see KetoyNavController
+ * @see NavigationStyle
  */
 object KetoyNavigationExecutor {
 
@@ -28,9 +41,20 @@ object KetoyNavigationExecutor {
     /**
      * Execute a [KNavigateAction] using the given [navController].
      *
-     * @param navController The Ketoy nav controller to perform navigation on.
-     * @param action        The navigation action to execute.
-     * @param context       Android context (needed for asset loading).
+     * Dispatches to the appropriate navigation method based on the action's
+     * [NavigationStyle] and target type ([KNavigateAction.routeName],
+     * [KNavigateAction.widgetJson], or [KNavigateAction.assetPath]).
+     *
+     * For inline JSON and asset-based screens, a temporary screen is registered
+     * in [KetoyScreenRegistry][com.developerstring.ketoy.screen.KetoyScreenRegistry]
+     * with a unique timestamped route before navigating.
+     *
+     * @param navController The [KetoyNavController] to perform navigation on.
+     * @param action        The [KNavigateAction] describing what navigation to perform.
+     * @param context       Android [Context] (required for asset loading; can be `null`
+     *                      if the action does not use [KNavigateAction.assetPath]).
+     * @see executeFromJson
+     * @see KNavigateAction
      */
     fun execute(
         navController: KetoyNavController,
@@ -135,7 +159,25 @@ object KetoyNavigationExecutor {
     }
 
     /**
-     * Parse a JSON string into a [KNavigateAction] and execute it.
+     * Deserialize a JSON string into a [KNavigateAction] and execute it.
+     *
+     * This is a convenience method that combines JSON parsing and execution
+     * in a single call. Unknown JSON keys are silently ignored.
+     *
+     * ### Example
+     * ```kotlin
+     * val json = """{
+     *   "routeName": "profile",
+     *   "navigationStyle": "navigate",
+     *   "arguments": { "userId": "abc123" }
+     * }"""
+     * KetoyNavigationExecutor.executeFromJson(navController, json, context)
+     * ```
+     *
+     * @param navController The [KetoyNavController] to perform navigation on.
+     * @param actionJson    A JSON string conforming to the [KNavigateAction] schema.
+     * @param context       Android [Context] (required for asset loading; can be `null`).
+     * @see execute
      */
     fun executeFromJson(
         navController: KetoyNavController,

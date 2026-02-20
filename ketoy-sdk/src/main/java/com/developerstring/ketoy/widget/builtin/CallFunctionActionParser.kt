@@ -35,8 +35,30 @@ import kotlinx.serialization.json.jsonPrimitive
  */
 class CallFunctionActionParser : KetoyActionParser<CallFunctionAction> {
 
+    /**
+     * The action type identifier: `"callFunction"`.
+     */
     override val actionType: String = "callFunction"
 
+    /**
+     * Parse a JSON action object into a [CallFunctionAction] model.
+     *
+     * The parser extracts `"functionName"` and `"arguments"` from the JSON.
+     * Argument values are automatically coerced from [JsonPrimitive] to their
+     * Kotlin equivalents:
+     *
+     * | JSON type  | Kotlin type |
+     * |------------|-------------|
+     * | `string`   | [String]    |
+     * | `boolean`  | [Boolean]   |
+     * | `integer`  | [Int]       |
+     * | `float`    | [Float]     |
+     * | `double`   | [Double]    |
+     * | `object`   | [String] (via `toString()`) |
+     *
+     * @param json The JSON object representing a `"callFunction"` action.
+     * @return A [CallFunctionAction] with the function name and typed arguments.
+     */
     override fun getModel(json: JsonObject): CallFunctionAction {
         val functionName = json["functionName"]?.jsonPrimitive?.content ?: ""
         val argsJson = json["arguments"]?.jsonObject
@@ -63,13 +85,38 @@ class CallFunctionActionParser : KetoyActionParser<CallFunctionAction> {
         )
     }
 
+    /**
+     * Execute the function call by delegating to [KetoyFunctionRegistry.call].
+     *
+     * If the function identified by [CallFunctionAction.functionName] is not
+     * registered, a warning is logged and the call is silently ignored.
+     *
+     * @param model   The [CallFunctionAction] containing the target function and arguments.
+     * @param context The runtime [ActionContext] (unused by this parser, but
+     *                available for consistency with the [KetoyActionParser] contract).
+     */
     override fun onCall(model: CallFunctionAction, context: ActionContext) {
         KetoyFunctionRegistry.call(model.functionName, model.arguments)
     }
 }
 
 /**
- * Model for a `callFunction` action.
+ * Model representing a `"callFunction"` action parsed from JSON.
+ *
+ * ### Example JSON
+ * ```json
+ * {
+ *   "actionType": "callFunction",
+ *   "functionName": "addToCart",
+ *   "arguments": { "productId": "SKU-12345", "quantity": 2 }
+ * }
+ * ```
+ *
+ * @property functionName The registered function name in [KetoyFunctionRegistry].
+ * @property arguments    A map of argument names to their typed Kotlin values.
+ *                        Defaults to an empty map for no-argument functions.
+ * @see KetoyFunctionRegistry
+ * @see CallFunctionActionParser
  */
 data class CallFunctionAction(
     val functionName: String,

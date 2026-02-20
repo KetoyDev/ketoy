@@ -17,31 +17,71 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import com.developerstring.ketoy.renderer.JSONStringToUI
+import com.developerstring.ketoy.navigation.KetoyNavDevOverrides
+import com.developerstring.ketoy.navigation.KetoyNavGraph
 import com.developerstring.ketoy.screen.KetoyScreenRegistry
 import kotlinx.coroutines.flow.collectLatest
 
 /**
- * Wraps your entire app to enable Ketoy Dev Tools hot-reload.
+ * Top-level composable that wraps your **entire app** to enable
+ * Ketoy Dev Tools hot-reload.
  *
- * **The app always runs normally.** In the background the wrapper connects
- * to the dev server and injects updated JSON into any [KetoyScreen] whose
- * `screenName` matches a screen name on the server. This means:
+ * **Your app always runs normally.** Behind the scenes the wrapper:
  *
+ * 1. Connects to the Ketoy Dev Server (via [KetoyDevClient]).
+ * 2. Listens for screen JSON updates pushed over WebSocket / HTTP.
+ * 3. Matches each incoming screen name against the screens registered
+ *    in [KetoyScreenRegistry] and injects the new JSON as a
+ *    dev-override (`setScreenDevOverride`).
+ * 4. Parses incoming `nav_*.json` payloads and feeds them to
+ *    [KetoyNavDevOverrides] so navigation graphs are hot-reloaded too.
+ * 5. Clears all overrides when the connection drops, restoring the
+ *    app to its original state.
+ *
+ * This means:
  * - Navigation, scaffold, drawers — everything keeps working.
  * - Only the screens whose JSON changed are hot-reloaded.
  * - Screens without a server match render as usual (cloud → DSL fallback).
  *
- * ## Usage in your Activity
+ * ## Usage
  * ```kotlin
+ * // In your Activity’s setContent:
  * setContent {
  *     KetoyDevWrapper {
- *         MyApp()   // ← always rendered
+ *         MyApp()   // ← always rendered, never blocked
+ *     }
+ * }
+ *
+ * // Or with auto-connect to a known server:
+ * setContent {
+ *     KetoyDevWrapper(
+ *         config = KetoyDevConfig(
+ *             host = "192.168.1.5",
+ *             port = 8484,
+ *             autoConnect = true
+ *         )
+ *     ) {
+ *         MyApp()
  *     }
  * }
  * ```
  *
- * @param config  Optional configuration for the dev server connection.
- * @param content Your normal app content — always rendered.
+ * ## Lifecycle
+ * - If [KetoyDevConfig.autoConnect] is `false` (the default), the
+ *   [KetoyDevConnectScreen] is displayed first. Once the user connects
+ *   (or taps “Skip”), [content] is rendered.
+ * - On `DisposableEffect` disposal, all dev-overrides are cleared and
+ *   the [KetoyDevClient] is destroyed.
+ *
+ * @param config  Connection configuration. Defaults to an empty
+ *                [KetoyDevConfig] which shows the connection screen.
+ * @param content Your normal application content — always rendered
+ *                after the setup phase completes.
+ *
+ * @see KetoyDevConfig
+ * @see KetoyDevClient
+ * @see KetoyDevConnectScreen
+ * @see KetoyDevPreviewScreen
  */
 @Composable
 fun KetoyDevWrapper(
@@ -63,29 +103,65 @@ fun KetoyDevWrapper(
     }
 
     // ── Core: inject dev-server JSON into registered KetoyScreens ──
-    // Uses snapshotFlow to continuously observe the screens map.
-    // Any update (including value changes for existing keys) immediately
-    // propagates to the matching KetoyScreen's devOverrideJson, which
-    // triggers recomposition of the active Content() composable.
+    // Observe each screen entry individually via derivedStateOf so that
+    // recomposition only happens for the screen that actually changed,
+    // instead of re-processing every screen on any map mutation.
     LaunchedEffect(Unit) {
-        snapshotFlow { screens.toList() }
-            .collectLatest { screenList ->
-                val registeredScreens = KetoyScreenRegistry.getAll()
-                screenList.forEach { (serverScreenName, json) ->
-                    // Match by screen name (case-insensitive)
+        snapshotFlow { screens.keys.toSet() }
+            .collectLatest { screenNames ->
+                screenNames.forEach { serverScreenName ->
+                    val json = screens[serverScreenName] ?: return@forEach
+                    val registeredScreens = KetoyScreenRegistry.getAll()
                     val match = registeredScreens[serverScreenName]
                         ?: registeredScreens.values.firstOrNull {
                             it.screenName.equals(serverScreenName, ignoreCase = true)
                         }
-                    match?.let { it.devOverrideJson = json }
+                    match?.setScreenDevOverride(json)
                 }
             }
+    }
+
+    // Per-screen observer: reacts only when a specific screen's JSON changes
+    val screenKeys = screens.keys.toSet()
+    for (name in screenKeys) {
+        key(name) {
+            val json = screens[name]
+            LaunchedEffect(json) {
+                if (json == null) return@LaunchedEffect
+                val registeredScreens = KetoyScreenRegistry.getAll()
+                val match = registeredScreens[name]
+                    ?: registeredScreens.values.firstOrNull {
+                        it.screenName.equals(name, ignoreCase = true)
+                    }
+                match?.setScreenDevOverride(json)
+            }
+        }
+    }
+
+    // ── Nav graph injection: parse nav_*.json and update KetoyNavDevOverrides ──
+    val navGraphJsons = client.navGraphs
+    val navKeys = navGraphJsons.keys.toSet()
+    for (navName in navKeys) {
+        key("nav_$navName") {
+            val navJson = navGraphJsons[navName]
+            LaunchedEffect(navJson) {
+                if (navJson == null) return@LaunchedEffect
+                try {
+                    val graph = KetoyNavGraph.fromJson(navJson)
+                    KetoyNavDevOverrides.set(navName, graph)
+                    println("📱 Ketoy Dev: Nav graph '$navName' injected (${graph.destinations.size} destinations)")
+                } catch (e: Exception) {
+                    System.err.println("Ketoy Dev: Failed to parse nav graph '$navName': ${e.message}")
+                }
+            }
+        }
     }
 
     // Clear overrides on disconnect
     LaunchedEffect(connectionState) {
         if (connectionState is ConnectionState.Disconnected) {
-            KetoyScreenRegistry.getAll().values.forEach { it.devOverrideJson = null }
+            KetoyScreenRegistry.getAll().values.forEach { it.setScreenDevOverride(null) }
+            KetoyNavDevOverrides.clearAll()
         }
     }
 
@@ -93,7 +169,8 @@ fun KetoyDevWrapper(
     DisposableEffect(Unit) {
         onDispose {
             // Clear all dev overrides when wrapper is removed
-            KetoyScreenRegistry.getAll().values.forEach { it.devOverrideJson = null }
+            KetoyScreenRegistry.getAll().values.forEach { it.setScreenDevOverride(null) }
+            KetoyNavDevOverrides.clearAll()
             client.destroy()
         }
     }
@@ -117,31 +194,41 @@ fun KetoyDevWrapper(
         }
 
         // Dev overlay (always visible when setup is complete)
-        if (isSetupComplete && config.showOverlay) {
-            KetoyDevOverlay(
-                client = client,
-                onDisconnect = {
-                    // Clear overrides when manually disconnecting
-                    KetoyScreenRegistry.getAll().values.forEach { it.devOverrideJson = null }
-                    client.disconnect()
-                    isSetupComplete = false
-                }
-            )
-        }
+        // Removed: the status dot / circle overlay is intentionally
+        // omitted to keep the UI clean during normal app usage.
     }
 }
 
 /**
- * A simpler wrapper that only provides the dev preview screen.
- * Use this when you want to show a specific screen from the dev server
- * without wrapping your entire app.
+ * A self-contained composable that connects to a dev server and renders
+ * a specific screen (or a screen picker) in an isolated preview surface.
  *
+ * Unlike [KetoyDevWrapper] — which wraps your full app and injects
+ * overrides into already-registered screens — `KetoyDevPreviewScreen`
+ * creates its **own** [KetoyDevClient] and renders the raw JSON through
+ * [JSONStringToUI]. Use it for quick, standalone previews.
+ *
+ * ## Usage
  * ```kotlin
  * KetoyDevPreviewScreen(
- *     serverUrl = "192.168.1.5:8484",
- *     screenName = "home"
+ *     serverUrl  = "192.168.1.5:8484",
+ *     screenName = "home"     // null = show screen picker
  * )
  * ```
+ *
+ * The composable also shows a [KetoyDevOverlay] in the corner for
+ * connection status and a disconnect action.
+ *
+ * @param serverUrl  The `host:port` (or full `http://…`) URL of the
+ *                    Ketoy Dev Server.
+ * @param screenName Optional screen to preview immediately. When
+ *                    `null`, the user sees a picker listing all
+ *                    available screens.
+ * @param modifier   Optional [Modifier] applied to the root [Box].
+ *
+ * @see KetoyDevWrapper
+ * @see KetoyDevClient
+ * @see KetoyDevOverlay
  */
 @Composable
 fun KetoyDevPreviewScreen(
@@ -171,6 +258,27 @@ fun KetoyDevPreviewScreen(
 
 // ── Internal Preview Renderer (for standalone preview mode) ─────
 
+/**
+ * Internal composable that renders the live SDUI preview for a
+ * connected [KetoyDevClient].
+ *
+ * Depending on the current [ConnectionState] and available screens,
+ * it shows one of:
+ * - A **connecting** spinner while the handshake is in progress.
+ * - An **error** message when the connection fails.
+ * - A **“Waiting for screens…”** placeholder when no JSON has arrived.
+ * - The **single screen** rendered via [JSONStringToUI] when exactly
+ *   one screen is available (or [screenName] is specified).
+ * - A **[KetoyDevScreenPicker]** list when multiple screens exist and
+ *   no specific screen is targeted.
+ *
+ * @param client     The active [KetoyDevClient].
+ * @param screenName Optional name of the screen to render. `null`
+ *                    means “show all / show picker”.
+ *
+ * @see KetoyDevPreviewScreen
+ * @see KetoyDevScreenPicker
+ */
 @Composable
 internal fun KetoyDevPreview(
     client: KetoyDevClient,
@@ -269,6 +377,18 @@ internal fun KetoyDevPreview(
     }
 }
 
+/**
+ * A dark-themed list of available screen names received from the dev
+ * server. Tapping an item calls [onScreenSelected] which sets
+ * [KetoyDevClient.activeScreen] and switches the preview to that
+ * screen.
+ *
+ * Shown inside [KetoyDevPreview] when multiple screens are available
+ * and no [KetoyDevClient.activeScreen] has been chosen yet.
+ *
+ * @param screens         Sorted list of screen names.
+ * @param onScreenSelected Callback invoked with the selected screen name.
+ */
 @Composable
 private fun KetoyDevScreenPicker(
     screens: List<String>,

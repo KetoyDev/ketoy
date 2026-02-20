@@ -13,18 +13,28 @@ import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 
 /**
- * A standalone Activity for Ketoy Dev Tools.
- * Launch this to get the connection screen + live preview without
- * modifying your existing app code.
+ * A standalone [ComponentActivity] for the Ketoy Dev Tools suite.
  *
- * Usage:
+ * Launch this activity to get a full-screen connection screen followed by a
+ * live-preview surface — **without modifying your existing app code**. This
+ * is ideal during development when you want an isolated environment for
+ * rapid iteration on SDUI screens served by the Ketoy Dev Server.
+ *
+ * The activity:
+ * 1. Shows the [KetoyDevConnectScreen] for entering the dev-server address.
+ * 2. Once connected, renders every screen pushed from the server in real time.
+ * 3. Supports deep-link launching via the `ketoy://dev` URI scheme.
+ *
+ * ## Programmatic launch
  * ```kotlin
+ * // From any Context (Activity, Service, Application …)
  * KetoyDevActivity.launch(context)
- * // or with auto-connect:
- * KetoyDevActivity.launch(context, "192.168.1.5", 8484)
+ *
+ * // Auto-connect to a known server:
+ * KetoyDevActivity.launch(context, host = "192.168.1.5", port = 8484)
  * ```
  *
- * Or declare it in your debug AndroidManifest.xml:
+ * ## Manifest declaration (debug only)
  * ```xml
  * <activity
  *     android:name="com.developerstring.ketoy.devtools.KetoyDevActivity"
@@ -37,9 +47,29 @@ import androidx.compose.ui.Modifier
  *     </intent-filter>
  * </activity>
  * ```
+ *
+ * ## Architecture
+ * Internally, `KetoyDevActivity` delegates to [KetoyDevWrapper] with an
+ * empty content lambda — it exists purely as a dedicated preview host.
+ * When a `host` extra is supplied via the launching [Intent], the wrapper
+ * auto-connects and skips the manual connection screen.
+ *
+ * @see KetoyDevWrapper
+ * @see KetoyDevConfig
+ * @see KetoyDevConnectScreen
  */
 class KetoyDevActivity : ComponentActivity() {
 
+    /**
+     * Initialises the activity, enables edge-to-edge rendering, and sets
+     * the Compose content tree.
+     *
+     * If the launching [Intent] contains [EXTRA_HOST], the connection
+     * screen is skipped and the client auto-connects to the specified
+     * server. Otherwise the user is presented with [KetoyDevConnectScreen].
+     *
+     * @param savedInstanceState The previously saved instance state, if any.
+     */
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
@@ -66,12 +96,39 @@ class KetoyDevActivity : ComponentActivity() {
         }
     }
 
+    /**
+     * Companion providing the [launch] factory and intent-extra constants.
+     */
     companion object {
+        /** Intent extra key for the dev-server hostname or IP address. */
         private const val EXTRA_HOST = "ketoy_dev_host"
+
+        /** Intent extra key for the dev-server HTTP port. */
         private const val EXTRA_PORT = "ketoy_dev_port"
 
         /**
-         * Launch the Ketoy Dev Activity.
+         * Convenience launcher for [KetoyDevActivity].
+         *
+         * If [host] is provided the activity auto-connects immediately;
+         * otherwise the connection screen is shown.
+         *
+         * When called from a non-Activity [Context] (e.g. a `Service` or
+         * `Application`), [Intent.FLAG_ACTIVITY_NEW_TASK] is added
+         * automatically.
+         *
+         * ```kotlin
+         * // Default — show connection screen:
+         * KetoyDevActivity.launch(context)
+         *
+         * // Skip to auto-connect:
+         * KetoyDevActivity.launch(context, host = "192.168.1.5", port = 8484)
+         * ```
+         *
+         * @param context The [Context] used to start the activity.
+         * @param host    Optional hostname / IP of the Ketoy Dev Server.
+         * @param port    HTTP port of the server. Defaults to `8484`.
+         *
+         * @see KetoyDevConfig
          */
         fun launch(context: Context, host: String? = null, port: Int = 8484) {
             val intent = Intent(context, KetoyDevActivity::class.java).apply {

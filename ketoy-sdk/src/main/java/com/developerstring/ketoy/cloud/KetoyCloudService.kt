@@ -15,22 +15,54 @@ import kotlinx.serialization.json.JsonElement
 /**
  * Orchestrates screen fetching from Ketoy Cloud with intelligent caching.
  *
- * Implements all five cache strategies:
- * - **NETWORK_FIRST** – Try network, fall back to cache
- * - **CACHE_FIRST** – Use valid cache, fall back to network
- * - **OPTIMISTIC** – Return cache instantly, refresh in background
- * - **CACHE_ONLY** – Only use cache, never network
- * - **NETWORK_ONLY** – Only use network, never cache
+ * This is the internal engine behind [KetoyCloud] and [KetoyCloudScreen].
+ * It implements all five cache strategies defined by [KetoyCacheStrategy]:
  *
- * ## Usage (internal – called by KetoyCloudView composable)
+ * | Strategy          | Behaviour                                                |
+ * |-------------------|----------------------------------------------------------|
+ * | `NETWORK_FIRST`   | Try network, fall back to cache on failure               |
+ * | `CACHE_FIRST`     | Use valid cache, fall back to network when stale/missing |
+ * | `OPTIMISTIC`      | Return cache instantly, refresh in background (SWR)      |
+ * | `CACHE_ONLY`      | Only use cache, never make network requests              |
+ * | `NETWORK_ONLY`    | Only use network, never use or update cache              |
+ *
+ * ## Typical call flow (internal — called by composables)
  * ```kotlin
- * val result = KetoyCloudService.fetchScreen("home_screen")
+ * val result: FetchResult = KetoyCloudService.fetchScreen("home_screen")
+ * when (result) {
+ *     is FetchResult.Success -> renderUi(result.uiJson)
+ *     is FetchResult.Error   -> showError(result.message)
+ * }
  * ```
+ *
+ * ## Background refresh
+ * When [KetoyCacheConfig.refreshInBackground] is enabled, the `CACHE_FIRST`
+ * and `OPTIMISTIC` strategies silently fetch fresh data after returning
+ * cached content. A per-screen guard ([backgroundFetchInProgress]) prevents
+ * duplicate background fetches for the same screen.
+ *
+ * ## Thread safety
+ * All public suspend functions switch to [kotlinx.coroutines.Dispatchers.IO]
+ * internally.  Background refreshes run in a dedicated [CoroutineScope]
+ * with a [SupervisorJob] so a single failure does not cancel siblings.
+ *
+ * @see KetoyCloud            Public facade that delegates to this service.
+ * @see KetoyCacheStore        Local cache storage.
+ * @see KetoyCacheConfig       Cache configuration (strategy, max age, background refresh).
+ * @see KetoyApiClient         Low-level HTTP client used for network calls.
  */
 object KetoyCloudService {
 
+    /** Log tag used for all cache and fetch diagnostics. */
     private const val TAG = "KetoyCloud"
 
+    /**
+     * Active cache configuration.
+     *
+     * Set during [com.developerstring.ketoy.Ketoy.initialize]; defaults to
+     * [KetoyCacheConfig.DEFAULT] (network-first, 30-day max age, background
+     * refresh enabled).
+     */
     internal var cacheConfig: KetoyCacheConfig = KetoyCacheConfig.DEFAULT
 
     private val backgroundScope = CoroutineScope(
@@ -51,9 +83,31 @@ object KetoyCloudService {
 
     /**
      * Result of a screen fetch operation.
+     *
+     * Sealed hierarchy with two outcomes:
+     * - [Success] — screen loaded (from cache or network).
+     * - [Error] — fetch failed with a human-readable message.
+     *
+     * ```kotlin
+     * when (val r = KetoyCloudService.fetchScreen("home")) {
+     *     is FetchResult.Success -> Log.d("UI", "Got ${r.screenName} v${r.version}")
+     *     is FetchResult.Error   -> Log.e("UI", r.message, r.cause)
+     * }
+     * ```
+     *
+     * @see fetchScreen
      */
     sealed class FetchResult {
-        /** Screen loaded successfully. */
+        /**
+         * Screen loaded successfully.
+         *
+         * @property screenName The resolved screen identifier.
+         * @property version    Version string returned by the server or stored in cache.
+         * @property uiJson     The full JSON UI tree as a raw string, ready to be passed
+         *                      to [JSONStringToUI][com.developerstring.ketoy.renderer.JSONStringToUI].
+         * @property fromCache  `true` if the content came from the local cache rather
+         *                      than a fresh network response.
+         */
         data class Success(
             val screenName: String,
             val version: String,
@@ -61,7 +115,13 @@ object KetoyCloudService {
             val fromCache: Boolean
         ) : FetchResult()
 
-        /** Screen fetch failed. */
+        /**
+         * Screen fetch failed.
+         *
+         * @property screenName The screen that was requested.
+         * @property message    Human-readable error description suitable for logging.
+         * @property cause      Optional underlying exception (e.g. [KetoyNetworkException]).
+         */
         data class Error(
             val screenName: String,
             val message: String,
@@ -72,11 +132,26 @@ object KetoyCloudService {
     /**
      * Fetch a screen using the configured cache strategy.
      *
-     * This is the main entry-point – it delegates to the appropriate
-     * strategy handler based on [cacheConfig].
+     * This is the **main entry point** for all screen data retrieval.
+     * It delegates to the appropriate strategy handler based on the current
+     * [cacheConfig] value.
      *
-     * @param screenName The screen identifier (e.g. "home_screen").
-     * @return [FetchResult] with the screen JSON or an error.
+     * The method runs entirely on [Dispatchers.IO][kotlinx.coroutines.Dispatchers.IO]
+     * and never blocks the main thread.
+     *
+     * ```kotlin
+     * val result = KetoyCloudService.fetchScreen("home_screen")
+     * when (result) {
+     *     is FetchResult.Success -> render(result.uiJson)
+     *     is FetchResult.Error   -> showError(result.message)
+     * }
+     * ```
+     *
+     * @param screenName The screen identifier (e.g. `"home_screen"`).
+     * @return [FetchResult.Success] with the screen JSON, or
+     *         [FetchResult.Error] with an error message.
+     * @see KetoyCacheStrategy
+     * @see KetoyCloud.hasUpdate
      */
     suspend fun fetchScreen(screenName: String): FetchResult {
         return withContext(Dispatchers.IO) {
@@ -110,10 +185,18 @@ object KetoyCloudService {
      * Check if a screen has an updated version on the server.
      *
      * Compares the local cached version with the server version
-     * using the lightweight version endpoint.
+     * using the lightweight `GET /api/v1/screen/version` endpoint.
+     * Makes no full JSON download, so it is safe to call frequently
+     * (e.g. on app resume).
      *
-     * @param screenName The screen identifier.
-     * @return `true` if server has a newer version, `false` otherwise.
+     * ```kotlin
+     * val outdated = KetoyCloudService.hasUpdate("home_screen")
+     * ```
+     *
+     * @param screenName The screen identifier (e.g. `"home_screen"`).
+     * @return `true` if the server has a newer version or no local cache
+     *         exists; `false` if versions match or the check fails.
+     * @see KetoyApiClient.fetchScreenVersion
      */
     suspend fun hasUpdate(screenName: String): Boolean {
         return withContext(Dispatchers.IO) {
@@ -129,21 +212,30 @@ object KetoyCloudService {
     }
 
     /**
-     * Clear the cache for a specific screen.
+     * Clear the cache entry for a specific screen.
+     *
+     * @param screenName The screen identifier (e.g. `"home_screen"`).
+     * @return `true` if the screen was found and removed.
+     * @see clearAllCache
      */
     fun clearScreenCache(screenName: String): Boolean {
         return KetoyCacheStore.remove(screenName)
     }
 
     /**
-     * Clear all cached screens.
+     * Clear all cached screens from [KetoyCacheStore].
+     *
+     * @see clearScreenCache
      */
     fun clearAllCache() {
         KetoyCacheStore.clearAll()
     }
 
     /**
-     * Get all cached screen names.
+     * Get the names of all screens currently present in the local cache.
+     *
+     * @return Immutable [Set] of cached screen identifiers.
+     * @see KetoyCacheStore.getAllCachedScreenNames
      */
     fun getCachedScreenNames(): Set<String> {
         return KetoyCacheStore.getAllCachedScreenNames()
@@ -152,7 +244,15 @@ object KetoyCloudService {
     // ── Strategy Handlers ───────────────────────────────────────
 
     /**
-     * NETWORK_FIRST: Try network, fall back to cache.
+     * **NETWORK_FIRST** strategy handler.
+     *
+     * Attempts a network fetch first. On failure, falls back to the
+     * locally cached entry (regardless of its age). If no cache exists
+     * and the network also fails, returns [FetchResult.Error].
+     *
+     * @param screenName Screen identifier.
+     * @param cached     Pre-loaded cache entry (may be `null`).
+     * @return [FetchResult] with screen data or an error.
      */
     private fun handleNetworkFirst(
         screenName: String,
@@ -187,7 +287,17 @@ object KetoyCloudService {
     }
 
     /**
-     * CACHE_FIRST: Use valid cache, fall back to network.
+     * **CACHE_FIRST** strategy handler.
+     *
+     * Returns a valid (non-expired) cached entry immediately. If the
+     * cache is stale or missing, falls back to a network fetch. Optionally
+     * schedules a background refresh for the next load when
+     * [KetoyCacheConfig.refreshInBackground] is enabled.
+     *
+     * @param screenName   Screen identifier.
+     * @param cached        Pre-loaded cache entry (may be `null`).
+     * @param isCacheValid `true` if [cached] is within [KetoyCacheConfig.maxAge].
+     * @return [FetchResult] with screen data or an error.
      */
     private fun handleCacheFirst(
         screenName: String,
@@ -234,8 +344,16 @@ object KetoyCloudService {
     }
 
     /**
-     * OPTIMISTIC (stale-while-revalidate): Return cache immediately,
-     * fetch in background for next load.
+     * **OPTIMISTIC** (stale-while-revalidate) strategy handler.
+     *
+     * Returns the cached entry immediately (even if expired) **and**
+     * triggers a background fetch so the next load gets fresh data.
+     * If no cache exists at all, falls back to a synchronous network call.
+     *
+     * @param screenName   Screen identifier.
+     * @param cached        Pre-loaded cache entry (may be `null`).
+     * @param isCacheValid  Unused for optimistic — always returns cache.
+     * @return [FetchResult] with screen data or an error.
      */
     private fun handleOptimistic(
         screenName: String,
@@ -268,7 +386,14 @@ object KetoyCloudService {
     }
 
     /**
-     * CACHE_ONLY: Only use cache, never network.
+     * **CACHE_ONLY** strategy handler.
+     *
+     * Returns cached data when available; never makes a network request.
+     * Returns [FetchResult.Error] when no cache exists.
+     *
+     * @param screenName Screen identifier.
+     * @param cached      Pre-loaded cache entry (may be `null`).
+     * @return [FetchResult] with cached data or an error.
      */
     private fun handleCacheOnly(
         screenName: String,
@@ -290,7 +415,13 @@ object KetoyCloudService {
     }
 
     /**
-     * NETWORK_ONLY: Always fetch from network, never cache.
+     * **NETWORK_ONLY** strategy handler.
+     *
+     * Always fetches from the network; never reads or writes the cache.
+     * Returns [FetchResult.Error] when the network request fails.
+     *
+     * @param screenName Screen identifier.
+     * @return [FetchResult] with fresh data or an error.
      */
     private fun handleNetworkOnly(screenName: String): FetchResult {
         return try {
@@ -309,7 +440,12 @@ object KetoyCloudService {
     // ── Internal Helpers ────────────────────────────────────────
 
     /**
-     * Fetch a screen from the network and optionally save to cache.
+     * Fetch a screen from the Ketoy API and optionally save it to the local cache.
+     *
+     * @param screenName  Screen identifier passed to the API.
+     * @param saveToCache If `true`, the response is persisted via [KetoyCacheStore.put].
+     * @return [KetoyScreenData] containing the screen name, version, and JSON UI tree.
+     * @throws KetoyNetworkException on HTTP or API errors.
      */
     private fun fetchFromNetwork(screenName: String, saveToCache: Boolean): KetoyScreenData {
         val data = KetoyApiClient.fetchScreen(screenName)
@@ -327,7 +463,16 @@ object KetoyCloudService {
     }
 
     /**
-     * Launch a background fetch to update the cache silently.
+     * Launch a background fetch to silently update the cache.
+     *
+     * First performs a lightweight version check via
+     * [KetoyApiClient.fetchScreenVersion]. If the server reports the same
+     * version as [cachedVersion], no further download occurs.
+     *
+     * A per-screen guard ensures only one background fetch runs at a time.
+     *
+     * @param screenName    Screen identifier.
+     * @param cachedVersion Current cached version (may be `null`).
      */
     private fun fetchInBackground(screenName: String, cachedVersion: String?) {
         if (backgroundFetchInProgress.contains(screenName)) return
@@ -360,7 +505,12 @@ object KetoyCloudService {
     }
 
     /**
-     * Check whether a cache entry is still valid based on maxAge.
+     * Check whether a cache entry is still valid based on [KetoyCacheConfig.maxAge].
+     *
+     * @param entry The cache entry to validate (may be `null`).
+     * @return `true` if the entry is non-null and its age is within [maxAge].
+     *         Returns `true` for a non-null entry when [maxAge] is `null`
+     *         (version-only expiration).
      */
     private fun isCacheValid(entry: KetoyCacheEntry?): Boolean {
         if (entry == null) return false

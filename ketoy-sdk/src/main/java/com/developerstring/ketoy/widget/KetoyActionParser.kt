@@ -37,6 +37,18 @@ interface KetoyActionParser<T> {
 
     /**
      * Deserialise JSON into the action model.
+     *
+     * Implementations should extract the action-specific fields from [json]
+     * and construct the typed model. The surrounding `"actionType"` key is
+     * already consumed by the framework before this method is called.
+     *
+     * ### Example JSON input
+     * ```json
+     * { "actionType": "showToast", "message": "Item added!" }
+     * ```
+     *
+     * @param json The JSON object containing action-specific properties.
+     * @return A fully initialised action model of type [T].
      */
     fun getModel(json: JsonObject): T
 
@@ -50,12 +62,29 @@ interface KetoyActionParser<T> {
 }
 
 /**
- * Context object passed to action parsers during execution.
+ * Context object passed to [KetoyActionParser] implementations during
+ * action execution.
  *
- * Provides access to:
- * - Android context (for toasts, system services, etc.)
- * - Ketoy nav controller (for navigation actions)
- * - The current composable scope's recomposition trigger
+ * [ActionContext] centralises the runtime dependencies that actions may
+ * need — Android system services, the active navigation controller, etc.
+ * The framework constructs this object automatically; custom parsers
+ * receive it in [KetoyActionParser.onCall].
+ *
+ * ### Example — accessing context in a custom action
+ * ```kotlin
+ * override fun onCall(model: MyModel, context: ActionContext) {
+ *     Toast.makeText(context.androidContext, model.message, Toast.LENGTH_SHORT).show()
+ *     context.navController?.navigate("result_screen")
+ * }
+ * ```
+ *
+ * @property androidContext The Android [android.content.Context] of the host Activity or Fragment.
+ *                          Use it for toasts, starting activities, accessing system services, etc.
+ * @property navController  The active [KetoyNavController][com.developerstring.ketoy.navigation.KetoyNavController]
+ *                          for navigation actions. May be `null` if the action is triggered
+ *                          outside a navigation-enabled scope.
+ * @see KetoyActionParser
+ * @see KetoyActionRegistry
  */
 data class ActionContext(
     val androidContext: android.content.Context,

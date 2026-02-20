@@ -1,43 +1,52 @@
 package com.developerstring.ketoy.screen
 
 /**
- * Marks a `@Composable` function as a Ketoy server-driven screen.
+ * **Optional** marker annotation for Ketoy screen composables.
  *
- * The [name] parameter identifies the screen for cloud lookup,
- * dev-server hot reload, caching, and JSON export. Inside the
- * annotated function you use one or more [KetoyContent] composables
- * to define the screen's content sections.
+ * This annotation is **not required** for Ketoy to work at runtime.
+ * The runtime mechanism is [ProvideKetoyScreen], which creates/retrieves a
+ * [KetoyScreen] and provides it via [LocalKetoyScreen]. Use `@KScreen`
+ * only when you want external tools (e.g. the Ketoy Dev Tools CLI or
+ * IDE plugins) to discover screen functions via reflection.
  *
- * A single `@KScreen` can contain **multiple** [KetoyContent] blocks,
- * each identified by a `contentId`. When exported, all content
- * blocks are written into a single JSON file.
+ * ## Recommended pattern (no annotation needed)
+ * ```kotlin
+ * @Composable
+ * fun HomeScreen() {
+ *     ProvideKetoyScreen(screenName = "home") {
+ *         KetoyContent(name = "cards", nodeBuilder = { buildCards() })
+ *         Text("Native Compose expenses section")
+ *         KetoyContent(name = "transactions", nodeBuilder = { buildTransactions() })
+ *         Button(onClick = {}) { Text("Compose Button") }
+ *     }
+ * }
+ * ```
  *
- * ## Example — single content
+ * ## With annotation (optional, for tooling discovery)
  * ```kotlin
  * @KScreen(name = "home")
  * @Composable
  * fun HomeScreen() {
- *     KetoyContent(nodeBuilder = { buildHomeUI() })
+ *     ProvideKetoyScreen(screenName = "home") {
+ *         KetoyContent(nodeBuilder = { buildHomeUI() })
+ *     }
  * }
  * ```
  *
- * ## Example — multiple contents
+ * ## How tools use this annotation
  * ```kotlin
- * @KScreen(name = "dashboard")
- * @Composable
- * fun DashboardScreen() {
- *     KetoyContent(contentId = "header", nodeBuilder = { buildHeader() })
- *     KetoyContent(contentId = "body",   nodeBuilder = { buildBody() })
- *     KetoyContent(contentId = "footer", nodeBuilder = { buildFooter() })
- * }
+ * // Tooling discovers all @KScreen functions via reflection:
+ * val screenFunctions = appPackage.declarations
+ *     .filter { it.hasAnnotation<KScreen>() }
  * ```
  *
- * @param name The unique screen identifier used for routing, cloud lookup,
- *             and JSON export. Must match the dev-server filename
- *             (e.g. `"home"` → `home.json`).
- *
+ * @property name The unique screen identifier. Only needed if external
+ *                tools scan for `@KScreen` via reflection. Leave empty
+ *                to rely on `ProvideKetoyScreen`’s `screenName` parameter.
+ * @see ProvideKetoyScreen
  * @see KetoyContent
  * @see KetoyScreen
+ * @see KetoyScreenRegistry
  */
 @Target(AnnotationTarget.FUNCTION)
 @Retention(AnnotationRetention.RUNTIME)

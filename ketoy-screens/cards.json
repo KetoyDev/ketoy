@@ -1,22 +1,33 @@
 {
+  "screenName": "cards",
+  "displayName": "Cards",
+  "version": "1.0.0",
+  "contents": {
+    "main": {
     "type": "Column",
     "props": {
         "modifier": {
-            "fillMaxSize": 1.0
-        }
+            "fillMaxSize": 1.0,
+            "padding": {
+                "top": 16
+            },
+            "background": "#1C1B1F",
+            "verticalScroll": true
+        },
+        "verticalArrangement": "spacedBy_0"
     },
     "children": [
         {
-            "type": "LazyColumn",
+            "type": "Row",
             "props": {
                 "modifier": {
-                    "fillMaxSize": 1.0
+                    "fillMaxWidth": 1.0,
+                    "padding": {
+                        "horizontal": 20
+                    }
                 },
-                "verticalArrangement": "spacedBy_16",
-                "contentPadding": {
-                    "horizontal": 16,
-                    "vertical": 16
-                }
+                "horizontalArrangement": "spaceBetween",
+                "verticalAlignment": "centerVertically"
             },
             "children": [
                 {
@@ -29,19 +40,34 @@
                     }
                 },
                 {
-                    "type": "Text",
+                    "type": "IconButton",
                     "props": {
-                        "text": "Manage your payment methods",
-                        "fontSize": 14,
-                        "color": "#CAC4D0"
+                        "icon": "add",
+                        "onClick": "cards_add",
+                        "iconSize": 26,
+                        "iconColor": "#D0BCFF"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Spacer",
+            "props": {
+                "height": 20
+            }
+        },
+        {
+            "type": "Column",
+            "props": {
+                "modifier": {
+                    "fillMaxWidth": 1.0,
+                    "padding": {
+                        "horizontal": 20
                     }
                 },
-                {
-                    "type": "Spacer",
-                    "props": {
-                        "height": 12
-                    }
-                },
+                "verticalArrangement": "spacedBy_16"
+            },
+            "children": [
                 {
                     "type": "Card",
                     "props": {
@@ -61,8 +87,7 @@
                                         "type": "linear",
                                         "colors": [
                                             "#6750A4",
-                                            "#9A82DB",
-                                            "#D0BCFF"
+                                            "#9A82DB"
                                         ],
                                         "direction": "diagonal"
                                     }
@@ -94,7 +119,7 @@
                                                 {
                                                     "type": "Text",
                                                     "props": {
-                                                        "text": "Platinum Visa",
+                                                        "text": "Visa Platinum",
                                                         "fontSize": 16,
                                                         "fontWeight": "semiBold",
                                                         "color": "#FFFFFF"
@@ -119,7 +144,7 @@
                                         {
                                             "type": "Text",
                                             "props": {
-                                                "text": "•••• 4829",
+                                                "text": "•••• •••• •••• 4592",
                                                 "fontSize": 22,
                                                 "fontWeight": "bold",
                                                 "color": "#FFFFFF"
@@ -154,7 +179,7 @@
                                                         {
                                                             "type": "Text",
                                                             "props": {
-                                                                "text": "$18,240.50",
+                                                                "text": "$12,450.00",
                                                                 "fontSize": 18,
                                                                 "fontWeight": "bold",
                                                                 "color": "#FFFFFF"
@@ -179,7 +204,7 @@
                                                         {
                                                             "type": "Text",
                                                             "props": {
-                                                                "text": "12/28",
+                                                                "text": "09/27",
                                                                 "fontSize": 14,
                                                                 "fontWeight": "medium",
                                                                 "color": "#FFFFFF"
@@ -194,186 +219,6 @@
                             ]
                         }
                     ]
-                },
-                {
-                    "type": "Spacer",
-                    "props": {
-                        "height": 12
-                    }
-                },
-                {
-                    "type": "Card",
-                    "props": {
-                        "modifier": {
-                            "fillMaxWidth": 1.0
-                        },
-                        "shape": "rounded_24",
-                        "elevation": 6
-                    },
-                    "children": [
-                        {
-                            "type": "Column",
-                            "props": {
-                                "modifier": {
-                                    "fillMaxWidth": 1.0,
-                                    "gradient": {
-                                        "type": "linear",
-                                        "colors": [
-                                            "#7D5260",
-                                            "#B88894",
-                                            "#FFD8E4"
-                                        ],
-                                        "direction": "diagonal"
-                                    }
-                                }
-                            },
-                            "children": [
-                                {
-                                    "type": "Column",
-                                    "props": {
-                                        "modifier": {
-                                            "fillMaxWidth": 1.0,
-                                            "padding": {
-                                                "all": 24
-                                            }
-                                        },
-                                        "verticalArrangement": "spacedBy_8"
-                                    },
-                                    "children": [
-                                        {
-                                            "type": "Row",
-                                            "props": {
-                                                "modifier": {
-                                                    "fillMaxWidth": 1.0
-                                                },
-                                                "horizontalArrangement": "spaceBetween",
-                                                "verticalAlignment": "centerVertically"
-                                            },
-                                            "children": [
-                                                {
-                                                    "type": "Text",
-                                                    "props": {
-                                                        "text": "Gold Mastercard",
-                                                        "fontSize": 16,
-                                                        "fontWeight": "semiBold",
-                                                        "color": "#FFFFFF"
-                                                    }
-                                                },
-                                                {
-                                                    "type": "Icon",
-                                                    "props": {
-                                                        "icon": "credit_card",
-                                                        "size": 28,
-                                                        "color": "#FFFFFFBB"
-                                                    }
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "type": "Spacer",
-                                            "props": {
-                                                "height": 16
-                                            }
-                                        },
-                                        {
-                                            "type": "Text",
-                                            "props": {
-                                                "text": "•••• 7631",
-                                                "fontSize": 22,
-                                                "fontWeight": "bold",
-                                                "color": "#FFFFFF"
-                                            }
-                                        },
-                                        {
-                                            "type": "Spacer",
-                                            "props": {
-                                                "height": 8
-                                            }
-                                        },
-                                        {
-                                            "type": "Row",
-                                            "props": {
-                                                "modifier": {
-                                                    "fillMaxWidth": 1.0
-                                                },
-                                                "horizontalArrangement": "spaceBetween"
-                                            },
-                                            "children": [
-                                                {
-                                                    "type": "Column",
-                                                    "children": [
-                                                        {
-                                                            "type": "Text",
-                                                            "props": {
-                                                                "text": "Balance",
-                                                                "fontSize": 11,
-                                                                "color": "#FFFFFFAA"
-                                                            }
-                                                        },
-                                                        {
-                                                            "type": "Text",
-                                                            "props": {
-                                                                "text": "$6,322.30",
-                                                                "fontSize": 18,
-                                                                "fontWeight": "bold",
-                                                                "color": "#FFFFFF"
-                                                            }
-                                                        }
-                                                    ]
-                                                },
-                                                {
-                                                    "type": "Column",
-                                                    "props": {
-                                                        "horizontalAlignment": "end"
-                                                    },
-                                                    "children": [
-                                                        {
-                                                            "type": "Text",
-                                                            "props": {
-                                                                "text": "Expires",
-                                                                "fontSize": 11,
-                                                                "color": "#FFFFFFAA"
-                                                            }
-                                                        },
-                                                        {
-                                                            "type": "Text",
-                                                            "props": {
-                                                                "text": "08/27",
-                                                                "fontSize": 14,
-                                                                "fontWeight": "medium",
-                                                                "color": "#FFFFFF"
-                                                            }
-                                                        }
-                                                    ]
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "type": "Spacer",
-                    "props": {
-                        "height": 20
-                    }
-                },
-                {
-                    "type": "Text",
-                    "props": {
-                        "text": "Card Actions",
-                        "fontSize": 18,
-                        "fontWeight": "semiBold",
-                        "color": "#E6E0E9"
-                    }
-                },
-                {
-                    "type": "Spacer",
-                    "props": {
-                        "height": 8
-                    }
                 },
                 {
                     "type": "Row",
@@ -398,7 +243,7 @@
                                             "size": 64
                                         },
                                         "shape": "rounded_20",
-                                        "containerColor": "#4A4458",
+                                        "containerColor": "#8C1D18",
                                         "elevation": 0
                                     },
                                     "children": [
@@ -415,9 +260,9 @@
                                                     "type": "IconButton",
                                                     "props": {
                                                         "icon": "lock",
-                                                        "onClick": "action_6",
+                                                        "onClick": "cards_freeze_0",
                                                         "iconSize": 28,
-                                                        "iconColor": "#D0BCFF"
+                                                        "iconColor": "#FFB4AB"
                                                     }
                                                 }
                                             ]
@@ -449,7 +294,7 @@
                                             "size": 64
                                         },
                                         "shape": "rounded_20",
-                                        "containerColor": "#633B48",
+                                        "containerColor": "#4A4458",
                                         "elevation": 0
                                     },
                                     "children": [
@@ -466,9 +311,9 @@
                                                     "type": "IconButton",
                                                     "props": {
                                                         "icon": "settings",
-                                                        "onClick": "action_7",
+                                                        "onClick": "cards_settings_0",
                                                         "iconSize": 28,
-                                                        "iconColor": "#EFB8C8"
+                                                        "iconColor": "#CCC5DC"
                                                     }
                                                 }
                                             ]
@@ -478,7 +323,7 @@
                                 {
                                     "type": "Text",
                                     "props": {
-                                        "text": "Limits",
+                                        "text": "Settings",
                                         "fontSize": 12,
                                         "fontWeight": "medium",
                                         "color": "#CAC4D0"
@@ -500,7 +345,7 @@
                                             "size": 64
                                         },
                                         "shape": "rounded_20",
-                                        "containerColor": "#0A5C30",
+                                        "containerColor": "#4F378B",
                                         "elevation": 0
                                     },
                                     "children": [
@@ -516,10 +361,10 @@
                                                 {
                                                     "type": "IconButton",
                                                     "props": {
-                                                        "icon": "credit_card",
-                                                        "onClick": "action_8",
+                                                        "icon": "visibility",
+                                                        "onClick": "cards_details_0",
                                                         "iconSize": 28,
-                                                        "iconColor": "#6DD58C"
+                                                        "iconColor": "#D0BCFF"
                                                     }
                                                 }
                                             ]
@@ -536,67 +381,588 @@
                                     }
                                 }
                             ]
+                        }
+                    ]
+                },
+                {
+                    "type": "Card",
+                    "props": {
+                        "modifier": {
+                            "fillMaxWidth": 1.0
                         },
+                        "shape": "rounded_24",
+                        "elevation": 6
+                    },
+                    "children": [
                         {
                             "type": "Column",
                             "props": {
-                                "verticalArrangement": "spacedBy_8",
-                                "horizontalAlignment": "centerHorizontally"
+                                "modifier": {
+                                    "fillMaxWidth": 1.0,
+                                    "gradient": {
+                                        "type": "linear",
+                                        "colors": [
+                                            "#787880",
+                                            "#A0A0A8"
+                                        ],
+                                        "direction": "diagonal"
+                                    }
+                                }
                             },
                             "children": [
                                 {
-                                    "type": "Card",
+                                    "type": "Column",
                                     "props": {
                                         "modifier": {
-                                            "size": 64
+                                            "fillMaxWidth": 1.0,
+                                            "padding": {
+                                                "all": 24
+                                            }
                                         },
-                                        "shape": "rounded_20",
-                                        "containerColor": "#8C1D18",
-                                        "elevation": 0
+                                        "verticalArrangement": "spacedBy_8"
                                     },
                                     "children": [
                                         {
-                                            "type": "Box",
+                                            "type": "Row",
                                             "props": {
                                                 "modifier": {
-                                                    "fillMaxSize": 1.0
+                                                    "fillMaxWidth": 1.0
                                                 },
-                                                "contentAlignment": "center"
+                                                "horizontalArrangement": "spaceBetween",
+                                                "verticalAlignment": "centerVertically"
                                             },
                                             "children": [
                                                 {
-                                                    "type": "IconButton",
+                                                    "type": "Text",
                                                     "props": {
-                                                        "icon": "add",
-                                                        "onClick": "action_9",
-                                                        "iconSize": 28,
-                                                        "iconColor": "#FFB4AB"
+                                                        "text": "Mastercard Gold",
+                                                        "fontSize": 16,
+                                                        "fontWeight": "semiBold",
+                                                        "color": "#FFFFFF"
                                                     }
+                                                },
+                                                {
+                                                    "type": "Icon",
+                                                    "props": {
+                                                        "icon": "credit_card",
+                                                        "size": 28,
+                                                        "color": "#FFFFFFBB"
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "Spacer",
+                                            "props": {
+                                                "height": 16
+                                            }
+                                        },
+                                        {
+                                            "type": "Text",
+                                            "props": {
+                                                "text": "•••• •••• •••• 7831",
+                                                "fontSize": 22,
+                                                "fontWeight": "bold",
+                                                "color": "#FFFFFF"
+                                            }
+                                        },
+                                        {
+                                            "type": "Spacer",
+                                            "props": {
+                                                "height": 8
+                                            }
+                                        },
+                                        {
+                                            "type": "Row",
+                                            "props": {
+                                                "modifier": {
+                                                    "fillMaxWidth": 1.0
+                                                },
+                                                "horizontalArrangement": "spaceBetween"
+                                            },
+                                            "children": [
+                                                {
+                                                    "type": "Column",
+                                                    "children": [
+                                                        {
+                                                            "type": "Text",
+                                                            "props": {
+                                                                "text": "Balance",
+                                                                "fontSize": 11,
+                                                                "color": "#FFFFFFAA"
+                                                            }
+                                                        },
+                                                        {
+                                                            "type": "Text",
+                                                            "props": {
+                                                                "text": "$8,320.50",
+                                                                "fontSize": 18,
+                                                                "fontWeight": "bold",
+                                                                "color": "#FFFFFF"
+                                                            }
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "type": "Column",
+                                                    "props": {
+                                                        "horizontalAlignment": "end"
+                                                    },
+                                                    "children": [
+                                                        {
+                                                            "type": "Text",
+                                                            "props": {
+                                                                "text": "Expires",
+                                                                "fontSize": 11,
+                                                                "color": "#FFFFFFAA"
+                                                            }
+                                                        },
+                                                        {
+                                                            "type": "Text",
+                                                            "props": {
+                                                                "text": "03/26",
+                                                                "fontSize": 14,
+                                                                "fontWeight": "medium",
+                                                                "color": "#FFFFFF"
+                                                            }
+                                                        }
+                                                    ]
                                                 }
                                             ]
                                         }
                                     ]
-                                },
-                                {
-                                    "type": "Text",
-                                    "props": {
-                                        "text": "New Card",
-                                        "fontSize": 12,
-                                        "fontWeight": "medium",
-                                        "color": "#CAC4D0"
-                                    }
                                 }
                             ]
                         }
                     ]
                 },
                 {
-                    "type": "Spacer",
+                    "type": "Card",
                     "props": {
-                        "height": 72
+                        "modifier": {
+                            "fillMaxWidth": 1.0
+                        },
+                        "shape": "rounded_24",
+                        "elevation": 6
+                    },
+                    "children": [
+                        {
+                            "type": "Column",
+                            "props": {
+                                "modifier": {
+                                    "fillMaxWidth": 1.0,
+                                    "gradient": {
+                                        "type": "linear",
+                                        "colors": [
+                                            "#787880",
+                                            "#A0A0A8"
+                                        ],
+                                        "direction": "diagonal"
+                                    }
+                                }
+                            },
+                            "children": [
+                                {
+                                    "type": "Column",
+                                    "props": {
+                                        "modifier": {
+                                            "fillMaxWidth": 1.0,
+                                            "padding": {
+                                                "all": 24
+                                            }
+                                        },
+                                        "verticalArrangement": "spacedBy_8"
+                                    },
+                                    "children": [
+                                        {
+                                            "type": "Row",
+                                            "props": {
+                                                "modifier": {
+                                                    "fillMaxWidth": 1.0
+                                                },
+                                                "horizontalArrangement": "spaceBetween",
+                                                "verticalAlignment": "centerVertically"
+                                            },
+                                            "children": [
+                                                {
+                                                    "type": "Text",
+                                                    "props": {
+                                                        "text": "Amex Blue",
+                                                        "fontSize": 16,
+                                                        "fontWeight": "semiBold",
+                                                        "color": "#FFFFFF"
+                                                    }
+                                                },
+                                                {
+                                                    "type": "Icon",
+                                                    "props": {
+                                                        "icon": "credit_card",
+                                                        "size": 28,
+                                                        "color": "#FFFFFFBB"
+                                                    }
+                                                }
+                                            ]
+                                        },
+                                        {
+                                            "type": "Spacer",
+                                            "props": {
+                                                "height": 16
+                                            }
+                                        },
+                                        {
+                                            "type": "Text",
+                                            "props": {
+                                                "text": "•••• •••• •••• 1204",
+                                                "fontSize": 22,
+                                                "fontWeight": "bold",
+                                                "color": "#FFFFFF"
+                                            }
+                                        },
+                                        {
+                                            "type": "Spacer",
+                                            "props": {
+                                                "height": 8
+                                            }
+                                        },
+                                        {
+                                            "type": "Row",
+                                            "props": {
+                                                "modifier": {
+                                                    "fillMaxWidth": 1.0
+                                                },
+                                                "horizontalArrangement": "spaceBetween"
+                                            },
+                                            "children": [
+                                                {
+                                                    "type": "Column",
+                                                    "children": [
+                                                        {
+                                                            "type": "Text",
+                                                            "props": {
+                                                                "text": "Balance",
+                                                                "fontSize": 11,
+                                                                "color": "#FFFFFFAA"
+                                                            }
+                                                        },
+                                                        {
+                                                            "type": "Text",
+                                                            "props": {
+                                                                "text": "$3,792.30",
+                                                                "fontSize": 18,
+                                                                "fontWeight": "bold",
+                                                                "color": "#FFFFFF"
+                                                            }
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "type": "Column",
+                                                    "props": {
+                                                        "horizontalAlignment": "end"
+                                                    },
+                                                    "children": [
+                                                        {
+                                                            "type": "Text",
+                                                            "props": {
+                                                                "text": "Expires",
+                                                                "fontSize": 11,
+                                                                "color": "#FFFFFFAA"
+                                                            }
+                                                        },
+                                                        {
+                                                            "type": "Text",
+                                                            "props": {
+                                                                "text": "11/28",
+                                                                "fontSize": 14,
+                                                                "fontWeight": "medium",
+                                                                "color": "#FFFFFF"
+                                                            }
+                                                        }
+                                                    ]
+                                                }
+                                            ]
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "Spacer",
+            "props": {
+                "height": 24
+            }
+        },
+        {
+            "type": "Row",
+            "props": {
+                "modifier": {
+                    "fillMaxWidth": 1.0,
+                    "padding": {
+                        "horizontal": 20
+                    }
+                },
+                "horizontalArrangement": "center"
+            },
+            "children": [
+                {
+                    "type": "Row",
+                    "props": {
+                        "horizontalArrangement": "spacedBy_8"
+                    },
+                    "children": [
+                        {
+                            "type": "Card",
+                            "props": {
+                                "modifier": {
+                                    "height": 36
+                                },
+                                "shape": "rounded_50",
+                                "containerColor": "#D0BCFF",
+                                "elevation": 0,
+                                "onClick": "cards_select_0"
+                            },
+                            "children": [
+                                {
+                                    "type": "Box",
+                                    "props": {
+                                        "modifier": {
+                                            "fillMaxHeight": 1.0,
+                                            "padding": {
+                                                "horizontal": 16
+                                            }
+                                        },
+                                        "contentAlignment": "center"
+                                    },
+                                    "children": [
+                                        {
+                                            "type": "Text",
+                                            "props": {
+                                                "text": "Card 1",
+                                                "fontSize": 13,
+                                                "fontWeight": "medium",
+                                                "color": "#381E72"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Card",
+                            "props": {
+                                "modifier": {
+                                    "height": 36
+                                },
+                                "shape": "rounded_50",
+                                "containerColor": "#1D1B20",
+                                "elevation": 0,
+                                "onClick": "cards_select_1"
+                            },
+                            "children": [
+                                {
+                                    "type": "Box",
+                                    "props": {
+                                        "modifier": {
+                                            "fillMaxHeight": 1.0,
+                                            "padding": {
+                                                "horizontal": 16
+                                            }
+                                        },
+                                        "contentAlignment": "center"
+                                    },
+                                    "children": [
+                                        {
+                                            "type": "Text",
+                                            "props": {
+                                                "text": "Card 2",
+                                                "fontSize": 13,
+                                                "fontWeight": "medium",
+                                                "color": "#CAC4D0"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Card",
+                            "props": {
+                                "modifier": {
+                                    "height": 36
+                                },
+                                "shape": "rounded_50",
+                                "containerColor": "#1D1B20",
+                                "elevation": 0,
+                                "onClick": "cards_select_2"
+                            },
+                            "children": [
+                                {
+                                    "type": "Box",
+                                    "props": {
+                                        "modifier": {
+                                            "fillMaxHeight": 1.0,
+                                            "padding": {
+                                                "horizontal": 16
+                                            }
+                                        },
+                                        "contentAlignment": "center"
+                                    },
+                                    "children": [
+                                        {
+                                            "type": "Text",
+                                            "props": {
+                                                "text": "Card 3",
+                                                "fontSize": 13,
+                                                "fontWeight": "medium",
+                                                "color": "#CAC4D0"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "Spacer",
+            "props": {
+                "height": 24
+            }
+        },
+        {
+            "type": "Row",
+            "props": {
+                "modifier": {
+                    "fillMaxWidth": 1.0,
+                    "padding": {
+                        "horizontal": 20
+                    }
+                },
+                "horizontalArrangement": "spaceBetween",
+                "verticalAlignment": "centerVertically"
+            },
+            "children": [
+                {
+                    "type": "Text",
+                    "props": {
+                        "text": "Card Activity",
+                        "fontSize": 17,
+                        "fontWeight": "semiBold",
+                        "color": "#E6E0E9"
+                    }
+                },
+                {
+                    "type": "Button",
+                    "props": {
+                        "onClick": "cards_view_all",
+                        "containerColor": "#00000000",
+                        "elevation": 0
+                    },
+                    "children": [
+                        {
+                            "type": "Text",
+                            "props": {
+                                "text": "View All",
+                                "fontSize": 13,
+                                "fontWeight": "medium",
+                                "color": "#D0BCFF"
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "Spacer",
+            "props": {
+                "height": 8
+            }
+        },
+        {
+            "type": "Column",
+            "props": {
+                "modifier": {
+                    "fillMaxWidth": 1.0,
+                    "padding": {
+                        "horizontal": 20,
+                        "bottom": 16
+                    }
+                },
+                "verticalArrangement": "spacedBy_8"
+            },
+            "children": [
+                {
+                    "type": "Component",
+                    "props": {
+                        "name": "TransactionRow",
+                        "componentName": "TransactionRow",
+                        "properties": {
+                            "title": "Apple Store",
+                            "subtitle": "Today",
+                            "amount": "- $999.00",
+                            "isIncome": false
+                        },
+                        "props": {
+                            "title": "Apple Store",
+                            "subtitle": "Today",
+                            "amount": "- $999.00",
+                            "isIncome": false
+                        }
+                    }
+                },
+                {
+                    "type": "Component",
+                    "props": {
+                        "name": "TransactionRow",
+                        "componentName": "TransactionRow",
+                        "properties": {
+                            "title": "Refund - Amazon",
+                            "subtitle": "Yesterday",
+                            "amount": "+ $42.50",
+                            "isIncome": true
+                        },
+                        "props": {
+                            "title": "Refund - Amazon",
+                            "subtitle": "Yesterday",
+                            "amount": "+ $42.50",
+                            "isIncome": true
+                        }
+                    }
+                },
+                {
+                    "type": "Component",
+                    "props": {
+                        "name": "TransactionRow",
+                        "componentName": "TransactionRow",
+                        "properties": {
+                            "title": "Gas Station",
+                            "subtitle": "Feb 2",
+                            "amount": "- $55.00",
+                            "isIncome": false
+                        },
+                        "props": {
+                            "title": "Gas Station",
+                            "subtitle": "Feb 2",
+                            "amount": "- $55.00",
+                            "isIncome": false
+                        }
                     }
                 }
             ]
+        },
+        {
+            "type": "Spacer",
+            "props": {
+                "height": 20
+            }
         }
     ]
+}
+  }
 }

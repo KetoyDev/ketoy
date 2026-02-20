@@ -1,0 +1,59 @@
+{
+    "navHostName": "demo",
+    "startRoute": "explore",
+    "destinations": [
+        {
+            "id": "explore",
+            "route": "explore",
+            "screenName": "explore",
+            "label": "Explore",
+            "icon": "explore",
+            "selectedIcon": "explore",
+            "isStartDestination": true
+        },
+        {
+            "id": "favorites",
+            "route": "favorites",
+            "screenName": "favorites",
+            "label": "Favorites",
+            "icon": "favorite_border",
+            "selectedIcon": "favorite",
+            "isStartDestination": false
+        },
+        {
+            "id": "notifications",
+            "route": "notifications",
+            "screenName": "notifications",
+            "label": "Notifications",
+            "icon": "notifications_none",
+            "selectedIcon": "notifications",
+            "isStartDestination": false
+        },
+        {
+            "id": "settings",
+            "route": "settings",
+            "screenName": "settings",
+            "label": "Settings",
+            "icon": "settings",
+            "selectedIcon": "settings",
+            "isStartDestination": false
+        }
+    ],
+    "navigations": [
+        {
+            "id": "go_favorites",
+            "route": "favorites",
+            "label": "Open Favorites"
+        },
+        {
+            "id": "go_notifications",
+            "route": "notifications",
+            "label": "Open Notifications"
+        },
+        {
+            "id": "go_settings",
+            "route": "settings",
+            "label": "Open Settings"
+        }
+    ]
+}
