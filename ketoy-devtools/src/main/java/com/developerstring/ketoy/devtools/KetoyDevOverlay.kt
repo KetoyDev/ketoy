@@ -21,8 +21,50 @@ import androidx.compose.ui.unit.sp
 import androidx.compose.ui.zIndex
 
 /**
- * Floating overlay that shows the dev server connection status.
- * Sits on top of the app content and can be expanded/collapsed.
+ * Floating overlay composable that displays the live connection status
+ * of a [KetoyDevClient].
+ *
+ * The overlay sits at the **top-end** corner of its parent and renders
+ * in two modes:
+ *
+ * - **Collapsed** — a small 36 dp circular dot whose colour reflects
+ *   the current [ConnectionState]:
+ *   - Green (`#3FB950`) — Connected
+ *   - Amber (`#D29922`) — Connecting / Reconnecting (pulsing)
+ *   - Red  (`#F85149`) — Error
+ *   - Grey (`#484F58`) — Disconnected
+ * - **Expanded** — a dark card showing server URL, screen count,
+ *   data version, and a **Disconnect** button.
+ *
+ * Tap the collapsed dot to expand; tap the close icon to collapse.
+ *
+ * ## Usage
+ * ```kotlin
+ * Box {
+ *     // Your app content
+ *     MyApp()
+ *
+ *     // Overlay on top
+ *     KetoyDevOverlay(
+ *         client       = client,
+ *         onDisconnect = { client.disconnect() }
+ *     )
+ * }
+ * ```
+ *
+ * ## Architecture
+ * The overlay is a purely presentational composable — all state is
+ * read from [KetoyDevClient] snapshot-state properties, and the only
+ * side-effect is the [onDisconnect] callback.
+ *
+ * @param client       The [KetoyDevClient] whose state drives the overlay.
+ * @param onDisconnect Callback invoked when the user taps the
+ *                      **Disconnect** button inside the expanded card.
+ * @param modifier     Optional [Modifier] applied to the outermost [Box].
+ *
+ * @see KetoyDevClient
+ * @see KetoyDevWrapper
+ * @see ConnectionState
  */
 @Composable
 fun KetoyDevOverlay(
@@ -202,6 +244,14 @@ fun KetoyDevOverlay(
     }
 }
 
+/**
+ * A single label–value row used inside the expanded [KetoyDevOverlay] card.
+ *
+ * @param label      Left-aligned descriptor (e.g. `"Status"`, `"Server"`).
+ * @param value      Right-aligned value text.
+ * @param valueColor Color applied to [value]. Defaults to a light grey
+ *                    (`#C9D1D9`) that contrasts with the dark card.
+ */
 @Composable
 private fun StatusRow(
     label: String,

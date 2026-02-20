@@ -45,14 +45,29 @@ object KComponentRegistry {
     private var isInitialized = false
 
     /* ── Initialisation ─────────────────────────────── */
-
-    fun initialize() {
+    /**
+     * Initialise the component registry.
+     *
+     * This is called lazily on first [get] or [isAvailable] access.
+     * Calling it explicitly is safe and idempotent — subsequent calls
+     * are no-ops.
+     */    fun initialize() {
         if (isInitialized) return
         isInitialized = true
     }
 
     /* ── Registration ───────────────────────────────── */
 
+    /**
+     * Register a component using a pre-built [KComponentInfo].
+     *
+     * Stores both the component info (with its renderer lambda) and
+     * the lightweight [KComponentMetadata] for schema/documentation use.
+     *
+     * @param info The [KComponentInfo] describing the component, including
+     *             its name, renderer lambda, and optional parameter types.
+     * @see register
+     */
     fun register(info: KComponentInfo) {
         components[info.name] = info
         componentMetadata[info.name] = KComponentMetadata(
@@ -95,20 +110,51 @@ object KComponentRegistry {
 
     /* ── Retrieval ───────────────────────────────────── */
 
+    /**
+     * Retrieve a registered component by name.
+     *
+     * Triggers lazy [initialize] if not yet called.
+     *
+     * @param name The component name (matching the JSON `"type"` key).
+     * @return The [KComponentInfo], or `null` if not registered.
+     */
     fun get(name: String): KComponentInfo? {
         if (!isInitialized) initialize()
         return components[name]
     }
 
+    /**
+     * Return all registered components as an immutable map.
+     *
+     * @return Map of component name → [KComponentInfo].
+     */
     fun getAll(): Map<String, KComponentInfo> {
         if (!isInitialized) initialize()
         return components.toMap()
     }
 
+    /**
+     * Retrieve lightweight metadata for a registered component.
+     *
+     * @param name The component name.
+     * @return The [KComponentMetadata], or `null` if not registered.
+     */
     fun getMetadata(name: String): KComponentMetadata? = componentMetadata[name]
 
+    /**
+     * Return all registered component metadata as an immutable map.
+     *
+     * @return Map of component name → [KComponentMetadata].
+     */
     fun getAllMetadata(): Map<String, KComponentMetadata> = componentMetadata.toMap()
 
+    /**
+     * Check whether a component with the given name is registered and
+     * available for rendering.
+     *
+     * @param name The component name to check.
+     * @return `true` if the component is registered.
+     */
     fun isAvailable(name: String): Boolean {
         if (!isInitialized) initialize()
         return components.containsKey(name)
@@ -157,12 +203,23 @@ object KComponentRegistry {
 
     /* ── Lifecycle ───────────────────────────────────── */
 
+    /**
+     * Clear all registered components and metadata, resetting the
+     * initialisation flag.
+     *
+     * Primarily used in tests to restore a clean state.
+     */
     fun clear() {
         components.clear()
         componentMetadata.clear()
         isInitialized = false
     }
 
+    /**
+     * Clear all registered data and immediately re-initialise the registry.
+     *
+     * Equivalent to calling [clear] followed by [initialize].
+     */
     fun reset() {
         clear()
         initialize()

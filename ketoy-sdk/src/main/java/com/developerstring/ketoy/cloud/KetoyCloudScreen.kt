@@ -20,23 +20,56 @@ import com.developerstring.ketoy.screen.KetoyScreenRegistry
 import com.developerstring.ketoy.theme.KetoyColorScheme
 
 /**
- * Renders a screen by its name, using the unified [KetoyScreen] pipeline:
- * dev-override → cloud → local JSON → DSL fallback → error.
+ * Renders a server-driven screen by its name using the unified [KetoyScreen] pipeline.
  *
- * If a [KetoyScreen] with this name is registered in [KetoyScreenRegistry],
- * it delegates to `screen.Content()`. Otherwise it falls back to a direct
- * cloud fetch (legacy behavior).
+ * The resolution order is:
+ * 1. **Dev-server override** — hot-reload JSON injected via the Ketoy Dev Tools.
+ * 2. **Cloud** — fetches from the Ketoy Cloud backend (respects [KetoyCacheStrategy]).
+ * 3. **Local JSON** — statically bundled JSON registered in [KetoyScreenRegistry].
+ * 4. **DSL fallback** — DSL node tree serialised to JSON at runtime.
+ * 5. **Error** — displays [errorContent] with retry.
+ *
+ * If a [KetoyScreen] with the given [screenName] is already registered in
+ * [KetoyScreenRegistry], this composable delegates to `screen.Content()`.
+ * Otherwise it falls back to a direct cloud fetch (legacy behaviour for
+ * screens that were not registered via [ProvideKetoyScreen]).
  *
  * ## Basic usage
  * ```kotlin
- * KetoyCloudScreen(screenName = "home_screen")
+ * @Composable
+ * fun App() {
+ *     KetoyCloudScreen(screenName = "home_screen")
+ * }
  * ```
  *
- * @param screenName      The screen identifier (matches [KetoyScreen.screenName]).
- * @param modifier        Optional [Modifier] for the root container.
- * @param colorScheme     Optional [KetoyColorScheme] for theming.
- * @param loadingContent  Composable shown while fetching.
- * @param errorContent    Composable shown on error with retry.
+ * ## With custom loading and error UI
+ * ```kotlin
+ * KetoyCloudScreen(
+ *     screenName     = "profile",
+ *     colorScheme    = myKetoyColors,
+ *     loadingContent = { ShimmerPlaceholder() },
+ *     errorContent   = { error, retry ->
+ *         Column {
+ *             Text("Oops: $error")
+ *             Button(onClick = retry) { Text("Try again") }
+ *         }
+ *     }
+ * )
+ * ```
+ *
+ * @param screenName      The screen identifier. Must match the screen name
+ *                        registered on the Ketoy Cloud dashboard or in
+ *                        [KetoyScreenRegistry] (e.g. `"home_screen"`).
+ * @param modifier        Optional [Modifier] applied to the root [Box] container.
+ * @param colorScheme     Optional [KetoyColorScheme] for theming the rendered UI tree.
+ * @param loadingContent  Composable shown while the screen JSON is being fetched.
+ *                        Defaults to a centred [CircularProgressIndicator].
+ * @param errorContent    Composable shown when fetching fails. Receives the error
+ *                        message and a `retry` callback. Defaults to
+ *                        [DefaultCloudError].
+ * @see KetoyCloudScreenFromJson
+ * @see KetoyScreen
+ * @see KetoyCloudService.fetchScreen
  */
 @Composable
 fun KetoyCloudScreen(
@@ -66,14 +99,36 @@ fun KetoyCloudScreen(
 }
 
 /**
- * Composable for rendering a pre-fetched server screen JSON string.
+ * Renders a pre-fetched Ketoy screen from a raw JSON string.
  *
- * Use this when you've already fetched the JSON yourself.
+ * Use this composable when you have already fetched or constructed the
+ * screen JSON yourself (e.g. from a custom API, local file, or a Room
+ * database) and want Ketoy to render it without any network call.
  *
+ * ## Example
  * ```kotlin
  * val json = myRepository.getScreenJson("dashboard")
- * KetoyCloudScreenFromJson(json = json)
+ * KetoyCloudScreenFromJson(
+ *     json        = json,
+ *     colorScheme = myKetoyColors
+ * )
  * ```
+ *
+ * ## Expected JSON format
+ * ```json
+ * {
+ *   "type": "Column",
+ *   "children": [
+ *     { "type": "Text", "text": "Hello, World!" }
+ *   ]
+ * }
+ * ```
+ *
+ * @param json        The raw JSON string describing the Ketoy UI tree.
+ * @param modifier    Optional [Modifier] applied to the root [Box] container.
+ * @param colorScheme Optional [KetoyColorScheme] for theming.
+ * @see KetoyCloudScreen
+ * @see com.developerstring.ketoy.renderer.JSONStringToUI
  */
 @Composable
 fun KetoyCloudScreenFromJson(

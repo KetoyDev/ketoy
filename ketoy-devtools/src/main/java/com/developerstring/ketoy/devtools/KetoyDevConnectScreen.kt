@@ -29,7 +29,16 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
- * Returns true if running on an Android emulator.
+ * Detects whether the app is running on an Android emulator.
+ *
+ * Uses a combination of [android.os.Build] fingerprint, model, manufacturer,
+ * brand, device, product, and hardware fields to cover the most common
+ * emulators (Google AVD, Genymotion, etc.).
+ *
+ * This is used internally by [KetoyDevConnectScreen] to pre-fill the
+ * server URL with `10.0.2.2` (the emulator-to-host loopback address).
+ *
+ * @return `true` if the current device is likely an emulator.
  */
 private fun isEmulator(): Boolean {
     return (android.os.Build.FINGERPRINT.startsWith("generic")
@@ -46,15 +55,51 @@ private fun isEmulator(): Boolean {
 }
 
 /**
- * Material 3 themed connection screen for Ketoy Dev Tools.
- * Respects system dark/light theme automatically.
+ * Material 3 themed connection screen for the Ketoy Dev Tools suite.
  *
- * Provides:
- * - Server URL input with emulator auto-detection
- * - Connect button for live-reload
- * - **Skip button** to load the app directly without dev tools
- * - Advanced port configuration
- * - Connection status and error display
+ * This is the first screen users see when [KetoyDevWrapper] (or
+ * [KetoyDevActivity]) is launched without [KetoyDevConfig.autoConnect].
+ * It handles the entire connection flow:
+ *
+ * - **Server URL input** with automatic emulator detection (pre-fills
+ *   `10.0.2.2` when running on an AVD/Genymotion emulator).
+ * - **Connect button** that initiates [KetoyDevClient.connect].
+ * - **Skip button** that allows loading the app directly without
+ *   connecting to a dev server — useful for QA builds that ship the
+ *   devtools module but don’t always need live-reload.
+ * - **Advanced section** for overriding the default port (`8484`).
+ * - **Connection status & error display** driven reactively by
+ *   [KetoyDevClient.connectionState] and [KetoyDevClient.lastError].
+ * - Dynamic Material You color theming on Android 12+ with graceful
+ *   fallback to default dark/light schemes.
+ *
+ * ## Usage
+ * ```kotlin
+ * // Typically you don’t call this directly; KetoyDevWrapper uses it.
+ * // But you can embed it manually:
+ * KetoyDevConnectScreen(
+ *     client = remember { KetoyDevClient() },
+ *     onConnected = { /* navigate to preview */ },
+ *     onSkip      = { /* load app without dev tools */ }
+ * )
+ * ```
+ *
+ * ## Architecture
+ * The composable is **stateless** with respect to networking — it
+ * delegates all connection logic to [KetoyDevClient]. A
+ * [LaunchedEffect] observes [ConnectionState.Connected] and
+ * automatically invokes [onConnected] when the handshake succeeds.
+ *
+ * @param client      The [KetoyDevClient] instance managing the connection.
+ * @param onConnected Callback invoked once the client reaches
+ *                     [ConnectionState.Connected].
+ * @param onSkip      Callback invoked when the user taps “Skip” to
+ *                     bypass devtools and load the app directly.
+ * @param modifier    Optional [Modifier] applied to the root surface.
+ *
+ * @see KetoyDevClient
+ * @see KetoyDevWrapper
+ * @see KetoyDevConfig
  */
 @Composable
 fun KetoyDevConnectScreen(
@@ -365,6 +410,13 @@ fun KetoyDevConnectScreen(
     }
 }
 
+/**
+ * Branded logo composable for the Ketoy Dev Tools connection screen.
+ *
+ * Renders a circular badge with a sweep gradient border using the
+ * current [MaterialTheme] color scheme and a monospaced “K” glyph
+ * in the center.
+ */
 @Composable
 private fun DevToolsLogo() {
     val gradientColors = listOf(
@@ -399,6 +451,15 @@ private fun DevToolsLogo() {
     }
 }
 
+/**
+ * Instructional card displayed on [KetoyDevConnectScreen] that walks
+ * the developer through the four steps required to start live-reloading:
+ *
+ * 1. Start the dev server (`./gradlew ketoyDev`).
+ * 2. Note the IP address from the terminal output.
+ * 3. Enter the IP and tap **Connect**.
+ * 4. Edit Kotlin DSL — changes appear instantly.
+ */
 @Composable
 private fun M3InstructionsCard() {
     ElevatedCard(
@@ -438,6 +499,13 @@ private fun M3InstructionsCard() {
     }
 }
 
+/**
+ * A single numbered instruction row used inside [M3InstructionsCard].
+ *
+ * @param number 1-based step number rendered inside a circular badge.
+ * @param title  Short human-readable instruction text.
+ * @param code   Optional code snippet displayed in a monospace chip.
+ */
 @Composable
 private fun M3InstructionStep(number: Int, title: String, code: String?) {
     Row(
@@ -486,6 +554,19 @@ private fun M3InstructionStep(number: Int, title: String, code: String?) {
     }
 }
 
+/**
+ * Parses the user-entered URL and port, then delegates to
+ * [KetoyDevClient.connect].
+ *
+ * If the URL already contains a colon-delimited port (e.g.
+ * `"192.168.1.5:9090"`), the separate [port] field is ignored.
+ * Otherwise the numeric value of [port] is used (falling back to
+ * `8484` when the string is not a valid integer).
+ *
+ * @param client The [KetoyDevClient] to connect.
+ * @param url    Trimmed server URL entered by the user.
+ * @param port   Port string from the advanced-options text field.
+ */
 private fun attemptConnect(client: KetoyDevClient, url: String, port: String) {
     val cleanUrl = url.trim()
     if (cleanUrl.isBlank()) return

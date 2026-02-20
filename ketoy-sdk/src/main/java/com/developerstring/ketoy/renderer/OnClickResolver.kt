@@ -1,3 +1,15 @@
+/**
+ * Unified onClick / action resolution for the Ketoy SDUI library.
+ *
+ * Every interactive component in the rendering pipeline (buttons, cards,
+ * navigation items, etc.) delegates its `onClick` prop resolution to
+ * [OnClickResolver]. This file contains the single [OnClickResolver] object
+ * that converts raw JSON elements into executable `() -> Unit` lambdas.
+ *
+ * @see OnClickResolver
+ * @see ActionRegistry
+ * @see KetoyActionRegistry
+ */
 package com.developerstring.ketoy.renderer
 
 import android.content.Context
@@ -12,32 +24,43 @@ import kotlinx.serialization.json.JsonPrimitive
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * Unified action resolution for onClick handlers in server-driven UI.
+ * Unified action resolution for `onClick` handlers in server-driven UI.
  *
- * Supports three formats:
+ * All renderers call [resolve] to convert a raw JSON element into a
+ * `() -> Unit` callback. Three formats are supported:
  *
- * 1. **Legacy string ID** – from DSL-built UI (e.g. `"action_42"`)
- *    → resolved via [ActionRegistry]
+ * 1. **Legacy string ID** — from DSL-built UI (e.g. `"action_42"`).
+ *    Resolved via [ActionRegistry].
  *
- * 2. **JSON action object** – from server (e.g. `{"actionType": "navigate", ...}`)
- *    → resolved via [KetoyActionRegistry]
+ * 2. **JSON action object** — from the server
+ *    (e.g. `{"actionType": "navigate", "route": "/home"}`).
+ *    Resolved via [KetoyActionRegistry].
  *
- * 3. **JSON array** – multiple actions in sequence
- *    → each resolved individually
+ * 3. **JSON array** — multiple actions executed in sequence.
+ *    Each element is resolved individually.
  *
- * Called by all renderers (WidgetRenderer, ScaffoldRenderer, etc.)
- * to create a unified `() -> Unit` callback.
+ * ### Thread safety
+ * Resolution and execution happen on the calling thread (typically the
+ * main/UI thread). Heavy work should be offloaded by the registered
+ * action handlers themselves.
+ *
+ * @see ActionRegistry
+ * @see KetoyActionRegistry
+ * @see ActionContext
  */
 internal object OnClickResolver {
 
     /**
-     * Resolve an `onClick` JSON element into a callback lambda.
+     * Resolves an `onClick` JSON element into a callback lambda.
      *
-     * @param element       The raw `"onClick"` JSON element from component props.
-     * @param context       Android context for action execution.
+     * @param element       The raw `"onClick"` [JsonElement] from the component’s props.
+     *                      May be a [JsonPrimitive] (string ID), a [JsonObject]
+     *                      (single action), a [JsonArray] (multiple actions), or `null`.
+     * @param context       Android [Context] forwarded to the action handler.
      * @param navController Optional [KetoyNavController] for navigation actions.
-     *                      When provided, JSON `"navigate"` actions will work correctly.
-     * @return A lambda that executes the action(s), or null if element is null.
+     *                      When provided, JSON `"navigate"` actions work correctly.
+     * @return A lambda that executes the resolved action(s), or `null` if
+     *         [element] is `null` or no handler could be found.
      */
     fun resolve(
         element: JsonElement?,
@@ -74,6 +97,19 @@ internal object OnClickResolver {
         }
     }
 
+    /**
+     * Resolves a single JSON action object into a callback lambda.
+     *
+     * Reads the `actionType` key, looks up the corresponding parser in
+     * [KetoyActionRegistry], deserialises the model, and wraps the
+     * [KetoyActionParser.onCall] invocation in a try/catch so that a
+     * failing action does not crash the host application.
+     *
+     * @param json          The action JSON object.
+     * @param context       Android [Context] for execution.
+     * @param navController Optional [KetoyNavController] for navigation.
+     * @return A callback, or `null` if `actionType` is missing or unregistered.
+     */
     @Suppress("UNCHECKED_CAST")
     private fun resolveJsonAction(
         json: JsonObject,

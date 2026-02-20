@@ -40,6 +40,8 @@ import kotlinx.serialization.json.JsonObject
  * ```
  *
  * @param T The model type this parser produces from JSON.
+ * @see KetoyWidgetRegistry
+ * @see com.developerstring.ketoy.renderer.WidgetRenderer
  */
 interface KetoyWidgetParser<T> {
 
@@ -52,15 +54,28 @@ interface KetoyWidgetParser<T> {
     /**
      * Deserialise a [JsonObject] into the model type [T].
      *
+     * Implementations should extract relevant fields from the JSON and
+     * construct the model. Unknown keys should be silently ignored to
+     * allow forward-compatible schema evolution.
+     *
+     * ### Example JSON input
+     * ```json
+     * { "type": "badge", "text": "New", "color": "#FF0000" }
+     * ```
+     *
      * @param json The JSON object containing widget properties.
-     * @return The parsed model.
+     * @return The fully initialised model of type [T].
      */
     fun getModel(json: JsonObject): T
 
     /**
      * Render the model as a Composable widget.
      *
-     * @param model The parsed model from [getModel].
+     * This method is called inside a Compose composition scope.
+     * It should emit one or more Composable nodes that represent the
+     * visual output of the widget described by [model].
+     *
+     * @param model The parsed model produced by [getModel].
      */
     @Composable
     fun parse(model: T)

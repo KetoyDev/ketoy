@@ -1,3 +1,21 @@
+/**
+ * Custom-component renderers for the Ketoy SDUI library.
+ *
+ * This file bridges the server-driven rendering pipeline with user-registered
+ * components that live in [KComponentRegistry]. Two entry-points are provided:
+ *
+ * - [RenderCustomComponent] — handles the `"component"` type by looking up
+ *   `props.componentName` in the registry.
+ * - [RenderRegisteredComponent] — handles the fallback path where the
+ *   component’s type name itself is the registry key.
+ *
+ * Properties from the JSON payload are extracted into `Map<String, Any>` and
+ * forwarded to the registered renderer lambda.
+ *
+ * @see KComponentRegistry
+ * @see RenderComponent
+ * @see UIComponent
+ */
 package com.developerstring.ketoy.renderer
 
 import androidx.compose.material3.Text
@@ -6,8 +24,21 @@ import com.developerstring.ketoy.registry.KComponentRegistry
 import kotlinx.serialization.json.*
 
 /**
- * Render a custom component via the `"component"` type.
- * The component name is specified in `props.componentName`.
+ * Renders a custom component referenced by `props.componentName`.
+ *
+ * This is the handler for the `"component"` type in the [UIComponent] tree.
+ * It reads the `componentName` from props, looks up the corresponding renderer
+ * in [KComponentRegistry], extracts the nested `properties` object into a
+ * flat `Map<String, Any>`, and invokes the renderer.
+ *
+ * Displays an error text if:
+ * - No `componentName` is specified.
+ * - The named component has not been registered.
+ *
+ * @param component The [UIComponent] whose `type` is `"component"`.
+ *
+ * @see KComponentRegistry
+ * @see RenderRegisteredComponent
  */
 @Composable
 internal fun RenderCustomComponent(component: UIComponent) {
@@ -30,7 +61,18 @@ internal fun RenderCustomComponent(component: UIComponent) {
 }
 
 /**
- * Render a registered component found by its type name in the component registry.
+ * Renders a registered component found by its raw type name.
+ *
+ * This is the fallback path used by [RenderComponent] when the type does not
+ * match any built-in renderer. The type string is used directly as the
+ * [KComponentRegistry] key. All props (except `modifier`) are flattened into
+ * a `Map<String, Any>` for the renderer lambda.
+ *
+ * @param componentName The type name used as the [KComponentRegistry] key.
+ * @param component     The full [UIComponent] node.
+ *
+ * @see KComponentRegistry
+ * @see RenderCustomComponent
  */
 @Composable
 internal fun RenderRegisteredComponent(componentName: String, component: UIComponent) {
@@ -65,7 +107,14 @@ internal fun RenderRegisteredComponent(componentName: String, component: UICompo
 }
 
 // ─── Private helpers ──────────────────────────────────────────────
-
+/**
+ * Flattens a [JsonObject] into a `Map<String, Any>` by extracting:
+ * - Strings, booleans, ints, floats, and doubles from [JsonPrimitive] values.
+ * - `toString()` representations for complex (non-primitive) values.
+ *
+ * @param propsObject The JSON object to extract, or `null`.
+ * @return A flat map of property name to Kotlin value.
+ */
 private fun extractProperties(propsObject: JsonObject?): Map<String, Any> {
     if (propsObject == null) return emptyMap()
     val result = mutableMapOf<String, Any>()

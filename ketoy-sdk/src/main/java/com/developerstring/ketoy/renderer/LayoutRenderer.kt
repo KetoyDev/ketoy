@@ -1,3 +1,24 @@
+/**
+ * Layout renderers for the Ketoy SDUI library.
+ *
+ * This file converts layout-type [UIComponent] nodes into their Jetpack Compose
+ * equivalents. Each function reads the component’s `props` to extract modifiers,
+ * arrangement, alignment, scroll behaviour, content-padding, and more — then
+ * recursively renders child nodes via [RenderComponent].
+ *
+ * Supported layout types:
+ * - [RenderColumn] — vertical linear layout (`Column`)
+ * - [RenderRow]    — horizontal linear layout (`Row`)
+ * - [RenderBox]    — stacking layout (`Box`)
+ * - [RenderLazyColumn] — vertically-scrolling lazy list (`LazyColumn`)
+ * - [RenderLazyRow]    — horizontally-scrolling lazy list (`LazyRow`)
+ *
+ * All functions support the common modifier JSON schema and the optional
+ * `weight` modifier on children for proportional sizing.
+ *
+ * @see RenderComponent
+ * @see UIComponent
+ */
 package com.developerstring.ketoy.renderer
 
 import androidx.compose.foundation.layout.*
@@ -13,6 +34,24 @@ import kotlinx.serialization.json.*
 
 // ─── Column ───────────────────────────────────────────────────────
 
+/**
+ * Renders a vertical `Column` layout from a [UIComponent] node.
+ *
+ * ### Supported props
+ * | Prop | Type | Default | Description |
+ * |------|------|---------|-------------|
+ * | `modifier` | object | – | Standard Ketoy modifier JSON |
+ * | `verticalArrangement` | string | `"top"` | Arrangement along the main axis |
+ * | `horizontalAlignment` | string | `"start"` | Cross-axis alignment |
+ *
+ * Children that carry a `modifier.weight` property are wrapped in a weighted
+ * `Box` so they participate in the Column's proportional sizing.
+ *
+ * @param component The [UIComponent] whose `type` is `"column"`.
+ *
+ * @see RenderRow
+ * @see RenderComponent
+ */
 @Composable
 internal fun RenderColumn(component: UIComponent) {
     val modifier = component.props?.let { parseModifier(it) } ?: Modifier
@@ -37,6 +76,24 @@ internal fun RenderColumn(component: UIComponent) {
 
 // ─── Row ──────────────────────────────────────────────────────────
 
+/**
+ * Renders a horizontal `Row` layout from a [UIComponent] node.
+ *
+ * ### Supported props
+ * | Prop | Type | Default | Description |
+ * |------|------|---------|-------------|
+ * | `modifier` | object | – | Standard Ketoy modifier JSON |
+ * | `horizontalArrangement` | string | `"start"` | Arrangement along the main axis |
+ * | `verticalAlignment` | string | `"top"` | Cross-axis alignment |
+ *
+ * Children that carry a `modifier.weight` property are wrapped in a weighted
+ * `Box` so they participate in the Row's proportional sizing.
+ *
+ * @param component The [UIComponent] whose `type` is `"row"`.
+ *
+ * @see RenderColumn
+ * @see RenderComponent
+ */
 @Composable
 internal fun RenderRow(component: UIComponent) {
     val modifier = component.props?.let { parseModifier(it) } ?: Modifier
@@ -61,6 +118,19 @@ internal fun RenderRow(component: UIComponent) {
 
 // ─── Box ──────────────────────────────────────────────────────────
 
+/**
+ * Renders a stacking `Box` layout from a [UIComponent] node.
+ *
+ * ### Supported props
+ * | Prop | Type | Default | Description |
+ * |------|------|---------|-------------|
+ * | `modifier` | object | – | Standard Ketoy modifier JSON |
+ * | `contentAlignment` | string | `"topStart"` | Alignment of stacked children |
+ *
+ * @param component The [UIComponent] whose `type` is `"box"`.
+ *
+ * @see RenderComponent
+ */
 @Composable
 internal fun RenderBox(component: UIComponent) {
     val modifier = component.props?.let { parseModifier(it) } ?: Modifier
@@ -73,6 +143,26 @@ internal fun RenderBox(component: UIComponent) {
 
 // ─── LazyColumn ───────────────────────────────────────────────────
 
+/**
+ * Renders a vertically-scrolling `LazyColumn` from a [UIComponent] node.
+ *
+ * ### Supported props
+ * | Prop | Type | Default | Description |
+ * |------|------|---------|-------------|
+ * | `modifier` | object | – | Standard Ketoy modifier JSON |
+ * | `verticalArrangement` | string | `"top"` | Arrangement along the main axis |
+ * | `horizontalAlignment` | string | `"start"` | Cross-axis alignment |
+ * | `userScrollEnabled` | boolean | `true` | Whether the user can scroll |
+ * | `reverseLayout` | boolean | `false` | Reverse the item order |
+ * | `contentPadding` | object/int | `0` | Inner padding around the content |
+ *
+ * Each child [UIComponent] is emitted as a lazy item.
+ *
+ * @param component The [UIComponent] whose `type` is `"lazycolumn"`.
+ *
+ * @see RenderLazyRow
+ * @see RenderColumn
+ */
 @Composable
 internal fun RenderLazyColumn(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
@@ -99,6 +189,26 @@ internal fun RenderLazyColumn(component: UIComponent) {
 
 // ─── LazyRow ──────────────────────────────────────────────────────
 
+/**
+ * Renders a horizontally-scrolling `LazyRow` from a [UIComponent] node.
+ *
+ * ### Supported props
+ * | Prop | Type | Default | Description |
+ * |------|------|---------|-------------|
+ * | `modifier` | object | – | Standard Ketoy modifier JSON |
+ * | `horizontalArrangement` | string | `"start"` | Arrangement along the main axis |
+ * | `verticalAlignment` | string | `"top"` | Cross-axis alignment |
+ * | `userScrollEnabled` | boolean | `true` | Whether the user can scroll |
+ * | `reverseLayout` | boolean | `false` | Reverse the item order |
+ * | `contentPadding` | object/int | `0` | Inner padding around the content |
+ *
+ * Each child [UIComponent] is emitted as a lazy item.
+ *
+ * @param component The [UIComponent] whose `type` is `"lazyrow"`.
+ *
+ * @see RenderLazyColumn
+ * @see RenderRow
+ */
 @Composable
 internal fun RenderLazyRow(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())

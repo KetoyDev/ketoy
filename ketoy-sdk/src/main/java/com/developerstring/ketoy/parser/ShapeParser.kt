@@ -1,3 +1,12 @@
+/**
+ * Shape parser for the Ketoy SDUI engine.
+ *
+ * Translates shape descriptors — either plain strings (e.g. `"circle"`,
+ * `"rounded_12"`) or structured [JsonObject]s — into Jetpack Compose [Shape]
+ * instances used for clipping, backgrounds, and borders.
+ *
+ * @see parseModifier
+ */
 package com.developerstring.ketoy.parser
 
 import androidx.compose.foundation.shape.CircleShape
@@ -11,7 +20,23 @@ import kotlinx.serialization.json.intOrNull
 import kotlinx.serialization.json.jsonPrimitive
 
 /**
- * Parse a shape string (e.g. "circle", "rectangle", "rounded_12", "roundedcornershape(8dp)").
+ * Parses a shape descriptor string into a Compose [Shape].
+ *
+ * ### Accepted formats
+ * | Input string                         | Result                              |
+ * |--------------------------------------|-------------------------------------|
+ * | `"circle"`                           | [CircleShape]                       |
+ * | `"rectangle"` / `"clip"`             | [RectangleShape]                    |
+ * | `"rounded_12"`                       | [RoundedCornerShape] with 12 dp     |
+ * | `"rounded_corners_4_8_4_8"`          | Per-corner [RoundedCornerShape]     |
+ * | `"roundedcornershape(16dp)"`         | [RoundedCornerShape] with 16 dp     |
+ * | `"roundedcornershape(50%)"`          | 50 % rounded corners                |
+ * | `"roundedcornershape(4,8,4,8)"`      | Per-corner dp values                |
+ *
+ * @param shapeType the descriptor string (case-insensitive), or `null`.
+ * @return the corresponding [Shape]; defaults to [RectangleShape] for
+ *   unrecognised or `null` input.
+ * @see parseShapeWithRadius
  */
 fun parseShape(shapeType: String?): Shape {
     return when {
@@ -75,7 +100,24 @@ fun parseShape(shapeType: String?): Shape {
 }
 
 /**
- * Parse a shape from a [JsonObject] with `type`, `radius`, `percent`, or per-corner values.
+ * Parses a shape from a structured [JsonObject] with explicit type and
+ * radius/percent/per-corner values.
+ *
+ * ### Expected JSON keys
+ * | Key           | Type   | Description                                 |
+ * |---------------|--------|---------------------------------------------|
+ * | `type`        | String | `"circle"`, `"rectangle"`, `"rounded"`       |
+ * | `radius`      | Int    | Uniform corner radius in dp                 |
+ * | `percent`     | Int    | Corner radius as a percentage (0–100)       |
+ * | `topLeft`     | Int    | Top-start corner radius in dp               |
+ * | `topRight`    | Int    | Top-end corner radius in dp                 |
+ * | `bottomLeft`  | Int    | Bottom-start corner radius in dp            |
+ * | `bottomRight` | Int    | Bottom-end corner radius in dp              |
+ *
+ * @param shapeProps the JSON object describing the shape, or `null`.
+ * @return the corresponding [Shape]; defaults to [RectangleShape] for
+ *   `null` or unrecognised `type` values.
+ * @see parseShape
  */
 fun parseShapeWithRadius(shapeProps: JsonObject?): Shape {
     if (shapeProps == null) return RectangleShape

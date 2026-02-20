@@ -1,3 +1,32 @@
+/**
+ * Central rendering engine for the Ketoy Server-Driven UI (SDUI) library.
+ *
+ * This file contains the primary entry-points that convert a JSON UI
+ * description into a live Jetpack Compose tree:
+ *
+ * - [JSONStringToUI] — accepts a raw JSON string and renders the full tree.
+ * - [RenderComponent] — central dispatch that routes each [UIComponent] node
+ *   to the appropriate specialised renderer (layout, widget, scaffold, etc.).
+ * - [RenderContentSlotFromJson] — helper for rendering named content-slots
+ *   (e.g. `label`, `icon`) that appear as JSON arrays.
+ * - [RenderCustomWidgetParser] — bridge to the custom-widget extension system.
+ *
+ * ### Rendering pipeline
+ * ```
+ * JSON string
+ *   → [JSONStringToUI]
+ *     → [KetoyThemeProvider] (colour resolution)
+ *       → [RenderComponent] (recursive dispatch)
+ *         → LayoutRenderer / WidgetRenderer / ScaffoldRenderer / …
+ * ```
+ *
+ * @see LayoutRenderer
+ * @see WidgetRenderer
+ * @see ScaffoldRenderer
+ * @see TextFieldRenderer
+ * @see ComponentRenderer
+ * @see OnClickResolver
+ */
 package com.developerstring.ketoy.renderer
 
 import androidx.compose.material3.Text
@@ -13,7 +42,16 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 
 /**
- * Lightweight model used by the renderer to interpret JSON-driven UI trees.
+ * Lightweight serialisable model that mirrors a single node in a JSON-driven UI tree.
+ *
+ * Each node carries a [type] (e.g. `"column"`, `"text"`, `"scaffold"`), an optional
+ * [props] object with component-specific configuration, and an optional list of
+ * [children] nodes that are rendered recursively.
+ *
+ * @property type     The component type identifier (case-insensitive).
+ * @property props    Optional JSON object containing component properties such as
+ *                    modifiers, colours, text values, onClick handlers, etc.
+ * @property children Optional child nodes rendered inside this component.
  */
 @Serializable
 data class UIComponent(
@@ -23,12 +61,27 @@ data class UIComponent(
 )
 
 /**
- * Primary entry-point: parses a JSON string and renders the resulting tree.
+ * Primary entry-point: parses a JSON string and renders the full Compose UI tree.
  *
- * @param value  The JSON-encoded UI tree.
- * @param colorScheme  Optional [KetoyColorScheme] to power `@theme/` colour
- *   references.  When `null` (the default), [KetoyThemeProvider] will
- *   automatically derive one from the current [MaterialTheme].
+ * Call this composable from your Activity, Fragment, or any Compose host to
+ * display a server-driven screen.
+ *
+ * ```kotlin
+ * // Minimal usage
+ * JSONStringToUI(value = jsonFromServer)
+ *
+ * // With a custom colour scheme
+ * JSONStringToUI(value = jsonFromServer, colorScheme = myKetoyColors)
+ * ```
+ *
+ * @param value       The JSON-encoded UI tree (a single [UIComponent] root).
+ * @param colorScheme Optional [KetoyColorScheme] that powers `@theme/` colour
+ *                    references inside the tree. When `null` (the default),
+ *                    [KetoyThemeProvider] automatically derives one from the
+ *                    current Material 3 theme.
+ *
+ * @see RenderComponent
+ * @see KetoyThemeProvider
  */
 @Composable
 fun JSONStringToUI(
@@ -53,7 +106,28 @@ fun JSONStringToUI(
 }
 
 /**
- * Central dispatch – routes a [UIComponent] to the appropriate renderer.
+ * Central dispatch — recursively routes a [UIComponent] to the appropriate
+ * specialised renderer based on its [UIComponent.type].
+ *
+ * Supported type families:
+ * - **Layouts** — `column`, `row`, `box`, `lazycolumn`, `lazyrow`
+ * - **Widgets** — `text`, `textfield`, `button`, `spacer`, `card`, `image`,
+ *   `icon`, `iconbutton`, `component`
+ * - **Scaffold** — `scaffold`, `topappbar`, `bottomappbar`, `navigationbar`,
+ *   `floatingactionbutton`, `snackbar`, `snackbarhost`,
+ *   `navigationdraweritem`, `customnavigationitem`, `navigationrail`,
+ *   `navigationrailitem`, `appbaraction`, `modalbottomsheet`
+ * - **Data constructs** — `dataclass`, `enum` (register values into
+ *   [KetoyVariableRegistry])
+ * - **Fallback** — custom widget parsers via [KetoyWidgetRegistry] or
+ *   registered components via [KComponentRegistry]
+ *
+ * @param component The [UIComponent] node to render.
+ *
+ * @see LayoutRenderer
+ * @see WidgetRenderer
+ * @see ScaffoldRenderer
+ * @see ComponentRenderer
  */
 @Composable
 fun RenderComponent(component: UIComponent) {
@@ -132,7 +206,16 @@ fun RenderComponent(component: UIComponent) {
 }
 
 /**
- * Renders content-slot arrays (e.g. `label`, `icon` slots in TextField / Scaffold).
+ * Renders a content-slot encoded as a [JsonArray] of [UIComponent] nodes.
+ *
+ * Many Material 3 components expose named slots such as `label`, `icon`,
+ * `leadingIcon`, `trailingIcon`, etc. In the Ketoy JSON schema these are
+ * represented as JSON arrays. This helper decodes each element and delegates
+ * to [RenderComponent].
+ *
+ * @param contentArray The JSON array whose elements are serialised [UIComponent] objects.
+ *
+ * @see RenderComponent
  */
 @Composable
 fun RenderContentSlotFromJson(contentArray: JsonArray) {
@@ -144,7 +227,19 @@ fun RenderContentSlotFromJson(contentArray: JsonArray) {
 
 /**
  * Renders a widget using a registered [KetoyWidgetParser].
- * Enables the custom widget extension system.
+ *
+ * This is the bridge between the Ketoy core renderer and the custom-widget
+ * extension system. Third-party consumers can register their own widget types
+ * via [KetoyWidgetRegistry] and provide a [KetoyWidgetParser] that knows how
+ * to convert the JSON props into a typed model and emit Composable content.
+ *
+ * @param T         The model type produced by the parser.
+ * @param parser    The [KetoyWidgetParser] instance that converts JSON to a
+ *                  model and renders it.
+ * @param component The [UIComponent] whose [UIComponent.props] will be passed
+ *                  to the parser.
+ *
+ * @see KetoyWidgetRegistry
  */
 @Composable
 @Suppress("UNCHECKED_CAST")

@@ -6,13 +6,13 @@ plugins {
 }
 
 android {
-    namespace = "com.developerstring.ketoy"
+    namespace = "com.developerstring.ketoy_app"
     compileSdk {
         version = release(36)
     }
 
     defaultConfig {
-        applicationId = "com.developerstring.ketoy"
+        applicationId = "com.developerstring.ketoy_app"
         minSdk = 26
         targetSdk = 36
         versionCode = 1

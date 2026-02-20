@@ -1,3 +1,13 @@
+/**
+ * Arrangement & alignment parser for the Ketoy SDUI engine.
+ *
+ * Converts JSON layout properties (`verticalArrangement`, `horizontalArrangement`,
+ * `horizontalAlignment`, `verticalAlignment`, `contentAlignment`) into their
+ * Jetpack Compose equivalents used by `Row`, `Column`, and `Box` layouts.
+ * Also provides a general-purpose [parsePadding] helper for `PaddingValues`.
+ *
+ * @see parseModifier
+ */
 package com.developerstring.ketoy.parser
 
 import androidx.compose.foundation.layout.Arrangement
@@ -6,7 +16,20 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.*
 
-// ─── Vertical Arrangement ─────────────────────────────────────────
+// ─── Vertical Arrangement ───────────────────────────────────────────
+
+/**
+ * Parses the `"verticalArrangement"` property from a component [JsonObject]
+ * into a Compose [Arrangement.Vertical].
+ *
+ * The value may be either:
+ * - A **string** — `"center"`, `"spaceBetween"`, `"spaceEvenly"`, `"spaceAround"`,
+ *   `"top"`, `"bottom"`, or `"spacedBy_<dp>"` (e.g. `"spacedBy_8"`).
+ * - An **object** — `{ "type": "spacedBy", "spacing": 8 }`.
+ *
+ * @param props the component’s top-level [JsonObject].
+ * @return the resolved [Arrangement.Vertical]; defaults to [Arrangement.Top].
+ */
 
 fun parseVerticalArrangement(props: JsonObject): Arrangement.Vertical {
     val arrangement = props["verticalArrangement"] ?: return Arrangement.Top
@@ -46,7 +69,18 @@ fun parseVerticalArrangement(props: JsonObject): Arrangement.Vertical {
 }
 
 // ─── Horizontal Arrangement ───────────────────────────────────────
-
+/**
+ * Parses the `"horizontalArrangement"` property from a component [JsonObject]
+ * into a Compose [Arrangement.Horizontal].
+ *
+ * Accepts the same formats as [parseVerticalArrangement] (primitive string
+ * or structured object), using horizontal-axis names (`"start"`, `"end"`,
+ * `"center"`, `"spacedBy_<dp>"`, etc.).
+ *
+ * @param props the component’s top-level [JsonObject].
+ * @return the resolved [Arrangement.Horizontal]; defaults to [Arrangement.Start].
+ * @see parseVerticalArrangement
+ */
 fun parseHorizontalArrangement(props: JsonObject): Arrangement.Horizontal {
     val arrangement = props["horizontalArrangement"] ?: return Arrangement.Start
 
@@ -86,6 +120,14 @@ fun parseHorizontalArrangement(props: JsonObject): Arrangement.Horizontal {
 
 // ─── Alignments ───────────────────────────────────────────────────
 
+/**
+ * Parses the `"horizontalAlignment"` property into an [Alignment.Horizontal].
+ *
+ * Recognised values: `"center"` / `"centerHorizontally"`, `"start"`, `"end"`.
+ *
+ * @param props the component’s top-level [JsonObject].
+ * @return the resolved horizontal alignment; defaults to [Alignment.Start].
+ */
 fun parseHorizontalAlignment(props: JsonObject): Alignment.Horizontal {
     return when (props["horizontalAlignment"]?.jsonPrimitive?.content) {
         "center", "centerHorizontally" -> Alignment.CenterHorizontally
@@ -95,6 +137,14 @@ fun parseHorizontalAlignment(props: JsonObject): Alignment.Horizontal {
     }
 }
 
+/**
+ * Parses the `"verticalAlignment"` property into an [Alignment.Vertical].
+ *
+ * Recognised values: `"center"` / `"centerVertically"`, `"top"`, `"bottom"`.
+ *
+ * @param props the component’s top-level [JsonObject].
+ * @return the resolved vertical alignment; defaults to [Alignment.Top].
+ */
 fun parseVerticalAlignment(props: JsonObject): Alignment.Vertical {
     return when (props["verticalAlignment"]?.jsonPrimitive?.content) {
         "center", "centerVertically" -> Alignment.CenterVertically
@@ -104,12 +154,30 @@ fun parseVerticalAlignment(props: JsonObject): Alignment.Vertical {
     }
 }
 
+/**
+ * Parses the `"contentAlignment"` property into a two-dimensional [Alignment]
+ * suitable for `Box` composables.
+ *
+ * @param props the component’s top-level [JsonObject].
+ * @return the resolved [Alignment]; defaults to [Alignment.TopStart].
+ * @see parseContentAlignmentFromString
+ */
 fun parseContentAlignment(props: JsonObject): Alignment {
     return parseContentAlignmentFromString(
         props["contentAlignment"]?.jsonPrimitive?.content ?: ""
     )
 }
 
+/**
+ * Resolves a raw alignment string into a two-dimensional [Alignment].
+ *
+ * Recognised values: `"center"`, `"topStart"`, `"topCenter"`, `"topEnd"`,
+ * `"centerStart"`, `"centerEnd"`, `"bottomStart"`, `"bottomCenter"`,
+ * `"bottomEnd"`, and shorthand aliases (`"top"`, `"bottom"`, `"start"`, `"end"`).
+ *
+ * @param alignment the alignment string from the JSON payload.
+ * @return the corresponding [Alignment]; defaults to [Alignment.TopStart].
+ */
 fun parseContentAlignmentFromString(alignment: String): Alignment {
     return when (alignment) {
         "center" -> Alignment.Center
@@ -131,6 +199,17 @@ fun parseContentAlignmentFromString(alignment: String): Alignment {
 
 // ─── Padding ──────────────────────────────────────────────────────
 
+/**
+ * Converts a JSON element into Compose [PaddingValues].
+ *
+ * Accepted formats:
+ * - **Object** with keys: `all`, `horizontal`, `vertical`, `top`, `bottom`,
+ *   `start`, `end` (all in dp).
+ * - Any other element type returns `PaddingValues(0.dp)`.
+ *
+ * @param paddingElement the raw [JsonElement] from the component tree.
+ * @return the resulting [PaddingValues].
+ */
 fun parsePadding(paddingElement: JsonElement): PaddingValues {
     return when (paddingElement) {
         is JsonObject -> {

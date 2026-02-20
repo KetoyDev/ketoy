@@ -64,8 +64,57 @@ val LocalKetoyDarkTheme = staticCompositionLocalOf { false }
 
 /**
  * Ketoy's own colour scheme that maps semantic tokens (e.g. `"primary"`)
- * to actual [Color] values.  Users can provide a custom instance or let
+ * to actual [Color] values. Users can provide a custom instance or let
  * [KetoyThemeProvider] derive one from the active [MaterialTheme].
+ *
+ * The full set of tokens mirrors Material 3’s [ColorScheme], providing
+ * a consistent bridge between server-driven JSON colour references and
+ * the host app’s design system.
+ *
+ * ## Custom scheme
+ * ```kotlin
+ * val myScheme = KetoyColorScheme(
+ *     primary = Color(0xFF6200EE),
+ *     onPrimary = Color.White,
+ *     // ... all other tokens ...
+ * )
+ * ```
+ *
+ * ## From Material 3
+ * ```kotlin
+ * val scheme = KetoyColorScheme.fromMaterial(MaterialTheme.colorScheme)
+ * ```
+ *
+ * @property primary              The primary brand colour.
+ * @property onPrimary            Content colour on top of [primary].
+ * @property primaryContainer     A tonal variant of [primary] for containers.
+ * @property onPrimaryContainer   Content colour on [primaryContainer].
+ * @property secondary            The secondary brand colour.
+ * @property onSecondary          Content colour on top of [secondary].
+ * @property secondaryContainer   A tonal variant of [secondary] for containers.
+ * @property onSecondaryContainer Content colour on [secondaryContainer].
+ * @property tertiary             The tertiary accent colour.
+ * @property onTertiary           Content colour on top of [tertiary].
+ * @property tertiaryContainer    A tonal variant of [tertiary] for containers.
+ * @property onTertiaryContainer  Content colour on [tertiaryContainer].
+ * @property error                Colour for error states and indicators.
+ * @property onError              Content colour on top of [error].
+ * @property errorContainer       A lighter tonal variant of [error] for containers.
+ * @property onErrorContainer     Content colour on [errorContainer].
+ * @property background           The default background colour of the application.
+ * @property onBackground         Content colour on top of [background].
+ * @property surface              The default surface colour for cards, sheets, etc.
+ * @property onSurface            Content colour on top of [surface].
+ * @property surfaceVariant       An alternative surface colour with slightly more emphasis.
+ * @property onSurfaceVariant     Content colour on [surfaceVariant].
+ * @property outline              Subtle border/divider colour.
+ * @property outlineVariant       A lower-emphasis variant of [outline].
+ * @property inversePrimary       Primary colour for inverse (dark-on-light) surfaces.
+ * @property inverseSurface       Surface colour for inverse themes.
+ * @property inverseOnSurface     Content colour on [inverseSurface].
+ * @property surfaceTint          Tint colour applied to elevated surfaces.
+ * @see KetoyThemeProvider
+ * @see KetoyThemeMode
  */
 data class KetoyColorScheme(
     val primary: Color,
@@ -100,6 +149,14 @@ data class KetoyColorScheme(
     /**
      * Resolve a theme token name (e.g. `"primary"`, `"onSurface"`) to
      * the corresponding [Color], or `null` if the token is unknown.
+     *
+     * This method is used internally by the Ketoy renderer to map
+     * JSON colour references like `"color": "primary"` to concrete
+     * [Color] values from the current scheme.
+     *
+     * @param token The theme token name (case-sensitive).
+     * @return The [Color] for the token, or `null` if the token is not part
+     *         of this scheme.
      */
     fun resolve(token: String): Color? = when (token) {
         "primary"              -> primary
@@ -135,7 +192,14 @@ data class KetoyColorScheme(
 
     companion object {
         /**
-         * Build a [KetoyColorScheme] from a Material3 [ColorScheme].
+         * Build a [KetoyColorScheme] from a Material 3 [ColorScheme].
+         *
+         * This factory maps every Material 3 colour slot to its Ketoy
+         * equivalent, ensuring consistent theming when the host app
+         * already uses a Material 3 theme.
+         *
+         * @param cs The Material 3 [ColorScheme] to convert.
+         * @return A new [KetoyColorScheme] mirroring all [cs] colours.
          */
         fun fromMaterial(cs: ColorScheme): KetoyColorScheme = KetoyColorScheme(
             primary              = cs.primary,
@@ -171,11 +235,20 @@ data class KetoyColorScheme(
 }
 
 /**
- * CompositionLocal that provides the current [KetoyColorScheme].
+ * [CompositionLocal][staticCompositionLocalOf] that provides the current [KetoyColorScheme].
  *
- * If no [KetoyThemeProvider] is installed the default is a "stub" scheme
+ * If no [KetoyThemeProvider] is installed the default is a “stub” scheme
  * where every slot is [Color.Unspecified], so callers always fall back to
  * their own defaults.
+ *
+ * ### Reading colours inside a Ketoy renderer
+ * ```kotlin
+ * val scheme = LocalKetoyColors.current
+ * val bgColor = scheme.resolve("background") ?: Color.White
+ * ```
+ *
+ * @see KetoyThemeProvider
+ * @see KetoyColorScheme
  */
 val LocalKetoyColors = staticCompositionLocalOf {
     KetoyColorScheme(

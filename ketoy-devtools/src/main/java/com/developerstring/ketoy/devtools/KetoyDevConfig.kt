@@ -1,13 +1,55 @@
 package com.developerstring.ketoy.devtools
 
 /**
- * Configuration for connecting to a Ketoy Dev Server.
+ * Immutable configuration for connecting to a **Ketoy Dev Server**.
  *
- * @param host The hostname or IP address of the dev server
- * @param port The HTTP port of the dev server (WebSocket port is port + 1)
- * @param autoConnect Whether to auto-connect on launch (skip the connection screen)
- * @param showOverlay Whether to show the connection status overlay
- * @param shakeToDisconnect Whether shaking the device disconnects from the server
+ * Pass an instance to [KetoyDevWrapper] or [KetoyDevActivity] to control
+ * connection behavior, overlay visibility, and gesture shortcuts.
+ *
+ * ## Usage
+ * ```kotlin
+ * // Manual connect (show connection screen first):
+ * KetoyDevWrapper(config = KetoyDevConfig()) {
+ *     MyApp()
+ * }
+ *
+ * // Auto-connect to a known server (skip the connection screen):
+ * KetoyDevWrapper(
+ *     config = KetoyDevConfig(
+ *         host = "192.168.1.5",
+ *         port = 8484,
+ *         autoConnect = true
+ *     )
+ * ) {
+ *     MyApp()
+ * }
+ *
+ * // Hide the floating status overlay:
+ * KetoyDevWrapper(
+ *     config = KetoyDevConfig(showOverlay = false)
+ * ) { MyApp() }
+ * ```
+ *
+ * ## Port convention
+ * The HTTP server listens on [port] (default `8484`). The companion
+ * WebSocket server always listens on `port + 1` (`8485` by default).
+ *
+ * @property host              Hostname or IP address of the dev server.
+ *                              Leave empty to show the manual connection screen.
+ * @property port              HTTP port of the dev server. The WebSocket port
+ *                              is always `port + 1`.
+ * @property autoConnect       When `true` **and** [host] is non-blank, the
+ *                              wrapper connects immediately, skipping
+ *                              [KetoyDevConnectScreen].
+ * @property showOverlay       Whether the floating [KetoyDevOverlay] status
+ *                              pill is rendered on top of the app content.
+ * @property shakeToDisconnect When `true`, a device shake gesture triggers
+ *                              [KetoyDevClient.disconnect] for quick toggling
+ *                              during physical-device testing.
+ *
+ * @see KetoyDevWrapper
+ * @see KetoyDevActivity
+ * @see KetoyDevClient
  */
 data class KetoyDevConfig(
     val host: String = "",

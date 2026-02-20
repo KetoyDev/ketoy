@@ -553,3 +553,51 @@ gradle.taskGraph.whenReady {
             }
     }
 }
+
+// ══════════════════════════════════════════════════════════════════
+//  ketoyExportProd — Production export of screens + navigation
+// ══════════════════════════════════════════════════════════════════
+// Run with: ./gradlew ketoyExportProd
+//
+// Exports all screens and navigation graphs to `ketoy-export/` at the
+// project root. This is the PRODUCTION counterpart to `ketoyExport`:
+//
+//   - No test data, no dummy values, no hardcoded strings
+//   - Uses KetoyVariable template placeholders ({{data:...}})
+//   - Generates navigation_manifest.json (combined nav graphs)
+//   - Generates screen_manifest.json (screen index)
+//   - Output is ready for bundling in assets, Cloud push, or CDN
+//
+// Output structure:
+//   ketoy-export/
+//   ├── home.json
+//   ├── profile.json
+//   ├── analytics.json
+//   ├── cards.json
+//   ├── history_screen.json
+//   ├── nav_main.json
+//   ├── nav_demo.json
+//   ├── navigation_manifest.json
+//   └── screen_manifest.json
+//
+// To push to Ketoy Cloud after export:
+//   ./gradlew ketoyExportProd && ./gradlew ketoyPushAll -Pversion=1.0.0
+tasks.register("ketoyExportProd") {
+    group = "ketoy"
+    description = "Export production-ready Ketoy screens and navigation to ketoy-export/"
+    dependsOn(":app:testDebugUnitTest")
+}
+
+// Configure the app's unit test task to only run ProductionExportTest when
+// triggered via ketoyExportProd.
+gradle.taskGraph.whenReady {
+    if (hasTask(":ketoyExportProd") || hasTask("ketoyExportProd")) {
+        allTasks.filterIsInstance<Test>()
+            .filter { it.path == ":app:testDebugUnitTest" }
+            .forEach { task ->
+                task.filter {
+                    includeTestsMatching("*.ProductionExportTest")
+                }
+            }
+    }
+}

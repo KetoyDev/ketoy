@@ -1,34 +1,57 @@
 {
+  "screenName": "home",
+  "displayName": "Home",
+  "version": "1.0.0",
+  "contents": {
+    "cards": {
     "type": "Column",
     "props": {
         "modifier": {
-            "fillMaxSize": 1.0
-        }
+            "fillMaxWidth": 1.0,
+            "padding": {
+                "top": 16
+            }
+        },
+        "verticalArrangement": "spacedBy_0"
     },
     "children": [
         {
-            "type": "LazyColumn",
+            "type": "Row",
             "props": {
                 "modifier": {
-                    "fillMaxSize": 1.0
+                    "fillMaxWidth": 1.0,
+                    "padding": {
+                        "horizontal": 20
+                    }
                 },
-                "verticalArrangement": "spacedBy_16",
-                "contentPadding": {
-                    "horizontal": 16,
-                    "vertical": 16
-                }
+                "horizontalArrangement": "spaceBetween",
+                "verticalAlignment": "centerVertically"
             },
             "children": [
                 {
                     "type": "Row",
                     "props": {
-                        "modifier": {
-                            "fillMaxWidth": 1.0
-                        },
-                        "horizontalArrangement": "spaceBetween",
+                        "horizontalArrangement": "spacedBy_14",
                         "verticalAlignment": "centerVertically"
                     },
                     "children": [
+                        {
+                            "type": "Component",
+                            "props": {
+                                "name": "AvatarBadge",
+                                "componentName": "AvatarBadge",
+                                "properties": {
+                                    "initials": "Te",
+                                    "badgeCount": 3,
+                                    "size": 48
+                                },
+                                "props": {
+                                    "initials": "Te",
+                                    "badgeCount": 3,
+                                    "size": 48
+                                }
+                            }
+                        },
                         {
                             "type": "Column",
                             "props": {
@@ -38,59 +61,324 @@
                                 {
                                     "type": "Text",
                                     "props": {
-                                        "text": "Welcome back",
-                                        "fontSize": 14,
+                                        "text": "Good morning, hello",
+                                        "fontSize": 13,
                                         "color": "#CAC4D0"
                                     }
                                 },
                                 {
                                     "type": "Text",
                                     "props": {
-                                        "text": "Parth Ansh Sex",
-                                        "fontSize": 24,
+                                        "text": "Test User",
+                                        "fontSize": 20,
                                         "fontWeight": "bold",
                                         "color": "#E6E0E9"
                                     }
                                 }
                             ]
-                        },
-                        {
-                            "type": "Box",
-                            "props": {
-                                "modifier": {
-                                    "size": 48,
-                                    "background": "#4F378B",
-                                    "shape": "circle"
-                                },
-                                "contentAlignment": "center"
-                            },
-                            "children": [
-                                {
-                                    "type": "Icon",
-                                    "props": {
-                                        "icon": "account_circle",
-                                        "size": 36,
-                                        "color": "#D0BCFF"
-                                    }
-                                }
-                            ]
                         }
                     ]
                 },
                 {
-                    "type": "Spacer",
+                    "type": "IconButton",
                     "props": {
-                        "height": 8
+                        "icon": "notifications_none",
+                        "onClick": "home_clear_notifs",
+                        "iconSize": 26,
+                        "iconColor": "#E6E0E9"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Spacer",
+            "props": {
+                "height": 20
+            }
+        },
+        {
+            "type": "Box",
+            "props": {
+                "modifier": {
+                    "fillMaxWidth": 1.0,
+                    "padding": {
+                        "horizontal": 20
+                    }
+                }
+            },
+            "children": [
+                {
+                    "type": "Component",
+                    "props": {
+                        "name": "BalanceDisplay",
+                        "componentName": "BalanceDisplay",
+                        "properties": {
+                            "label": "Total Balance",
+                            "amount": "$12,450.00",
+                            "trend": "+12.5% this month",
+                            "trendPositive": true
+                        },
+                        "props": {
+                            "label": "Total Balance",
+                            "amount": "$12,450.00",
+                            "trend": "+12.5% this month",
+                            "trendPositive": true
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Spacer",
+            "props": {
+                "height": 20
+            }
+        },
+        {
+            "type": "Row",
+            "props": {
+                "modifier": {
+                    "fillMaxWidth": 1.0,
+                    "padding": {
+                        "horizontal": 20
                     }
                 },
+                "horizontalArrangement": "spaceEvenly"
+            },
+            "children": [
+                {
+                    "type": "Column",
+                    "props": {
+                        "verticalArrangement": "spacedBy_8",
+                        "horizontalAlignment": "centerHorizontally"
+                    },
+                    "children": [
+                        {
+                            "type": "Card",
+                            "props": {
+                                "modifier": {
+                                    "size": 64
+                                },
+                                "shape": "rounded_20",
+                                "containerColor": "#4F378B",
+                                "elevation": 0
+                            },
+                            "children": [
+                                {
+                                    "type": "Box",
+                                    "props": {
+                                        "modifier": {
+                                            "fillMaxSize": 1.0
+                                        },
+                                        "contentAlignment": "center"
+                                    },
+                                    "children": [
+                                        {
+                                            "type": "IconButton",
+                                            "props": {
+                                                "icon": "send",
+                                                "onClick": "home_send",
+                                                "iconSize": 28,
+                                                "iconColor": "#D0BCFF"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Text",
+                            "props": {
+                                "text": "Send",
+                                "fontSize": 12,
+                                "fontWeight": "medium",
+                                "color": "#CAC4D0"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "type": "Column",
+                    "props": {
+                        "verticalArrangement": "spacedBy_8",
+                        "horizontalAlignment": "centerHorizontally"
+                    },
+                    "children": [
+                        {
+                            "type": "Card",
+                            "props": {
+                                "modifier": {
+                                    "size": 64
+                                },
+                                "shape": "rounded_20",
+                                "containerColor": "#4A4458",
+                                "elevation": 0
+                            },
+                            "children": [
+                                {
+                                    "type": "Box",
+                                    "props": {
+                                        "modifier": {
+                                            "fillMaxSize": 1.0
+                                        },
+                                        "contentAlignment": "center"
+                                    },
+                                    "children": [
+                                        {
+                                            "type": "IconButton",
+                                            "props": {
+                                                "icon": "download",
+                                                "onClick": "home_receive",
+                                                "iconSize": 28,
+                                                "iconColor": "#CCC5DC"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Text",
+                            "props": {
+                                "text": "Receive",
+                                "fontSize": 12,
+                                "fontWeight": "medium",
+                                "color": "#CAC4D0"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "type": "Column",
+                    "props": {
+                        "verticalArrangement": "spacedBy_8",
+                        "horizontalAlignment": "centerHorizontally"
+                    },
+                    "children": [
+                        {
+                            "type": "Card",
+                            "props": {
+                                "modifier": {
+                                    "size": 64
+                                },
+                                "shape": "rounded_20",
+                                "containerColor": "#633B48",
+                                "elevation": 0
+                            },
+                            "children": [
+                                {
+                                    "type": "Box",
+                                    "props": {
+                                        "modifier": {
+                                            "fillMaxSize": 1.0
+                                        },
+                                        "contentAlignment": "center"
+                                    },
+                                    "children": [
+                                        {
+                                            "type": "IconButton",
+                                            "props": {
+                                                "icon": "swap_horiz",
+                                                "onClick": "home_swap",
+                                                "iconSize": 28,
+                                                "iconColor": "#EFB8C8"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Text",
+                            "props": {
+                                "text": "Swap",
+                                "fontSize": 12,
+                                "fontWeight": "medium",
+                                "color": "#CAC4D0"
+                            }
+                        }
+                    ]
+                },
+                {
+                    "type": "Column",
+                    "props": {
+                        "verticalArrangement": "spacedBy_8",
+                        "horizontalAlignment": "centerHorizontally"
+                    },
+                    "children": [
+                        {
+                            "type": "Card",
+                            "props": {
+                                "modifier": {
+                                    "size": 64
+                                },
+                                "shape": "rounded_20",
+                                "containerColor": "#1D1B20",
+                                "elevation": 0
+                            },
+                            "children": [
+                                {
+                                    "type": "Box",
+                                    "props": {
+                                        "modifier": {
+                                            "fillMaxSize": 1.0
+                                        },
+                                        "contentAlignment": "center"
+                                    },
+                                    "children": [
+                                        {
+                                            "type": "IconButton",
+                                            "props": {
+                                                "icon": "more_horiz",
+                                                "onClick": "home_more",
+                                                "iconSize": 28,
+                                                "iconColor": "#CAC4D0"
+                                            }
+                                        }
+                                    ]
+                                }
+                            ]
+                        },
+                        {
+                            "type": "Text",
+                            "props": {
+                                "text": "More",
+                                "fontSize": 12,
+                                "fontWeight": "medium",
+                                "color": "#CAC4D0"
+                            }
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "Spacer",
+            "props": {
+                "height": 24
+            }
+        },
+        {
+            "type": "Row",
+            "props": {
+                "modifier": {
+                    "fillMaxWidth": 1.0,
+                    "padding": {
+                        "horizontal": 20
+                    }
+                },
+                "horizontalArrangement": "spacedBy_12"
+            },
+            "children": [
                 {
                     "type": "Card",
                     "props": {
                         "modifier": {
-                            "fillMaxWidth": 1.0
+                            "weight": 1.0
                         },
-                        "shape": "rounded_24",
-                        "elevation": 6
+                        "shape": "rounded_16",
+                        "containerColor": "#2B2930",
+                        "elevation": 1
                     },
                     "children": [
                         {
@@ -98,54 +386,40 @@
                             "props": {
                                 "modifier": {
                                     "fillMaxWidth": 1.0,
-                                    "gradient": {
-                                        "type": "linear",
-                                        "colors": [
-                                            "#6750A4",
-                                            "#7F67BE",
-                                            "#9A82DB"
-                                        ],
-                                        "direction": "diagonal"
+                                    "padding": {
+                                        "all": 16
                                     }
-                                }
+                                },
+                                "verticalArrangement": "spacedBy_10"
                             },
                             "children": [
                                 {
-                                    "type": "Column",
+                                    "type": "Row",
                                     "props": {
                                         "modifier": {
-                                            "fillMaxWidth": 1.0,
-                                            "padding": {
-                                                "all": 24
-                                            }
+                                            "fillMaxWidth": 1.0
                                         },
-                                        "verticalArrangement": "spacedBy_4"
+                                        "horizontalArrangement": "spaceBetween",
+                                        "verticalAlignment": "centerVertically"
                                     },
                                     "children": [
                                         {
-                                            "type": "Row",
+                                            "type": "Box",
                                             "props": {
                                                 "modifier": {
-                                                    "fillMaxWidth": 1.0
+                                                    "size": 40,
+                                                    "background": "#0A5C30",
+                                                    "shape": "rounded_12"
                                                 },
-                                                "horizontalArrangement": "spaceBetween",
-                                                "verticalAlignment": "centerVertically"
+                                                "contentAlignment": "center"
                                             },
                                             "children": [
                                                 {
-                                                    "type": "Text",
-                                                    "props": {
-                                                        "text": "Total Balance",
-                                                        "fontSize": 14,
-                                                        "color": "#D0BCFF"
-                                                    }
-                                                },
-                                                {
                                                     "type": "Icon",
                                                     "props": {
-                                                        "icon": "visibility",
-                                                        "size": 20,
-                                                        "color": "#D0BCFF"
+                                                        "icon": "trending_up",
+                                                        "size": 22,
+                                                        "color": "#6DD58C"
                                                     }
                                                 }
                                             ]
@@ -153,1296 +427,170 @@
                                         {
                                             "type": "Text",
                                             "props": {
-                                                "text": "$24,562.80",
-                                                "fontSize": 38,
+                                                "text": "+8.2%",
+                                                "fontSize": 12,
                                                 "fontWeight": "bold",
-                                                "color": "#381E72"
+                                                "color": "#6DD58C"
                                             }
-                                        },
-                                        {
-                                            "type": "Spacer",
-                                            "props": {
-                                                "height": 12
-                                            }
-                                        },
-                                        {
-                                            "type": "Row",
-                                            "props": {
-                                                "modifier": {
-                                                    "fillMaxWidth": 1.0
-                                                },
-                                                "horizontalArrangement": "spaceBetween"
-                                            },
-                                            "children": [
-                                                {
-                                                    "type": "Row",
-                                                    "props": {
-                                                        "horizontalArrangement": "spacedBy_6",
-                                                        "verticalAlignment": "centerVertically"
-                                                    },
-                                                    "children": [
-                                                        {
-                                                            "type": "Box",
-                                                            "props": {
-                                                                "modifier": {
-                                                                    "size": 32,
-                                                                    "background": "#FFFFFF20",
-                                                                    "shape": "circle"
-                                                                },
-                                                                "contentAlignment": "center"
-                                                            },
-                                                            "children": [
-                                                                {
-                                                                    "type": "Icon",
-                                                                    "props": {
-                                                                        "icon": "trending_up",
-                                                                        "size": 18,
-                                                                        "color": "#A8F5C4"
-                                                                    }
-                                                                }
-                                                            ]
-                                                        },
-                                                        {
-                                                            "type": "Column",
-                                                            "children": [
-                                                                {
-                                                                    "type": "Text",
-                                                                    "props": {
-                                                                        "text": "Income",
-                                                                        "fontSize": 11,
-                                                                        "color": "#D0BCFF"
-                                                                    }
-                                                                },
-                                                                {
-                                                                    "type": "Text",
-                                                                    "props": {
-                                                                        "text": "+$8,240",
-                                                                        "fontSize": 15,
-                                                                        "fontWeight": "bold",
-                                                                        "color": "#381E72"
-                                                                    }
-                                                                }
-                                                            ]
-                                                        }
-                                                    ]
-                                                },
-                                                {
-                                                    "type": "Row",
-                                                    "props": {
-                                                        "horizontalArrangement": "spacedBy_6",
-                                                        "verticalAlignment": "centerVertically"
-                                                    },
-                                                    "children": [
-                                                        {
-                                                            "type": "Box",
-                                                            "props": {
-                                                                "modifier": {
-                                                                    "size": 32,
-                                                                    "background": "#FFFFFF20",
-                                                                    "shape": "circle"
-                                                                },
-                                                                "contentAlignment": "center"
-                                                            },
-                                                            "children": [
-                                                                {
-                                                                    "type": "Icon",
-                                                                    "props": {
-                                                                        "icon": "trending_down",
-                                                                        "size": 18,
-                                                                        "color": "#FFB4AB"
-                                                                    }
-                                                                }
-                                                            ]
-                                                        },
-                                                        {
-                                                            "type": "Column",
-                                                            "children": [
-                                                                {
-                                                                    "type": "Text",
-                                                                    "props": {
-                                                                        "text": "Expenses",
-                                                                        "fontSize": 11,
-                                                                        "color": "#D0BCFF"
-                                                                    }
-                                                                },
-                                                                {
-                                                                    "type": "Text",
-                                                                    "props": {
-                                                                        "text": "-$3,820",
-                                                                        "fontSize": 15,
-                                                                        "fontWeight": "bold",
-                                                                        "color": "#381E72"
-                                                                    }
-                                                                }
-                                                            ]
-                                                        }
-                                                    ]
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "type": "Spacer",
-                    "props": {
-                        "height": 4
-                    }
-                },
-                {
-                    "type": "Row",
-                    "props": {
-                        "modifier": {
-                            "fillMaxWidth": 1.0
-                        },
-                        "horizontalArrangement": "spaceEvenly"
-                    },
-                    "children": [
-                        {
-                            "type": "Column",
-                            "props": {
-                                "verticalArrangement": "spacedBy_8",
-                                "horizontalAlignment": "centerHorizontally"
-                            },
-                            "children": [
-                                {
-                                    "type": "Card",
-                                    "props": {
-                                        "modifier": {
-                                            "size": 64
-                                        },
-                                        "shape": "rounded_20",
-                                        "containerColor": "#4F378B",
-                                        "elevation": 0
-                                    },
-                                    "children": [
-                                        {
-                                            "type": "Box",
-                                            "props": {
-                                                "modifier": {
-                                                    "fillMaxSize": 1.0
-                                                },
-                                                "contentAlignment": "center"
-                                            },
-                                            "children": [
-                                                {
-                                                    "type": "IconButton",
-                                                    "props": {
-                                                        "icon": "send",
-                                                        "onClick": "action_0",
-                                                        "iconSize": 28,
-                                                        "iconColor": "#D0BCFF"
-                                                    }
-                                                }
-                                            ]
                                         }
                                     ]
                                 },
                                 {
                                     "type": "Text",
                                     "props": {
-                                        "text": "Send",
+                                        "text": "Income",
                                         "fontSize": 12,
-                                        "fontWeight": "medium",
                                         "color": "#CAC4D0"
                                     }
-                                }
-                            ]
-                        },
-                        {
-                            "type": "Column",
-                            "props": {
-                                "verticalArrangement": "spacedBy_8",
-                                "horizontalAlignment": "centerHorizontally"
-                            },
-                            "children": [
-                                {
-                                    "type": "Card",
-                                    "props": {
-                                        "modifier": {
-                                            "size": 64
-                                        },
-                                        "shape": "rounded_20",
-                                        "containerColor": "#4A4458",
-                                        "elevation": 0
-                                    },
-                                    "children": [
-                                        {
-                                            "type": "Box",
-                                            "props": {
-                                                "modifier": {
-                                                    "fillMaxSize": 1.0
-                                                },
-                                                "contentAlignment": "center"
-                                            },
-                                            "children": [
-                                                {
-                                                    "type": "IconButton",
-                                                    "props": {
-                                                        "icon": "call_received",
-                                                        "onClick": "action_1",
-                                                        "iconSize": 28,
-                                                        "iconColor": "#CCC5DC"
-                                                    }
-                                                }
-                                            ]
-                                        }
-                                    ]
                                 },
                                 {
                                     "type": "Text",
                                     "props": {
-                                        "text": "Receive",
-                                        "fontSize": 12,
-                                        "fontWeight": "medium",
-                                        "color": "#CAC4D0"
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "type": "Column",
-                            "props": {
-                                "verticalArrangement": "spacedBy_8",
-                                "horizontalAlignment": "centerHorizontally"
-                            },
-                            "children": [
-                                {
-                                    "type": "Card",
-                                    "props": {
-                                        "modifier": {
-                                            "size": 64
-                                        },
-                                        "shape": "rounded_20",
-                                        "containerColor": "#633B48",
-                                        "elevation": 0
-                                    },
-                                    "children": [
-                                        {
-                                            "type": "Box",
-                                            "props": {
-                                                "modifier": {
-                                                    "fillMaxSize": 1.0
-                                                },
-                                                "contentAlignment": "center"
-                                            },
-                                            "children": [
-                                                {
-                                                    "type": "IconButton",
-                                                    "props": {
-                                                        "icon": "receipt",
-                                                        "onClick": "action_2",
-                                                        "iconSize": 28,
-                                                        "iconColor": "#EFB8C8"
-                                                    }
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                },
-                                {
-                                    "type": "Text",
-                                    "props": {
-                                        "text": "Bills",
-                                        "fontSize": 12,
-                                        "fontWeight": "medium",
-                                        "color": "#CAC4D0"
-                                    }
-                                }
-                            ]
-                        },
-                        {
-                            "type": "Column",
-                            "props": {
-                                "verticalArrangement": "spacedBy_8",
-                                "horizontalAlignment": "centerHorizontally"
-                            },
-                            "children": [
-                                {
-                                    "type": "Card",
-                                    "props": {
-                                        "modifier": {
-                                            "size": 64
-                                        },
-                                        "shape": "rounded_20",
-                                        "containerColor": "#0A5C30",
-                                        "elevation": 0
-                                    },
-                                    "children": [
-                                        {
-                                            "type": "Box",
-                                            "props": {
-                                                "modifier": {
-                                                    "fillMaxSize": 1.0
-                                                },
-                                                "contentAlignment": "center"
-                                            },
-                                            "children": [
-                                                {
-                                                    "type": "IconButton",
-                                                    "props": {
-                                                        "icon": "credit_card",
-                                                        "onClick": "action_3",
-                                                        "iconSize": 28,
-                                                        "iconColor": "#6DD58C"
-                                                    }
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                },
-                                {
-                                    "type": "Text",
-                                    "props": {
-                                        "text": "Top Up",
-                                        "fontSize": 12,
-                                        "fontWeight": "medium",
-                                        "color": "#CAC4D0"
+                                        "text": "$4,200.00",
+                                        "fontSize": 20,
+                                        "fontWeight": "bold",
+                                        "color": "#E6E0E9"
                                     }
                                 }
                             ]
                         }
                     ]
-                },
-                {
-                    "type": "Spacer",
-                    "props": {
-                        "height": 4
+                }
+            ]
+        }
+    ]
+},
+    "transactions": {
+    "type": "Column",
+    "props": {
+        "modifier": {
+            "fillMaxWidth": 1.0
+        },
+        "verticalArrangement": "spacedBy_0"
+    },
+    "children": [
+        {
+            "type": "Row",
+            "props": {
+                "modifier": {
+                    "fillMaxWidth": 1.0,
+                    "padding": {
+                        "horizontal": 20
                     }
                 },
+                "horizontalArrangement": "spaceBetween",
+                "verticalAlignment": "centerVertically"
+            },
+            "children": [
                 {
                     "type": "Text",
                     "props": {
-                        "text": "Quick Stats",
-                        "fontSize": 18,
+                        "text": "Recent Transactions",
+                        "fontSize": 17,
                         "fontWeight": "semiBold",
                         "color": "#E6E0E9"
                     }
                 },
                 {
-                    "type": "Spacer",
+                    "type": "Button",
                     "props": {
-                        "height": 8
-                    }
-                },
-                {
-                    "type": "Row",
-                    "props": {
-                        "modifier": {
-                            "fillMaxWidth": 1.0
-                        },
-                        "horizontalArrangement": "spacedBy_12"
-                    },
-                    "children": [
-                        {
-                            "type": "Card",
-                            "props": {
-                                "modifier": {
-                                    "weight": 1.0
-                                },
-                                "shape": "rounded_16",
-                                "containerColor": "#2B2930",
-                                "elevation": 1
-                            },
-                            "children": [
-                                {
-                                    "type": "Column",
-                                    "props": {
-                                        "modifier": {
-                                            "fillMaxWidth": 1.0,
-                                            "padding": {
-                                                "all": 16
-                                            }
-                                        },
-                                        "verticalArrangement": "spacedBy_10"
-                                    },
-                                    "children": [
-                                        {
-                                            "type": "Row",
-                                            "props": {
-                                                "modifier": {
-                                                    "fillMaxWidth": 1.0
-                                                },
-                                                "horizontalArrangement": "spaceBetween",
-                                                "verticalAlignment": "centerVertically"
-                                            },
-                                            "children": [
-                                                {
-                                                    "type": "Box",
-                                                    "props": {
-                                                        "modifier": {
-                                                            "size": 40,
-                                                            "background": "#4F378B",
-                                                            "shape": "rounded_12"
-                                                        },
-                                                        "contentAlignment": "center"
-                                                    },
-                                                    "children": [
-                                                        {
-                                                            "type": "Icon",
-                                                            "props": {
-                                                                "icon": "savings",
-                                                                "size": 22,
-                                                                "color": "#D0BCFF"
-                                                            }
-                                                        }
-                                                    ]
-                                                },
-                                                {
-                                                    "type": "Text",
-                                                    "props": {
-                                                        "text": "+12%",
-                                                        "fontSize": 12,
-                                                        "fontWeight": "bold",
-                                                        "color": "#6DD58C"
-                                                    }
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "type": "Text",
-                                            "props": {
-                                                "text": "Savings",
-                                                "fontSize": 12,
-                                                "color": "#CAC4D0"
-                                            }
-                                        },
-                                        {
-                                            "type": "Text",
-                                            "props": {
-                                                "text": "$18,240",
-                                                "fontSize": 20,
-                                                "fontWeight": "bold",
-                                                "color": "#E6E0E9"
-                                            }
-                                        }
-                                    ]
-                                }
-                            ]
-                        },
-                        {
-                            "type": "Card",
-                            "props": {
-                                "modifier": {
-                                    "weight": 1.0
-                                },
-                                "shape": "rounded_16",
-                                "containerColor": "#2B2930",
-                                "elevation": 1
-                            },
-                            "children": [
-                                {
-                                    "type": "Column",
-                                    "props": {
-                                        "modifier": {
-                                            "fillMaxWidth": 1.0,
-                                            "padding": {
-                                                "all": 16
-                                            }
-                                        },
-                                        "verticalArrangement": "spacedBy_10"
-                                    },
-                                    "children": [
-                                        {
-                                            "type": "Row",
-                                            "props": {
-                                                "modifier": {
-                                                    "fillMaxWidth": 1.0
-                                                },
-                                                "horizontalArrangement": "spaceBetween",
-                                                "verticalAlignment": "centerVertically"
-                                            },
-                                            "children": [
-                                                {
-                                                    "type": "Box",
-                                                    "props": {
-                                                        "modifier": {
-                                                            "size": 40,
-                                                            "background": "#8C1D18",
-                                                            "shape": "rounded_12"
-                                                        },
-                                                        "contentAlignment": "center"
-                                                    },
-                                                    "children": [
-                                                        {
-                                                            "type": "Icon",
-                                                            "props": {
-                                                                "icon": "shopping_cart",
-                                                                "size": 22,
-                                                                "color": "#F9DEDC"
-                                                            }
-                                                        }
-                                                    ]
-                                                },
-                                                {
-                                                    "type": "Text",
-                                                    "props": {
-                                                        "text": "-8%",
-                                                        "fontSize": 12,
-                                                        "fontWeight": "bold",
-                                                        "color": "#FFB4AB"
-                                                    }
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "type": "Text",
-                                            "props": {
-                                                "text": "This Month",
-                                                "fontSize": 12,
-                                                "color": "#CAC4D0"
-                                            }
-                                        },
-                                        {
-                                            "type": "Text",
-                                            "props": {
-                                                "text": "$2,380",
-                                                "fontSize": 20,
-                                                "fontWeight": "bold",
-                                                "color": "#E6E0E9"
-                                            }
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "type": "Spacer",
-                    "props": {
-                        "height": 4
-                    }
-                },
-                {
-                    "type": "Row",
-                    "props": {
-                        "modifier": {
-                            "fillMaxWidth": 1.0
-                        },
-                        "horizontalArrangement": "spaceBetween",
-                        "verticalAlignment": "centerVertically"
+                        "onClick": "home_see_all",
+                        "containerColor": "#00000000",
+                        "elevation": 0
                     },
                     "children": [
                         {
                             "type": "Text",
                             "props": {
-                                "text": "Recent Transactions",
-                                "fontSize": 18,
-                                "fontWeight": "semiBold",
-                                "color": "#E6E0E9"
+                                "text": "See All",
+                                "fontSize": 13,
+                                "fontWeight": "medium",
+                                "color": "#D0BCFF"
                             }
-                        },
-                        {
-                            "type": "Button",
-                            "props": {
-                                "onClick": "action_4",
-                                "containerColor": "#00000000"
-                            },
-                            "children": [
-                                {
-                                    "type": "Text",
-                                    "props": {
-                                        "text": "See All",
-                                        "fontSize": 13,
-                                        "fontWeight": "medium",
-                                        "color": "#D0BCFF"
-                                    }
-                                },
-                                {
-                                    "type": "Icon",
-                                    "props": {
-                                        "icon": "chevron_right",
-                                        "size": 18,
-                                        "color": "#D0BCFF"
-                                    }
-                                }
-                            ]
                         }
                     ]
+                }
+            ]
+        },
+        {
+            "type": "Spacer",
+            "props": {
+                "height": 8
+            }
+        },
+        {
+            "type": "Column",
+            "props": {
+                "modifier": {
+                    "fillMaxWidth": 1.0,
+                    "padding": {
+                        "horizontal": 20,
+                        "bottom": 16
+                    }
                 },
+                "verticalArrangement": "spacedBy_8"
+            },
+            "children": [
                 {
-                    "type": "Spacer",
+                    "type": "Component",
                     "props": {
-                        "height": 4
+                        "name": "TransactionRow",
+                        "componentName": "TransactionRow",
+                        "properties": {
+                            "title": "Salary",
+                            "subtitle": "Today",
+                            "amount": "+$4,200.00",
+                            "isIncome": true
+                        },
+                        "props": {
+                            "title": "Salary",
+                            "subtitle": "Today",
+                            "amount": "+$4,200.00",
+                            "isIncome": true
+                        }
                     }
                 },
                 {
-                    "type": "Card",
+                    "type": "Component",
                     "props": {
-                        "modifier": {
-                            "fillMaxWidth": 1.0
+                        "name": "TransactionRow",
+                        "componentName": "TransactionRow",
+                        "properties": {
+                            "title": "Groceries",
+                            "subtitle": "Yesterday",
+                            "amount": "-$85.50",
+                            "isIncome": false
                         },
-                        "shape": "rounded_16",
-                        "containerColor": "#1D1B20",
-                        "elevation": 0
-                    },
-                    "children": [
-                        {
-                            "type": "Row",
-                            "props": {
-                                "modifier": {
-                                    "fillMaxWidth": 1.0,
-                                    "padding": {
-                                        "horizontal": 16,
-                                        "vertical": 14
-                                    },
-                                    "clickable": true
-                                },
-                                "horizontalArrangement": "spaceBetween",
-                                "verticalAlignment": "centerVertically"
-                            },
-                            "children": [
-                                {
-                                    "type": "Row",
-                                    "props": {
-                                        "horizontalArrangement": "spacedBy_14",
-                                        "verticalAlignment": "centerVertically"
-                                    },
-                                    "children": [
-                                        {
-                                            "type": "Box",
-                                            "props": {
-                                                "modifier": {
-                                                    "size": 46,
-                                                    "background": "#4A4458",
-                                                    "shape": "circle"
-                                                },
-                                                "contentAlignment": "center"
-                                            },
-                                            "children": [
-                                                {
-                                                    "type": "Icon",
-                                                    "props": {
-                                                        "icon": "shopping_cart",
-                                                        "size": 24,
-                                                        "color": "#D0BCFF"
-                                                    }
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "type": "Column",
-                                            "props": {
-                                                "verticalArrangement": "spacedBy_2"
-                                            },
-                                            "children": [
-                                                {
-                                                    "type": "Text",
-                                                    "props": {
-                                                        "text": "Grocery Store",
-                                                        "fontSize": 15,
-                                                        "fontWeight": "semiBold",
-                                                        "color": "#E6E0E9"
-                                                    }
-                                                },
-                                                {
-                                                    "type": "Text",
-                                                    "props": {
-                                                        "text": "Today, 2:30 PM",
-                                                        "fontSize": 12,
-                                                        "color": "#938F99"
-                                                    }
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                },
-                                {
-                                    "type": "Column",
-                                    "props": {
-                                        "verticalArrangement": "spacedBy_2",
-                                        "horizontalAlignment": "end"
-                                    },
-                                    "children": [
-                                        {
-                                            "type": "Text",
-                                            "props": {
-                                                "text": "- $45.20",
-                                                "fontSize": 15,
-                                                "fontWeight": "bold",
-                                                "color": "#FFB4AB"
-                                            }
-                                        },
-                                        {
-                                            "type": "Icon",
-                                            "props": {
-                                                "icon": "chevron_right",
-                                                "size": 16,
-                                                "color": "#938F99"
-                                            }
-                                        }
-                                    ]
-                                }
-                            ]
+                        "props": {
+                            "title": "Groceries",
+                            "subtitle": "Yesterday",
+                            "amount": "-$85.50",
+                            "isIncome": false
                         }
-                    ]
+                    }
                 },
                 {
-                    "type": "Card",
+                    "type": "Component",
                     "props": {
-                        "modifier": {
-                            "fillMaxWidth": 1.0
+                        "name": "TransactionRow",
+                        "componentName": "TransactionRow",
+                        "properties": {
+                            "title": "Netflix",
+                            "subtitle": "Feb 1",
+                            "amount": "-$15.99",
+                            "isIncome": false
                         },
-                        "shape": "rounded_16",
-                        "containerColor": "#1D1B20",
-                        "elevation": 0
-                    },
-                    "children": [
-                        {
-                            "type": "Row",
-                            "props": {
-                                "modifier": {
-                                    "fillMaxWidth": 1.0,
-                                    "padding": {
-                                        "horizontal": 16,
-                                        "vertical": 14
-                                    },
-                                    "clickable": true
-                                },
-                                "horizontalArrangement": "spaceBetween",
-                                "verticalAlignment": "centerVertically"
-                            },
-                            "children": [
-                                {
-                                    "type": "Row",
-                                    "props": {
-                                        "horizontalArrangement": "spacedBy_14",
-                                        "verticalAlignment": "centerVertically"
-                                    },
-                                    "children": [
-                                        {
-                                            "type": "Box",
-                                            "props": {
-                                                "modifier": {
-                                                    "size": 46,
-                                                    "background": "#0A5C30",
-                                                    "shape": "circle"
-                                                },
-                                                "contentAlignment": "center"
-                                            },
-                                            "children": [
-                                                {
-                                                    "type": "Icon",
-                                                    "props": {
-                                                        "icon": "attach_money",
-                                                        "size": 24,
-                                                        "color": "#6DD58C"
-                                                    }
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "type": "Column",
-                                            "props": {
-                                                "verticalArrangement": "spacedBy_2"
-                                            },
-                                            "children": [
-                                                {
-                                                    "type": "Text",
-                                                    "props": {
-                                                        "text": "Salary Deposit",
-                                                        "fontSize": 15,
-                                                        "fontWeight": "semiBold",
-                                                        "color": "#E6E0E9"
-                                                    }
-                                                },
-                                                {
-                                                    "type": "Text",
-                                                    "props": {
-                                                        "text": "Yesterday",
-                                                        "fontSize": 12,
-                                                        "color": "#938F99"
-                                                    }
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                },
-                                {
-                                    "type": "Column",
-                                    "props": {
-                                        "verticalArrangement": "spacedBy_2",
-                                        "horizontalAlignment": "end"
-                                    },
-                                    "children": [
-                                        {
-                                            "type": "Text",
-                                            "props": {
-                                                "text": "+ $3,200",
-                                                "fontSize": 15,
-                                                "fontWeight": "bold",
-                                                "color": "#6DD58C"
-                                            }
-                                        },
-                                        {
-                                            "type": "Icon",
-                                            "props": {
-                                                "icon": "chevron_right",
-                                                "size": 16,
-                                                "color": "#938F99"
-                                            }
-                                        }
-                                    ]
-                                }
-                            ]
+                        "props": {
+                            "title": "Netflix",
+                            "subtitle": "Feb 1",
+                            "amount": "-$15.99",
+                            "isIncome": false
                         }
-                    ]
-                },
-                {
-                    "type": "Card",
-                    "props": {
-                        "modifier": {
-                            "fillMaxWidth": 1.0
-                        },
-                        "shape": "rounded_16",
-                        "containerColor": "#1D1B20",
-                        "elevation": 0
-                    },
-                    "children": [
-                        {
-                            "type": "Row",
-                            "props": {
-                                "modifier": {
-                                    "fillMaxWidth": 1.0,
-                                    "padding": {
-                                        "horizontal": 16,
-                                        "vertical": 14
-                                    },
-                                    "clickable": true
-                                },
-                                "horizontalArrangement": "spaceBetween",
-                                "verticalAlignment": "centerVertically"
-                            },
-                            "children": [
-                                {
-                                    "type": "Row",
-                                    "props": {
-                                        "horizontalArrangement": "spacedBy_14",
-                                        "verticalAlignment": "centerVertically"
-                                    },
-                                    "children": [
-                                        {
-                                            "type": "Box",
-                                            "props": {
-                                                "modifier": {
-                                                    "size": 46,
-                                                    "background": "#633B48",
-                                                    "shape": "circle"
-                                                },
-                                                "contentAlignment": "center"
-                                            },
-                                            "children": [
-                                                {
-                                                    "type": "Icon",
-                                                    "props": {
-                                                        "icon": "local_cafe",
-                                                        "size": 24,
-                                                        "color": "#EFB8C8"
-                                                    }
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "type": "Column",
-                                            "props": {
-                                                "verticalArrangement": "spacedBy_2"
-                                            },
-                                            "children": [
-                                                {
-                                                    "type": "Text",
-                                                    "props": {
-                                                        "text": "Coffee Shop",
-                                                        "fontSize": 15,
-                                                        "fontWeight": "semiBold",
-                                                        "color": "#E6E0E9"
-                                                    }
-                                                },
-                                                {
-                                                    "type": "Text",
-                                                    "props": {
-                                                        "text": "Yesterday",
-                                                        "fontSize": 12,
-                                                        "color": "#938F99"
-                                                    }
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                },
-                                {
-                                    "type": "Column",
-                                    "props": {
-                                        "verticalArrangement": "spacedBy_2",
-                                        "horizontalAlignment": "end"
-                                    },
-                                    "children": [
-                                        {
-                                            "type": "Text",
-                                            "props": {
-                                                "text": "- $6.50",
-                                                "fontSize": 15,
-                                                "fontWeight": "bold",
-                                                "color": "#FFB4AB"
-                                            }
-                                        },
-                                        {
-                                            "type": "Icon",
-                                            "props": {
-                                                "icon": "chevron_right",
-                                                "size": 16,
-                                                "color": "#938F99"
-                                            }
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "type": "Card",
-                    "props": {
-                        "modifier": {
-                            "fillMaxWidth": 1.0
-                        },
-                        "shape": "rounded_16",
-                        "containerColor": "#1D1B20",
-                        "elevation": 0
-                    },
-                    "children": [
-                        {
-                            "type": "Row",
-                            "props": {
-                                "modifier": {
-                                    "fillMaxWidth": 1.0,
-                                    "padding": {
-                                        "horizontal": 16,
-                                        "vertical": 14
-                                    },
-                                    "clickable": true
-                                },
-                                "horizontalArrangement": "spaceBetween",
-                                "verticalAlignment": "centerVertically"
-                            },
-                            "children": [
-                                {
-                                    "type": "Row",
-                                    "props": {
-                                        "horizontalArrangement": "spacedBy_14",
-                                        "verticalAlignment": "centerVertically"
-                                    },
-                                    "children": [
-                                        {
-                                            "type": "Box",
-                                            "props": {
-                                                "modifier": {
-                                                    "size": 46,
-                                                    "background": "#8C1D18",
-                                                    "shape": "circle"
-                                                },
-                                                "contentAlignment": "center"
-                                            },
-                                            "children": [
-                                                {
-                                                    "type": "Icon",
-                                                    "props": {
-                                                        "icon": "movie",
-                                                        "size": 24,
-                                                        "color": "#FFB4AB"
-                                                    }
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "type": "Column",
-                                            "props": {
-                                                "verticalArrangement": "spacedBy_2"
-                                            },
-                                            "children": [
-                                                {
-                                                    "type": "Text",
-                                                    "props": {
-                                                        "text": "Netflix Subscription",
-                                                        "fontSize": 15,
-                                                        "fontWeight": "semiBold",
-                                                        "color": "#E6E0E9"
-                                                    }
-                                                },
-                                                {
-                                                    "type": "Text",
-                                                    "props": {
-                                                        "text": "Feb 1",
-                                                        "fontSize": 12,
-                                                        "color": "#938F99"
-                                                    }
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                },
-                                {
-                                    "type": "Column",
-                                    "props": {
-                                        "verticalArrangement": "spacedBy_2",
-                                        "horizontalAlignment": "end"
-                                    },
-                                    "children": [
-                                        {
-                                            "type": "Text",
-                                            "props": {
-                                                "text": "- $15.99",
-                                                "fontSize": 15,
-                                                "fontWeight": "bold",
-                                                "color": "#FFB4AB"
-                                            }
-                                        },
-                                        {
-                                            "type": "Icon",
-                                            "props": {
-                                                "icon": "chevron_right",
-                                                "size": 16,
-                                                "color": "#938F99"
-                                            }
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "type": "Card",
-                    "props": {
-                        "modifier": {
-                            "fillMaxWidth": 1.0
-                        },
-                        "shape": "rounded_16",
-                        "containerColor": "#1D1B20",
-                        "elevation": 0
-                    },
-                    "children": [
-                        {
-                            "type": "Row",
-                            "props": {
-                                "modifier": {
-                                    "fillMaxWidth": 1.0,
-                                    "padding": {
-                                        "horizontal": 16,
-                                        "vertical": 14
-                                    },
-                                    "clickable": true
-                                },
-                                "horizontalArrangement": "spaceBetween",
-                                "verticalAlignment": "centerVertically"
-                            },
-                            "children": [
-                                {
-                                    "type": "Row",
-                                    "props": {
-                                        "horizontalArrangement": "spacedBy_14",
-                                        "verticalAlignment": "centerVertically"
-                                    },
-                                    "children": [
-                                        {
-                                            "type": "Box",
-                                            "props": {
-                                                "modifier": {
-                                                    "size": 46,
-                                                    "background": "#4A4458",
-                                                    "shape": "circle"
-                                                },
-                                                "contentAlignment": "center"
-                                            },
-                                            "children": [
-                                                {
-                                                    "type": "Icon",
-                                                    "props": {
-                                                        "icon": "phone",
-                                                        "size": 24,
-                                                        "color": "#CCC5DC"
-                                                    }
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "type": "Column",
-                                            "props": {
-                                                "verticalArrangement": "spacedBy_2"
-                                            },
-                                            "children": [
-                                                {
-                                                    "type": "Text",
-                                                    "props": {
-                                                        "text": "App Store",
-                                                        "fontSize": 15,
-                                                        "fontWeight": "semiBold",
-                                                        "color": "#E6E0E9"
-                                                    }
-                                                },
-                                                {
-                                                    "type": "Text",
-                                                    "props": {
-                                                        "text": "Jan 30",
-                                                        "fontSize": 12,
-                                                        "color": "#938F99"
-                                                    }
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                },
-                                {
-                                    "type": "Column",
-                                    "props": {
-                                        "verticalArrangement": "spacedBy_2",
-                                        "horizontalAlignment": "end"
-                                    },
-                                    "children": [
-                                        {
-                                            "type": "Text",
-                                            "props": {
-                                                "text": "- $9.99",
-                                                "fontSize": 15,
-                                                "fontWeight": "bold",
-                                                "color": "#FFB4AB"
-                                            }
-                                        },
-                                        {
-                                            "type": "Icon",
-                                            "props": {
-                                                "icon": "chevron_right",
-                                                "size": 16,
-                                                "color": "#938F99"
-                                            }
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "type": "Card",
-                    "props": {
-                        "modifier": {
-                            "fillMaxWidth": 1.0
-                        },
-                        "shape": "rounded_16",
-                        "containerColor": "#1D1B20",
-                        "elevation": 0
-                    },
-                    "children": [
-                        {
-                            "type": "Row",
-                            "props": {
-                                "modifier": {
-                                    "fillMaxWidth": 1.0,
-                                    "padding": {
-                                        "horizontal": 16,
-                                        "vertical": 14
-                                    },
-                                    "clickable": true
-                                },
-                                "horizontalArrangement": "spaceBetween",
-                                "verticalAlignment": "centerVertically"
-                            },
-                            "children": [
-                                {
-                                    "type": "Row",
-                                    "props": {
-                                        "horizontalArrangement": "spacedBy_14",
-                                        "verticalAlignment": "centerVertically"
-                                    },
-                                    "children": [
-                                        {
-                                            "type": "Box",
-                                            "props": {
-                                                "modifier": {
-                                                    "size": 46,
-                                                    "background": "#0A5C30",
-                                                    "shape": "circle"
-                                                },
-                                                "contentAlignment": "center"
-                                            },
-                                            "children": [
-                                                {
-                                                    "type": "Icon",
-                                                    "props": {
-                                                        "icon": "swap_horiz",
-                                                        "size": 24,
-                                                        "color": "#6DD58C"
-                                                    }
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "type": "Column",
-                                            "props": {
-                                                "verticalArrangement": "spacedBy_2"
-                                            },
-                                            "children": [
-                                                {
-                                                    "type": "Text",
-                                                    "props": {
-                                                        "text": "Transfer from Alex",
-                                                        "fontSize": 15,
-                                                        "fontWeight": "semiBold",
-                                                        "color": "#E6E0E9"
-                                                    }
-                                                },
-                                                {
-                                                    "type": "Text",
-                                                    "props": {
-                                                        "text": "Jan 28",
-                                                        "fontSize": 12,
-                                                        "color": "#938F99"
-                                                    }
-                                                }
-                                            ]
-                                        }
-                                    ]
-                                },
-                                {
-                                    "type": "Column",
-                                    "props": {
-                                        "verticalArrangement": "spacedBy_2",
-                                        "horizontalAlignment": "end"
-                                    },
-                                    "children": [
-                                        {
-                                            "type": "Text",
-                                            "props": {
-                                                "text": "+ $150.00",
-                                                "fontSize": 15,
-                                                "fontWeight": "bold",
-                                                "color": "#6DD58C"
-                                            }
-                                        },
-                                        {
-                                            "type": "Icon",
-                                            "props": {
-                                                "icon": "chevron_right",
-                                                "size": 16,
-                                                "color": "#938F99"
-                                            }
-                                        }
-                                    ]
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "type": "Spacer",
-                    "props": {
-                        "height": 72
                     }
                 }
             ]
         }
     ]
+}
+  }
 }

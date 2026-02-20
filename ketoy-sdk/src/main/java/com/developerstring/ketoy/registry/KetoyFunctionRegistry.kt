@@ -116,6 +116,16 @@ object KetoyFunctionRegistry {
 
     /**
      * Register a simple no-argument function.
+     *
+     * ```kotlin
+     * KetoyFunctionRegistry.register("logout") {
+     *     authManager.signOut()
+     * }
+     * ```
+     *
+     * @param name        Unique function name referenced from JSON `"functionName"`.
+     * @param description Optional human-readable description.
+     * @param handler     The function body (receives no arguments).
      */
     fun register(name: String, description: String = "", handler: () -> Unit) {
         register(
@@ -151,24 +161,50 @@ object KetoyFunctionRegistry {
 
     // ── Query ───────────────────────────────────────────────────
 
-    /** Get a function's info by name. */
+    /** Get a function’s info by name.
+     *
+     * @param name The function name to look up.
+     * @return The [FunctionInfo], or `null` if not registered.
+     */
     fun get(name: String): FunctionInfo? = functions[name]
 
-    /** Check if a function is registered. */
+    /**
+     * Check if a function is registered.
+     *
+     * @param name The function name to check.
+     * @return `true` if the function is registered.
+     */
     fun isRegistered(name: String): Boolean = functions.containsKey(name)
 
-    /** Get all registered function names. */
+    /**
+     * Get all registered function names.
+     *
+     * @return An immutable [Set] of function name strings.
+     */
     fun getAllNames(): Set<String> = functions.keys.toSet()
 
-    /** Get all registered functions with their metadata. */
+    /**
+     * Get all registered functions with their metadata.
+     *
+     * @return An immutable map of function name → [FunctionInfo].
+     */
     fun getAll(): Map<String, FunctionInfo> = functions.toMap()
 
     // ── Lifecycle ───────────────────────────────────────────────
 
-    /** Remove a function by name. */
+    /**
+     * Remove a function by name.
+     *
+     * @param name The function name to unregister.
+     * @return `true` if the function was removed, `false` if it was not found.
+     */
     fun remove(name: String): Boolean = functions.remove(name) != null
 
-    /** Clear all registered functions. */
+    /**
+     * Clear all registered functions.
+     *
+     * Typically used in tests to reset state between test cases.
+     */
     fun clear() {
         functions.clear()
     }

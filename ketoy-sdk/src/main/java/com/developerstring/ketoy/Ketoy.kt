@@ -8,6 +8,7 @@ import com.developerstring.ketoy.cloud.cache.KetoyCacheStore
 import com.developerstring.ketoy.cloud.network.KetoyApiClient
 import com.developerstring.ketoy.core.ActionRegistry
 import com.developerstring.ketoy.core.KetoyVariableRegistry
+import com.developerstring.ketoy.navigation.KetoyCloudNavOverrides
 import com.developerstring.ketoy.registry.KComponentRegistry
 import com.developerstring.ketoy.registry.KetoyFunctionRegistry
 import com.developerstring.ketoy.screen.KetoyScreen
@@ -159,6 +160,7 @@ object Ketoy {
         KetoyWidgetRegistry.clear()
         KetoyActionRegistry.clear()
         KetoyScreenRegistry.clear()
+        KetoyCloudNavOverrides.clearAll()
         _cloudConfig = null
         isInitialized = false
     }
