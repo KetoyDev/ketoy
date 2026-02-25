@@ -1,0 +1,92 @@
+{
+    "navHostName": "main",
+    "startRoute": "home",
+    "destinations": [
+        {
+            "id": "home",
+            "route": "home",
+            "screenName": "home",
+            "label": "Home",
+            "icon": "home",
+            "selectedIcon": "home",
+            "isStartDestination": true
+        },
+        {
+            "id": "analytics",
+            "route": "analytics",
+            "screenName": "analytics",
+            "label": "Analytics",
+            "icon": "insights",
+            "selectedIcon": "insights",
+            "isStartDestination": false
+        },
+        {
+            "id": "cards",
+            "route": "cards",
+            "screenName": "cards",
+            "label": "Cards",
+            "icon": "credit_card",
+            "selectedIcon": "credit_card",
+            "isStartDestination": false
+        },
+        {
+            "id": "history",
+            "route": "history",
+            "screenName": "history_screen",
+            "label": "History",
+            "icon": "schedule",
+            "selectedIcon": "schedule",
+            "isStartDestination": false
+        },
+        {
+            "id": "profile",
+            "route": "profile",
+            "screenName": "profile",
+            "label": "Profile",
+            "icon": "person",
+            "selectedIcon": "person",
+            "isStartDestination": false
+        },
+        {
+            "id": "demo_nav",
+            "route": "demo_nav",
+            "screenName": "demo_nav",
+            "label": "Nav Demo",
+            "icon": "navigation",
+            "selectedIcon": "navigation",
+            "isStartDestination": false
+        }
+    ],
+    "navigations": [
+        {
+            "id": "go_home",
+            "route": "home",
+            "label": "Go Home"
+        },
+        {
+            "id": "go_analytics",
+            "route": "analytics",
+            "label": "Go Analytics"
+        },
+        {
+            "id": "go_cards",
+            "route": "cards",
+            "label": "Go Cards"
+        },
+        {
+            "id": "go_history",
+            "route": "history",
+            "label": "Go History"
+        },
+        {
+            "id": "go_profile",
+            "route": "cards",
+            "label": "Go Profile"
+        },
+        {
+            "id": "go_demo_nav",
+            "route": "demo_nav",
+            "label": "Open Nav Demo"
+        }
+    ]
+}

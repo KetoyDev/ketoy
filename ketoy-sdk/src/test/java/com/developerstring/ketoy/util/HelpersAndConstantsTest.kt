@@ -210,6 +210,13 @@ class HelpersAndConstantsTest {
         assertEquals("spaceAround", KArrangements.SpaceAround)
     }
 
+    @Test
+    fun `KArrangements spacedBy returns correct format`() {
+        assertEquals("spacedBy_0", KArrangements.spacedBy(0))
+        assertEquals("spacedBy_8", KArrangements.spacedBy(8))
+        assertEquals("spacedBy_12", KArrangements.spacedBy(12))
+    }
+
     // ─── KAlignments ────────────────────────────────────────────
 
     @Test

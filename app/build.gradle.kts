@@ -6,13 +6,13 @@ plugins {
 }
 
 android {
-    namespace = "com.developerstring.ketoy"
+    namespace = "com.developerstring.ketoy_app"
     compileSdk {
         version = release(36)
     }
 
     defaultConfig {
-        applicationId = "com.developerstring.ketoy"
+        applicationId = "com.developerstring.ketoy_app"
         minSdk = 26
         targetSdk = 36
         versionCode = 1
@@ -45,6 +45,9 @@ android {
 dependencies {
     // Ketoy SDK
     implementation(project(":ketoy-sdk"))
+
+    // Ketoy Dev Tools (debug only — hot-reload preview)
+    debugImplementation(project(":ketoy-devtools"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

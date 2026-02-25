@@ -1,0 +1,445 @@
+{
+  "screenName": "history_screen",
+  "displayName": "History",
+  "version": "1.0.0",
+  "contents": {
+    "main": {
+    "type": "Column",
+    "props": {
+        "modifier": {
+            "fillMaxSize": 1.0,
+            "padding": {
+                "top": 16
+            },
+            "background": "#1C1B1F"
+        },
+        "verticalArrangement": "spacedBy_0"
+    },
+    "children": [
+        {
+            "type": "Row",
+            "props": {
+                "modifier": {
+                    "fillMaxWidth": 1.0,
+                    "padding": {
+                        "horizontal": 20
+                    }
+                },
+                "horizontalArrangement": "spaceBetween",
+                "verticalAlignment": "centerVertically"
+            },
+            "children": [
+                {
+                    "type": "Text",
+                    "props": {
+                        "text": "Transaction History",
+                        "fontSize": 24,
+                        "fontWeight": "bold",
+                        "color": "#E6E0E9"
+                    }
+                },
+                {
+                    "type": "IconButton",
+                    "props": {
+                        "icon": "filter_list",
+                        "onClick": "history_filter",
+                        "iconSize": 24,
+                        "iconColor": "#CAC4D0"
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Spacer",
+            "props": {
+                "height": 16
+            }
+        },
+        {
+            "type": "Box",
+            "props": {
+                "modifier": {
+                    "fillMaxWidth": 1.0,
+                    "padding": {
+                        "horizontal": 20
+                    }
+                }
+            },
+            "children": [
+                {
+                    "type": "Card",
+                    "props": {
+                        "modifier": {
+                            "fillMaxWidth": 1.0
+                        },
+                        "shape": "rounded_16",
+                        "containerColor": "#1D1B20",
+                        "elevation": 0,
+                        "onClick": "history_search"
+                    },
+                    "children": [
+                        {
+                            "type": "Row",
+                            "props": {
+                                "modifier": {
+                                    "fillMaxWidth": 1.0,
+                                    "padding": {
+                                        "horizontal": 16,
+                                        "vertical": 14
+                                    }
+                                },
+                                "horizontalArrangement": "spacedBy_12",
+                                "verticalAlignment": "centerVertically"
+                            },
+                            "children": [
+                                {
+                                    "type": "Icon",
+                                    "props": {
+                                        "icon": "search",
+                                        "size": 22,
+                                        "color": "#938F99"
+                                    }
+                                },
+                                {
+                                    "type": "Text",
+                                    "props": {
+                                        "text": "Search transactions...",
+                                        "fontSize": 15,
+                                        "color": "#938F99"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "Spacer",
+            "props": {
+                "height": 20
+            }
+        },
+        {
+            "type": "Row",
+            "props": {
+                "modifier": {
+                    "fillMaxWidth": 1.0,
+                    "padding": {
+                        "horizontal": 20
+                    }
+                },
+                "horizontalArrangement": "spacedBy_8"
+            },
+            "children": [
+                {
+                    "type": "Card",
+                    "props": {
+                        "modifier": {
+                            "height": 34
+                        },
+                        "shape": "rounded_50",
+                        "containerColor": "#D0BCFF",
+                        "elevation": 0,
+                        "onClick": "history_chip_All"
+                    },
+                    "children": [
+                        {
+                            "type": "Box",
+                            "props": {
+                                "modifier": {
+                                    "fillMaxHeight": 1.0,
+                                    "padding": {
+                                        "horizontal": 16
+                                    }
+                                },
+                                "contentAlignment": "center"
+                            },
+                            "children": [
+                                {
+                                    "type": "Text",
+                                    "props": {
+                                        "text": "All",
+                                        "fontSize": 13,
+                                        "fontWeight": "medium",
+                                        "color": "#381E72"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "Card",
+                    "props": {
+                        "modifier": {
+                            "height": 34
+                        },
+                        "shape": "rounded_50",
+                        "containerColor": "#1D1B20",
+                        "elevation": 0,
+                        "onClick": "history_chip_Income"
+                    },
+                    "children": [
+                        {
+                            "type": "Box",
+                            "props": {
+                                "modifier": {
+                                    "fillMaxHeight": 1.0,
+                                    "padding": {
+                                        "horizontal": 16
+                                    }
+                                },
+                                "contentAlignment": "center"
+                            },
+                            "children": [
+                                {
+                                    "type": "Text",
+                                    "props": {
+                                        "text": "Income",
+                                        "fontSize": 13,
+                                        "fontWeight": "medium",
+                                        "color": "#CAC4D0"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "Card",
+                    "props": {
+                        "modifier": {
+                            "height": 34
+                        },
+                        "shape": "rounded_50",
+                        "containerColor": "#1D1B20",
+                        "elevation": 0,
+                        "onClick": "history_chip_Expense"
+                    },
+                    "children": [
+                        {
+                            "type": "Box",
+                            "props": {
+                                "modifier": {
+                                    "fillMaxHeight": 1.0,
+                                    "padding": {
+                                        "horizontal": 16
+                                    }
+                                },
+                                "contentAlignment": "center"
+                            },
+                            "children": [
+                                {
+                                    "type": "Text",
+                                    "props": {
+                                        "text": "Expense",
+                                        "fontSize": 13,
+                                        "fontWeight": "medium",
+                                        "color": "#CAC4D0"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                },
+                {
+                    "type": "Card",
+                    "props": {
+                        "modifier": {
+                            "height": 34
+                        },
+                        "shape": "rounded_50",
+                        "containerColor": "#1D1B20",
+                        "elevation": 0,
+                        "onClick": "history_chip_Pending"
+                    },
+                    "children": [
+                        {
+                            "type": "Box",
+                            "props": {
+                                "modifier": {
+                                    "fillMaxHeight": 1.0,
+                                    "padding": {
+                                        "horizontal": 16
+                                    }
+                                },
+                                "contentAlignment": "center"
+                            },
+                            "children": [
+                                {
+                                    "type": "Text",
+                                    "props": {
+                                        "text": "Pending",
+                                        "fontSize": 13,
+                                        "fontWeight": "medium",
+                                        "color": "#CAC4D0"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        },
+        {
+            "type": "Spacer",
+            "props": {
+                "height": 16
+            }
+        },
+        {
+            "type": "Text",
+            "props": {
+                "text": "February 2025",
+                "modifier": {
+                    "padding": {
+                        "horizontal": 20,
+                        "bottom": 8
+                    }
+                },
+                "fontSize": 13,
+                "fontWeight": "semiBold",
+                "color": "#CAC4D0"
+            }
+        },
+        {
+            "type": "Column",
+            "props": {
+                "modifier": {
+                    "fillMaxWidth": 1.0,
+                    "padding": {
+                        "horizontal": 20,
+                        "bottom": 16
+                    }
+                },
+                "verticalArrangement": "spacedBy_8"
+            },
+            "children": [
+                {
+                    "type": "Component",
+                    "props": {
+                        "name": "TransactionRow",
+                        "componentName": "TransactionRow",
+                        "properties": {
+                            "title": "Salary",
+                            "subtitle": "Today",
+                            "amount": "+$4,200.00",
+                            "isIncome": true
+                        },
+                        "props": {
+                            "title": "Salary",
+                            "subtitle": "Today",
+                            "amount": "+$4,200.00",
+                            "isIncome": true
+                        }
+                    }
+                },
+                {
+                    "type": "Component",
+                    "props": {
+                        "name": "TransactionRow",
+                        "componentName": "TransactionRow",
+                        "properties": {
+                            "title": "Groceries",
+                            "subtitle": "Yesterday",
+                            "amount": "-$85.50",
+                            "isIncome": false
+                        },
+                        "props": {
+                            "title": "Groceries",
+                            "subtitle": "Yesterday",
+                            "amount": "-$85.50",
+                            "isIncome": false
+                        }
+                    }
+                },
+                {
+                    "type": "Component",
+                    "props": {
+                        "name": "TransactionRow",
+                        "componentName": "TransactionRow",
+                        "properties": {
+                            "title": "Netflix",
+                            "subtitle": "Feb 1",
+                            "amount": "-$15.99",
+                            "isIncome": false
+                        },
+                        "props": {
+                            "title": "Netflix",
+                            "subtitle": "Feb 1",
+                            "amount": "-$15.99",
+                            "isIncome": false
+                        }
+                    }
+                }
+            ]
+        },
+        {
+            "type": "Spacer",
+            "props": {
+                "height": 8
+            }
+        },
+        {
+            "type": "Box",
+            "props": {
+                "modifier": {
+                    "fillMaxWidth": 1.0,
+                    "padding": {
+                        "horizontal": 20,
+                        "bottom": 16
+                    }
+                },
+                "contentAlignment": "center"
+            },
+            "children": [
+                {
+                    "type": "Card",
+                    "props": {
+                        "shape": "rounded_50",
+                        "containerColor": "#D0BCFF",
+                        "elevation": 4,
+                        "onClick": "history_add_txn"
+                    },
+                    "children": [
+                        {
+                            "type": "Row",
+                            "props": {
+                                "modifier": {
+                                    "padding": {
+                                        "horizontal": 20,
+                                        "vertical": 12
+                                    }
+                                },
+                                "horizontalArrangement": "spacedBy_8",
+                                "verticalAlignment": "centerVertically"
+                            },
+                            "children": [
+                                {
+                                    "type": "Icon",
+                                    "props": {
+                                        "icon": "add",
+                                        "size": 20,
+                                        "color": "#381E72"
+                                    }
+                                },
+                                {
+                                    "type": "Text",
+                                    "props": {
+                                        "text": "Add Transaction",
+                                        "fontSize": 14,
+                                        "fontWeight": "semiBold",
+                                        "color": "#381E72"
+                                    }
+                                }
+                            ]
+                        }
+                    ]
+                }
+            ]
+        }
+    ]
+}
+  }
+}

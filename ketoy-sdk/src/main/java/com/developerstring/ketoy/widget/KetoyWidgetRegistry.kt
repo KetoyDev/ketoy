@@ -5,9 +5,8 @@ import kotlinx.serialization.json.JsonObject
 /**
  * Global registry for custom [KetoyWidgetParser] instances.
  *
- * Mirrors Stac's `StacRegistry` – when the renderer encounters a JSON
- * `"type"` it doesn't recognise as a built-in widget, it checks this
- * registry for a matching custom parser.
+ * When the renderer encounters a JSON `"type"` it doesn't recognise as
+ * a built-in widget, it checks this registry for a matching custom parser.
  *
  * ## Registration
  * ```kotlin
@@ -44,6 +43,20 @@ object KetoyWidgetRegistry {
 
     /**
      * Register multiple custom widget parsers at once.
+     *
+     * Convenience method for batch registration, commonly called during
+     * SDK initialisation.
+     *
+     * ```kotlin
+     * KetoyWidgetRegistry.registerAll(
+     *     listOf(KetoyBadgeParser(), KetoyRatingBarParser()),
+     *     override = true
+     * )
+     * ```
+     *
+     * @param parserList List of [KetoyWidgetParser] instances to register.
+     * @param override   If `true`, replaces any existing parser whose
+     *                   [KetoyWidgetParser.type] collides with one in the list.
      */
     fun registerAll(
         parserList: List<KetoyWidgetParser<*>>,
@@ -54,6 +67,15 @@ object KetoyWidgetRegistry {
 
     /**
      * Register multiple parsers via varargs.
+     *
+     * ```kotlin
+     * KetoyWidgetRegistry.registerAll(
+     *     KetoyBadgeParser(),
+     *     KetoyRatingBarParser()
+     * )
+     * ```
+     *
+     * @param parserList One or more [KetoyWidgetParser] instances to register.
      */
     fun registerAll(vararg parserList: KetoyWidgetParser<*>) {
         parserList.forEach { register(it) }
@@ -62,7 +84,16 @@ object KetoyWidgetRegistry {
     // ── Retrieval ───────────────────────────────────────────────
 
     /**
-     * Get a parser by its type identifier.
+     * Retrieve a registered parser by its type identifier.
+     *
+     * The generic parameter [T] is inferred by the call-site and the
+     * returned parser is cast accordingly. Returns `null` when no parser
+     * matches [type].
+     *
+     * @param T    The expected model type of the parser.
+     * @param type The widget type string (e.g. `"badge"`).
+     * @return The matching [KetoyWidgetParser], or `null` if not registered.
+     * @see isRegistered
      */
     @Suppress("UNCHECKED_CAST")
     fun <T> get(type: String): KetoyWidgetParser<T>? {
@@ -71,22 +102,32 @@ object KetoyWidgetRegistry {
 
     /**
      * Check whether a parser is registered for the given type.
+     *
+     * @param type The widget type string to look up (e.g. `"badge"`).
+     * @return `true` if a parser is registered for [type], `false` otherwise.
      */
     fun isRegistered(type: String): Boolean = parsers.containsKey(type)
 
     /**
      * Get all registered type identifiers.
+     *
+     * Useful for debugging or building a widget catalogue.
+     *
+     * @return An immutable [Set] of type strings currently registered.
      */
     fun getAllTypes(): Set<String> = parsers.keys.toSet()
 
     // ── Internal render helper ──────────────────────────────────
 
     /**
-     * Attempt to parse and render a custom widget from a JSON object.
+     * Resolve the parser for a given widget type.
      *
-     * @param type The widget type identifier.
-     * @param json The full JSON object of the widget node.
-     * @return A composable lambda, or null if no parser is registered.
+     * This is an **internal** helper used by the Ketoy rendering pipeline
+     * ([com.developerstring.ketoy.renderer.WidgetRenderer]) to look up
+     * custom parsers at render time.
+     *
+     * @param type The widget type identifier from the JSON `"type"` field.
+     * @return The matching [KetoyWidgetParser], or `null` if none is registered.
      */
     internal fun resolveParser(type: String): KetoyWidgetParser<*>? {
         return parsers[type]
@@ -95,12 +136,18 @@ object KetoyWidgetRegistry {
     // ── Lifecycle ───────────────────────────────────────────────
 
     /**
-     * Remove a parser by type.
+     * Remove a previously registered parser by its type identifier.
+     *
+     * @param type The widget type string to unregister.
+     * @return `true` if a parser was removed, `false` if no parser existed for [type].
      */
     fun remove(type: String): Boolean = parsers.remove(type) != null
 
     /**
      * Clear all registered parsers.
+     *
+     * Typically called during testing or when tearing down the Ketoy SDK.
+     * After this call, [getAllTypes] returns an empty set.
      */
     fun clear() {
         parsers.clear()

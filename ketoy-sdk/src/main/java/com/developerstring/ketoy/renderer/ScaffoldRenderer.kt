@@ -1,3 +1,28 @@
+/**
+ * Scaffold and navigation-component renderers for the Ketoy SDUI library.
+ *
+ * This file maps scaffold-family [UIComponent] nodes to their Material 3
+ * Jetpack Compose counterparts, covering the full screen-chrome surface:
+ *
+ * - [RenderScaffold]              — top-level `Scaffold` with slot-based bars
+ * - [RenderTopAppBar]             — small / centerAligned / medium / large top bar
+ * - [RenderBottomAppBar]          — bottom toolbar
+ * - [RenderNavigationBar]         — bottom navigation bar with items
+ * - [RenderNavigationBarItem]     — single tab inside a [NavigationBar]
+ * - [RenderNavigationDrawerItem]  — item inside a navigation drawer
+ * - [RenderCustomNavigationItem]  — button-based fallback navigation item
+ * - [RenderFloatingActionButton]  — regular / small / large / extended FAB
+ * - [RenderSnackBar]              — standalone Snackbar
+ * - [RenderSnackBarHost]          — SnackbarHost wrapper
+ * - [RenderAppBarAction]          — IconButton wrapper for TopAppBar actions
+ * - [RenderNavigationRail]        — side navigation rail
+ * - [RenderNavigationRailItem]    — single item inside a NavigationRail
+ * - [RenderModalBottomSheet]      — modal bottom sheet
+ *
+ * @see RenderComponent
+ * @see UIComponent
+ * @see OnClickResolver
+ */
 package com.developerstring.ketoy.renderer
 
 import androidx.compose.foundation.layout.*
@@ -7,15 +32,41 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.unit.dp
-import com.developerstring.ketoy.core.ActionRegistry
+import com.developerstring.ketoy.navigation.LocalKetoyNavController
 import com.developerstring.ketoy.parser.*
 import kotlinx.serialization.json.*
+import androidx.compose.ui.platform.LocalContext
 
 // ═══════════════════════════════════════════════════════════════════
 //  Scaffold
 // ═══════════════════════════════════════════════════════════════════
-
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Renders a Material 3 `Scaffold` from a [UIComponent] node.
+ *
+ * The scaffold's chrome slots (`topBar`, `bottomBar`, `snackbarHost`,
+ * `floatingActionButton`) are specified as JSON arrays within the props.
+ * Each array element is decoded into a [UIComponent] and rendered via
+ * [RenderComponent]. The body content comes from [UIComponent.children].
+ *
+ * ### Supported props
+ * | Prop | Type | Default | Description |
+ * |------|------|---------|-------------|
+ * | `modifier` | object | – | Standard Ketoy modifier JSON |
+ * | `containerColor` | string | `background` | Scaffold background colour |
+ * | `contentColor` | string | `onBackground` | Default text/icon colour |
+ * | `contentWindowInsets` | object | defaults | Window insets for content area |
+ * | `topBar` | array | – | Top-bar slot components |
+ * | `bottomBar` | array | – | Bottom-bar slot components |
+ * | `snackbarHost` | array | – | Snackbar-host slot components |
+ * | `floatingActionButton` | array | – | FAB slot components |
+ * | `floatingActionButtonPosition` | string | `"end"` | FAB position |
+ *
+ * @param component The [UIComponent] whose `type` is `"scaffold"`.
+ *
+ * @see RenderTopAppBar
+ * @see RenderBottomAppBar
+ * @see RenderFloatingActionButton
+ */@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun RenderScaffold(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
@@ -67,8 +118,32 @@ internal fun RenderScaffold(component: UIComponent) {
 // ═══════════════════════════════════════════════════════════════════
 //  TopAppBar  (small | centerAligned | medium | large)
 // ═══════════════════════════════════════════════════════════════════
-
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Renders a Material 3 top app bar from a [UIComponent] node.
+ *
+ * The `type` prop selects the variant:
+ * - `"small"` (default) — `TopAppBar`
+ * - `"centerAligned"` — `CenterAlignedTopAppBar`
+ * - `"medium"` — `MediumTopAppBar`
+ * - `"large"` — `LargeTopAppBar`
+ *
+ * ### Supported props
+ * | Prop | Type | Default | Description |
+ * |------|------|---------|-------------|
+ * | `type` | string | `"small"` | Bar variant |
+ * | `title` | array | – | Title slot components |
+ * | `navigationIcon` | array | – | Leading icon slot |
+ * | `actions` | array | – | Trailing action icons |
+ * | `colors` | object | defaults | Custom bar colours |
+ * | `windowInsets` | object | defaults | Window insets override |
+ * | `scrollBehavior` | object | – | Scroll-behaviour configuration |
+ * | `modifier` | object | – | Standard Ketoy modifier JSON |
+ *
+ * @param component The [UIComponent] whose `type` is `"topappbar"`.
+ *
+ * @see RenderScaffold
+ * @see RenderAppBarAction
+ */@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun RenderTopAppBar(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
@@ -120,8 +195,25 @@ internal fun RenderTopAppBar(component: UIComponent) {
 // ═══════════════════════════════════════════════════════════════════
 //  BottomAppBar
 // ═══════════════════════════════════════════════════════════════════
-
-@Composable
+/**
+ * Renders a Material 3 `BottomAppBar` from a [UIComponent] node.
+ *
+ * ### Supported props
+ * | Prop | Type | Default | Description |
+ * |------|------|---------|-------------|
+ * | `containerColor` | string | defaults | Bar background colour |
+ * | `contentColor` | string | unspecified | Default icon/text colour |
+ * | `tonalElevation` | int | defaults | Elevation in dp |
+ * | `contentPadding` | object/int | defaults | Inner padding |
+ * | `windowInsets` | object | defaults | Window insets override |
+ * | `modifier` | object | – | Standard Ketoy modifier JSON |
+ *
+ * Children are rendered inside the bar’s content slot.
+ *
+ * @param component The [UIComponent] whose `type` is `"bottomappbar"`.
+ *
+ * @see RenderScaffold
+ */@Composable
 internal fun RenderBottomAppBar(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
     val modifier = parseModifier(props)
@@ -151,8 +243,27 @@ internal fun RenderBottomAppBar(component: UIComponent) {
 // ═══════════════════════════════════════════════════════════════════
 //  NavigationBar  (contains NavigationBarItem children)
 // ═══════════════════════════════════════════════════════════════════
-
-@Composable
+/**
+ * Renders a Material 3 `NavigationBar` from a [UIComponent] node.
+ *
+ * Children whose type is `"NavigationBarItem"` are rendered via
+ * [RenderNavigationBarItem] inside the required `RowScope`; all other
+ * children fall back to [RenderComponent].
+ *
+ * ### Supported props
+ * | Prop | Type | Default | Description |
+ * |------|------|---------|-------------|
+ * | `containerColor` | string | defaults | Bar background colour |
+ * | `contentColor` | string | unspecified | Default content colour |
+ * | `tonalElevation` | int | defaults | Elevation in dp |
+ * | `windowInsets` | object | defaults | Window insets override |
+ * | `modifier` | object | – | Standard Ketoy modifier JSON |
+ *
+ * @param component The [UIComponent] whose `type` is `"navigationbar"`.
+ *
+ * @see RenderNavigationBarItem
+ * @see RenderScaffold
+ */@Composable
 internal fun RenderNavigationBar(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
     val modifier = parseModifier(props)
@@ -186,12 +297,35 @@ internal fun RenderNavigationBar(component: UIComponent) {
 // ═══════════════════════════════════════════════════════════════════
 //  NavigationBarItem  (must be called inside RowScope)
 // ═══════════════════════════════════════════════════════════════════
-
-@Composable
+/**
+ * Renders a single `NavigationBarItem` inside a `RowScope`.
+ *
+ * Must be invoked from within a [NavigationBar] (i.e. [RenderNavigationBar]).
+ * Switches between `icon` and `selectedIcon` content slots based on [selected].
+ *
+ * ### Supported props
+ * | Prop | Type | Default | Description |
+ * |------|------|---------|-------------|
+ * | `selected` | boolean | `false` | Whether the item is active |
+ * | `onClick` | string/object | – | Action resolved by [OnClickResolver] |
+ * | `icon` | array | – | Unselected icon slot |
+ * | `selectedIcon` | array | – | Selected icon slot |
+ * | `label` | array | – | Label slot |
+ * | `enabled` | boolean | `true` | Whether taps are accepted |
+ * | `alwaysShowLabel` | boolean | `true` | Show label even when unselected |
+ * | `colors` | object | defaults | Custom item colours |
+ * | `modifier` | object | – | Standard Ketoy modifier JSON |
+ *
+ * @param component The [UIComponent] whose `type` is `"navigationbaritem"`.
+ *
+ * @see RenderNavigationBar
+ */@Composable
 internal fun RowScope.RenderNavigationBarItem(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
     val selected = props["selected"]?.jsonPrimitive?.booleanOrNull ?: false
-    val onClick = props["onClick"]?.jsonPrimitive?.contentOrNull
+    val context = LocalContext.current
+    val navController = LocalKetoyNavController.current
+    val onClickAction = OnClickResolver.resolve(props["onClick"], context, navController)
     val modifier = parseModifier(props)
     val enabled = props["enabled"]?.jsonPrimitive?.booleanOrNull ?: true
     val alwaysShowLabel = props["alwaysShowLabel"]?.jsonPrimitive?.booleanOrNull ?: true
@@ -205,7 +339,7 @@ internal fun RowScope.RenderNavigationBarItem(component: UIComponent) {
 
     NavigationBarItem(
         selected = selected,
-        onClick = { onClick?.let { ActionRegistry.get(it)?.invoke() } },
+        onClick = { onClickAction?.invoke() },
         icon = {
             if (selected && selectedIconContent != null) {
                 selectedIconContent.forEach { RenderComponent(Json.decodeFromJsonElement(it)) }
@@ -226,12 +360,30 @@ internal fun RowScope.RenderNavigationBarItem(component: UIComponent) {
 // ═══════════════════════════════════════════════════════════════════
 //  NavigationDrawerItem
 // ═══════════════════════════════════════════════════════════════════
-
-@Composable
+/**
+ * Renders a Material 3 `NavigationDrawerItem` from a [UIComponent] node.
+ *
+ * Typically used inside a `ModalNavigationDrawer` or `PermanentNavigationDrawer`.
+ *
+ * ### Supported props
+ * | Prop | Type | Default | Description |
+ * |------|------|---------|-------------|
+ * | `selected` | boolean | `false` | Whether the item is active |
+ * | `onClick` | string/object | – | Action resolved by [OnClickResolver] |
+ * | `icon` | array | – | Leading icon slot |
+ * | `label` | array | – | Label slot |
+ * | `badge` | array | – | Trailing badge slot |
+ * | `colors` | object | defaults | Custom item colours |
+ * | `modifier` | object | – | Standard Ketoy modifier JSON |
+ *
+ * @param component The [UIComponent] whose `type` is `"navigationdraweritem"`.
+ */@Composable
 internal fun RenderNavigationDrawerItem(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
     val selected = props["selected"]?.jsonPrimitive?.booleanOrNull ?: false
-    val onClick = props["onClick"]?.jsonPrimitive?.contentOrNull
+    val context = LocalContext.current
+    val navController = LocalKetoyNavController.current
+    val onClickAction = OnClickResolver.resolve(props["onClick"], context, navController)
     val modifier = parseModifier(props)
     val colors = props["colors"]?.jsonObject?.let { parseNavigationDrawerItemColors(it) }
         ?: NavigationDrawerItemDefaults.colors()
@@ -243,7 +395,7 @@ internal fun RenderNavigationDrawerItem(component: UIComponent) {
     NavigationDrawerItem(
         label = { labelContent?.forEach { RenderComponent(Json.decodeFromJsonElement(it)) } },
         selected = selected,
-        onClick = { onClick?.let { ActionRegistry.get(it)?.invoke() } },
+        onClick = { onClickAction?.invoke() },
         modifier = modifier,
         icon = iconContent?.let { arr ->
             { arr.forEach { RenderComponent(Json.decodeFromJsonElement(it)) } }
@@ -258,12 +410,39 @@ internal fun RenderNavigationDrawerItem(component: UIComponent) {
 // ═══════════════════════════════════════════════════════════════════
 //  CustomNavigationItem  (fallback custom button-based nav item)
 // ═══════════════════════════════════════════════════════════════════
-
-@Composable
+/**
+ * Renders a custom button-based navigation item as a fallback when the
+ * standard Material `NavigationBarItem` is not flexible enough.
+ *
+ * Uses a `Button` with a `Column` of icon + label to emulate a nav-item.
+ * Supports distinct colours for selected vs. unselected states.
+ *
+ * ### Supported props
+ * | Prop | Type | Default | Description |
+ * |------|------|---------|-------------|
+ * | `selected` | boolean | `false` | Active state |
+ * | `onClick` | string/object | – | Action resolved by [OnClickResolver] |
+ * | `icon` | array | – | Unselected icon slot |
+ * | `selectedIcon` | array | – | Selected icon slot |
+ * | `label` | array | – | Label slot |
+ * | `enabled` | boolean | `true` | Whether taps are accepted |
+ * | `alwaysShowLabel` | boolean | `true` | Show label when unselected |
+ * | `containerColor` | string | `surface` | Normal background |
+ * | `selectedContainerColor` | string | `primaryContainer` | Active background |
+ * | `contentColor` | string | `onSurface` | Normal icon/text colour |
+ * | `selectedContentColor` | string | `onPrimaryContainer` | Active colour |
+ * | `modifier` | object | – | Standard Ketoy modifier JSON |
+ *
+ * @param component The [UIComponent] whose `type` is `"customnavigationitem"`.
+ *
+ * @see RenderNavigationBarItem
+ */@Composable
 internal fun RenderCustomNavigationItem(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
     val selected = props["selected"]?.jsonPrimitive?.booleanOrNull ?: false
-    val onClick = props["onClick"]?.jsonPrimitive?.contentOrNull
+    val context = LocalContext.current
+    val navController = LocalKetoyNavController.current
+    val onClickAction = OnClickResolver.resolve(props["onClick"], context, navController)
     val modifier = parseModifier(props)
     val enabled = props["enabled"]?.jsonPrimitive?.booleanOrNull ?: true
     val alwaysShowLabel = props["alwaysShowLabel"]?.jsonPrimitive?.booleanOrNull ?: true
@@ -278,7 +457,7 @@ internal fun RenderCustomNavigationItem(component: UIComponent) {
     val labelContent = props["label"]?.jsonArray
 
     Button(
-        onClick = { onClick?.let { ActionRegistry.get(it)?.invoke() } },
+        onClick = { onClickAction?.invoke() },
         modifier = modifier,
         enabled = enabled,
         colors = ButtonDefaults.buttonColors(
@@ -313,11 +492,36 @@ internal fun RenderCustomNavigationItem(component: UIComponent) {
 // ═══════════════════════════════════════════════════════════════════
 //  FloatingActionButton  (regular | small | large | extended)
 // ═══════════════════════════════════════════════════════════════════
-
-@Composable
+/**
+ * Renders a Material 3 Floating Action Button from a [UIComponent] node.
+ *
+ * The `type` prop selects the FAB variant:
+ * - `"regular"` (default) — `FloatingActionButton`
+ * - `"small"` — `SmallFloatingActionButton`
+ * - `"large"` — `LargeFloatingActionButton`
+ * - `"extended"` — `ExtendedFloatingActionButton` (splits children into
+ *   text and icon slots automatically)
+ *
+ * ### Supported props
+ * | Prop | Type | Default | Description |
+ * |------|------|---------|-------------|
+ * | `type` | string | `"regular"` | FAB variant |
+ * | `onClick` | string/object | – | Action resolved by [OnClickResolver] |
+ * | `shape` | string | defaults | Corner shape descriptor |
+ * | `containerColor` | string | defaults | Background colour |
+ * | `contentColor` | string | unspecified | Icon/text colour |
+ * | `elevation` | object | defaults | Elevation configuration |
+ * | `modifier` | object | – | Standard Ketoy modifier JSON |
+ *
+ * @param component The [UIComponent] whose `type` is `"floatingactionbutton"`.
+ *
+ * @see RenderScaffold
+ */@Composable
 internal fun RenderFloatingActionButton(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
-    val onClick = props["onClick"]?.jsonPrimitive?.contentOrNull
+    val context = LocalContext.current
+    val navController = LocalKetoyNavController.current
+    val onClickAction = OnClickResolver.resolve(props["onClick"], context, navController)
     val modifier = parseModifier(props)
     val shape = props["shape"]?.jsonPrimitive?.contentOrNull?.let { parseShape(it) }
         ?: FloatingActionButtonDefaults.shape
@@ -329,26 +533,25 @@ internal fun RenderFloatingActionButton(component: UIComponent) {
         ?: FloatingActionButtonDefaults.elevation()
     val type = props["type"]?.jsonPrimitive?.contentOrNull ?: "regular"
 
-    val onClickAction: () -> Unit = { onClick?.let { ActionRegistry.get(it)?.invoke() } }
     val content: @Composable () -> Unit = {
         component.children?.forEach { child -> RenderComponent(child) }
     }
 
     when (type) {
         "small" -> SmallFloatingActionButton(
-            onClick = onClickAction, modifier = modifier,
+            onClick = { onClickAction?.invoke() }, modifier = modifier,
             shape = shape, containerColor = containerColor,
             contentColor = contentColor, elevation = elevation,
             content = content
         )
         "large" -> LargeFloatingActionButton(
-            onClick = onClickAction, modifier = modifier,
+            onClick = { onClickAction?.invoke() }, modifier = modifier,
             shape = shape, containerColor = containerColor,
             contentColor = contentColor, elevation = elevation,
             content = content
         )
         "extended" -> ExtendedFloatingActionButton(
-            onClick = onClickAction, modifier = modifier,
+            onClick = { onClickAction?.invoke() }, modifier = modifier,
             shape = shape, containerColor = containerColor,
             contentColor = contentColor, elevation = elevation,
             text = {
@@ -361,7 +564,7 @@ internal fun RenderFloatingActionButton(component: UIComponent) {
             }
         )
         else -> FloatingActionButton(
-            onClick = onClickAction, modifier = modifier,
+            onClick = { onClickAction?.invoke() }, modifier = modifier,
             shape = shape, containerColor = containerColor,
             contentColor = contentColor, elevation = elevation,
             content = content
@@ -372,8 +575,27 @@ internal fun RenderFloatingActionButton(component: UIComponent) {
 // ═══════════════════════════════════════════════════════════════════
 //  Snackbar
 // ═══════════════════════════════════════════════════════════════════
-
-@Composable
+/**
+ * Renders a Material 3 `Snackbar` from a [UIComponent] node.
+ *
+ * ### Supported props
+ * | Prop | Type | Default | Description |
+ * |------|------|---------|-------------|
+ * | `message` | string | `""` | Text shown inside the snackbar |
+ * | `actionOnNewLine` | boolean | `false` | Place the action on a new line |
+ * | `shape` | string | defaults | Corner shape descriptor |
+ * | `containerColor` | string | defaults | Background colour |
+ * | `contentColor` | string | defaults | Text colour |
+ * | `actionContentColor` | string | defaults | Action button colour |
+ * | `dismissActionContentColor` | string | defaults | Dismiss icon colour |
+ * | `action` | array | – | Action-button slot |
+ * | `dismissAction` | array | – | Dismiss-button slot |
+ * | `modifier` | object | – | Standard Ketoy modifier JSON |
+ *
+ * @param component The [UIComponent] whose `type` is `"snackbar"`.
+ *
+ * @see RenderSnackBarHost
+ */@Composable
 internal fun RenderSnackBar(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
     val modifier = parseModifier(props)
@@ -416,8 +638,22 @@ internal fun RenderSnackBar(component: UIComponent) {
 // ═══════════════════════════════════════════════════════════════════
 //  SnackbarHost
 // ═══════════════════════════════════════════════════════════════════
-
-@Composable
+/**
+ * Renders a `SnackbarHost` from a [UIComponent] node.
+ *
+ * If a `snackbar` array is provided in props, those components are used as
+ * the host’s snackbar content; otherwise a default empty host is created.
+ *
+ * ### Supported props
+ * | Prop | Type | Default | Description |
+ * |------|------|---------|-------------|
+ * | `snackbar` | array | – | Custom snackbar content |
+ * | `modifier` | object | – | Standard Ketoy modifier JSON |
+ *
+ * @param component The [UIComponent] whose `type` is `"snackbarhost"`.
+ *
+ * @see RenderSnackBar
+ */@Composable
 internal fun RenderSnackBarHost(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
     val modifier = parseModifier(props)
@@ -436,18 +672,36 @@ internal fun RenderSnackBarHost(component: UIComponent) {
 // ═══════════════════════════════════════════════════════════════════
 //  AppBarAction (IconButton wrapper for TopAppBar actions)
 // ═══════════════════════════════════════════════════════════════════
-
-@Composable
+/**
+ * Renders an `IconButton` intended for use inside a [TopAppBar] actions slot.
+ *
+ * Children are placed inside the button's content area (typically a single
+ * `Icon` widget).
+ *
+ * ### Supported props
+ * | Prop | Type | Default | Description |
+ * |------|------|---------|-------------|
+ * | `onClick` | string/object | – | Action resolved by [OnClickResolver] |
+ * | `enabled` | boolean | `true` | Whether taps are accepted |
+ * | `colors` | object | defaults | Icon-button colour overrides |
+ * | `modifier` | object | – | Standard Ketoy modifier JSON |
+ *
+ * @param component The [UIComponent] whose `type` is `"appbaraction"`.
+ *
+ * @see RenderTopAppBar
+ */@Composable
 internal fun RenderAppBarAction(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
-    val onClick = props["onClick"]?.jsonPrimitive?.contentOrNull
     val modifier = parseModifier(props)
     val enabled = props["enabled"]?.jsonPrimitive?.booleanOrNull ?: true
     val colors = props["colors"]?.jsonObject?.let { parseIconButtonColors(it) }
         ?: IconButtonDefaults.iconButtonColors()
+    val context = LocalContext.current
+    val navController = LocalKetoyNavController.current
+    val resolvedClick = OnClickResolver.resolve(props["onClick"], context, navController)
 
     IconButton(
-        onClick = { onClick?.let { ActionRegistry.get(it)?.invoke() } },
+        onClick = { resolvedClick?.invoke() },
         modifier = modifier,
         enabled = enabled,
         colors = colors
@@ -459,8 +713,27 @@ internal fun RenderAppBarAction(component: UIComponent) {
 // ═══════════════════════════════════════════════════════════════════
 //  NavigationRail
 // ═══════════════════════════════════════════════════════════════════
-
-@Composable
+/**
+ * Renders a Material 3 `NavigationRail` from a [UIComponent] node.
+ *
+ * The rail is typically used on larger screens (tablets, desktops) as a
+ * side-navigation alternative to `NavigationBar`.
+ *
+ * ### Supported props
+ * | Prop | Type | Default | Description |
+ * |------|------|---------|-------------|
+ * | `containerColor` | string | defaults | Rail background colour |
+ * | `contentColor` | string | unspecified | Default content colour |
+ * | `header` | array | – | Header slot (e.g. FAB or logo) |
+ * | `windowInsets` | object | defaults | Window insets override |
+ * | `modifier` | object | – | Standard Ketoy modifier JSON |
+ *
+ * Children are rendered as rail items.
+ *
+ * @param component The [UIComponent] whose `type` is `"navigationrail"`.
+ *
+ * @see RenderNavigationRailItem
+ */@Composable
 internal fun RenderNavigationRail(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
     val modifier = parseModifier(props)
@@ -488,12 +761,28 @@ internal fun RenderNavigationRail(component: UIComponent) {
 // ═══════════════════════════════════════════════════════════════════
 //  NavigationRailItem
 // ═══════════════════════════════════════════════════════════════════
-
-@Composable
+/**
+ * Renders a single `NavigationRailItem` from a [UIComponent] node.
+ *
+ * ### Supported props
+ * | Prop | Type | Default | Description |
+ * |------|------|---------|-------------|
+ * | `selected` | boolean | `false` | Whether the item is active |
+ * | `onClick` | string/object | – | Action resolved by [OnClickResolver] |
+ * | `icon` | array | – | Unselected icon slot |
+ * | `selectedIcon` | array | – | Selected icon slot |
+ * | `label` | array | – | Label slot |
+ * | `enabled` | boolean | `true` | Whether taps are accepted |
+ * | `alwaysShowLabel` | boolean | `true` | Show label when unselected |
+ * | `modifier` | object | – | Standard Ketoy modifier JSON |
+ *
+ * @param component The [UIComponent] whose `type` is `"navigationrailitem"`.
+ *
+ * @see RenderNavigationRail
+ */@Composable
 internal fun RenderNavigationRailItem(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
     val selected = props["selected"]?.jsonPrimitive?.booleanOrNull ?: false
-    val onClick = props["onClick"]?.jsonPrimitive?.contentOrNull
     val modifier = parseModifier(props)
     val enabled = props["enabled"]?.jsonPrimitive?.booleanOrNull ?: true
     val alwaysShowLabel = props["alwaysShowLabel"]?.jsonPrimitive?.booleanOrNull ?: true
@@ -501,10 +790,13 @@ internal fun RenderNavigationRailItem(component: UIComponent) {
     val iconContent = props["icon"]?.jsonArray
     val selectedIconContent = props["selectedIcon"]?.jsonArray
     val labelContent = props["label"]?.jsonArray
+    val context = LocalContext.current
+    val navController = LocalKetoyNavController.current
+    val resolvedClick = OnClickResolver.resolve(props["onClick"], context, navController)
 
     NavigationRailItem(
         selected = selected,
-        onClick = { onClick?.let { ActionRegistry.get(it)?.invoke() } },
+        onClick = { resolvedClick?.invoke() },
         icon = {
             if (selected && selectedIconContent != null) {
                 selectedIconContent.forEach { RenderComponent(Json.decodeFromJsonElement(it)) }
@@ -524,13 +816,29 @@ internal fun RenderNavigationRailItem(component: UIComponent) {
 // ═══════════════════════════════════════════════════════════════════
 //  ModalBottomSheet
 // ═══════════════════════════════════════════════════════════════════
-
-@OptIn(ExperimentalMaterial3Api::class)
+/**
+ * Renders a Material 3 `ModalBottomSheet` from a [UIComponent] node.
+ *
+ * ### Supported props
+ * | Prop | Type | Default | Description |
+ * |------|------|---------|-------------|
+ * | `shape` | string | expanded shape | Corner shape descriptor |
+ * | `containerColor` | string | defaults | Sheet background colour |
+ * | `contentColor` | string | unspecified | Default content colour |
+ * | `tonalElevation` | int | defaults | Elevation in dp |
+ * | `scrimColor` | string | defaults | Overlay scrim colour |
+ * | `dragHandle` | array | default drag handle | Custom drag-handle slot |
+ * | `onDismissRequest` | string/object | – | Dismiss action via [OnClickResolver] |
+ * | `modifier` | object | – | Standard Ketoy modifier JSON |
+ *
+ * Children are rendered inside the sheet body.
+ *
+ * @param component The [UIComponent] whose `type` is `"modalbottomsheet"`.
+ */@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 internal fun RenderModalBottomSheet(component: UIComponent) {
     val props = component.props ?: JsonObject(emptyMap())
     val modifier = parseModifier(props)
-    val onDismissAction = props["onDismissRequest"]?.jsonPrimitive?.contentOrNull
     val shape = props["shape"]?.jsonPrimitive?.contentOrNull?.let { parseShape(it) }
         ?: BottomSheetDefaults.ExpandedShape
     val containerColor = resolveKetoyColorOrNull(props["containerColor"]?.jsonPrimitive?.contentOrNull)
@@ -542,11 +850,14 @@ internal fun RenderModalBottomSheet(component: UIComponent) {
     val scrimColor = resolveKetoyColorOrNull(props["scrimColor"]?.jsonPrimitive?.contentOrNull)
         ?: BottomSheetDefaults.ScrimColor
     val dragHandleContent = props["dragHandle"]?.jsonArray
+    val context = LocalContext.current
+    val navController = LocalKetoyNavController.current
+    val resolvedDismiss = OnClickResolver.resolve(props["onDismissRequest"], context, navController)
 
     val sheetState = rememberModalBottomSheetState()
 
     ModalBottomSheet(
-        onDismissRequest = { onDismissAction?.let { ActionRegistry.get(it)?.invoke() } },
+        onDismissRequest = { resolvedDismiss?.invoke() },
         modifier = modifier,
         sheetState = sheetState,
         shape = shape,

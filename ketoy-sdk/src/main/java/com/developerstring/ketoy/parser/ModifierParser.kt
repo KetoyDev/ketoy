@@ -1,3 +1,16 @@
+/**
+ * Modifier parser for the Ketoy Server-Driven UI engine.
+ *
+ * Converts a `"modifier"` JSON object from the component tree into a fully
+ * chained Jetpack Compose [Modifier]. Every recognised key (e.g. `padding`,
+ * `background`, `shadow`, `gradient`, `border`, `fillMaxWidth`, …) is mapped
+ * to its Compose equivalent and applied in the order it appears in the JSON,
+ * giving the backend full control over modifier ordering.
+ *
+ * @see parseShape
+ * @see parseGradient
+ * @see parseColor
+ */
 package com.developerstring.ketoy.parser
 
 import androidx.compose.foundation.background
@@ -21,10 +34,30 @@ import androidx.compose.ui.unit.dp
 import kotlinx.serialization.json.*
 
 /**
- * Parse a [JsonObject] `"modifier"` key into a Compose [Modifier] chain.
+ * Parses a [JsonObject] `"modifier"` key into a Compose [Modifier] chain.
  *
  * The order in which keys appear in the JSON object is preserved,
- * so the developer controls the modifier chain ordering.
+ * so the server / backend controls the modifier chain ordering.
+ *
+ * Supported modifier keys include:
+ * - **Size**: `fillMaxSize`, `fillMaxWidth`, `fillMaxHeight`, `size`, `width`, `height`,
+ *   `wrapContentWidth`, `wrapContentHeight`
+ * - **Spacing**: `padding`, `margin`, `paddingHorizontal`, `paddingVertical`, `paddingTop`
+ * - **Position**: `offsetX` / `offsetY`
+ * - **Appearance**: `background`, `gradient`, `shape`, `cornerRadius`, `border`, `shadow`
+ * - **Effects**: `alpha`, `scale`, `scaleX` / `scaleY`, `rotation`
+ * - **Interaction**: `clickable`
+ * - **Scroll**: `verticalScroll`, `horizontalScroll`
+ *
+ * Unknown keys are silently ignored, and any exception is caught so that
+ * the modifier chain accumulated so far is still returned.
+ *
+ * @param props the component's top-level [JsonObject]; the function reads `props["modifier"]`.
+ * @return a fully composed [Modifier] chain, or [Modifier] if the key is absent/empty.
+ * @see parseShape
+ * @see parseShapeWithRadius
+ * @see parseColor
+ * @see parseGradient
  */
 fun parseModifier(props: JsonObject): Modifier {
     var modifier: Modifier = Modifier
@@ -204,6 +237,17 @@ fun parseModifier(props: JsonObject): Modifier {
 
 // ─── private helper ─────────────────────────────────────────────────
 
+/**
+ * Applies padding to [base] from a JSON value that may be either a single
+ * integer (uniform padding) or an object with directional keys.
+ *
+ * Accepted object keys: `all`, `horizontal`, `vertical`, `top`, `bottom`,
+ * `start`, `end`.
+ *
+ * @param base the [Modifier] to append padding to.
+ * @param value the JSON element — a primitive int or a [JsonObject].
+ * @return the [Modifier] with padding applied, or [base] if the value is invalid.
+ */
 private fun applyPaddingFromJson(base: Modifier, value: JsonElement): Modifier {
     return when (value) {
         is JsonPrimitive -> value.intOrNull?.let { base.padding(it.dp) } ?: base
