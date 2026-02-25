@@ -80,7 +80,7 @@
         },
         {
             "id": "go_profile",
-            "route": "profile",
+            "route": "cards",
             "label": "Go Profile"
         },
         {

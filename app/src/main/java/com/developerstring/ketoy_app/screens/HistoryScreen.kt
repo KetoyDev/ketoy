@@ -43,8 +43,10 @@ fun buildHistoryScreen(
             padding = kPadding(top = 16),
             background = if (isDark) "#1C1B1F" else "#FFFBFE"
         ),
-        verticalArrangement = "spacedBy_0"
+        verticalArrangement = KArrangements.spacedBy(0)
     ) {
+
+        KText(fontSize = 20)
 
         // ── Header ────────────────────────────────────────
         KRow(
@@ -76,7 +78,7 @@ fun buildHistoryScreen(
             ) {
                 KRow(
                     modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 16, vertical = 14)),
-                    horizontalArrangement = "spacedBy_12",
+                    horizontalArrangement = KArrangements.spacedBy(12),
                     verticalAlignment = KAlignments.CenterVertically
                 ) {
                     KIcon(icon = KIcons.Search, size = 22, color = c.outline(isDark))
@@ -90,7 +92,7 @@ fun buildHistoryScreen(
         // ── Summary chips ─────────────────────────────────
         KRow(
             modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20)),
-            horizontalArrangement = "spacedBy_8"
+            horizontalArrangement = KArrangements.spacedBy(8)
         ) {
             val chipLabels = listOf("All" to true, "Income" to false, "Expense" to false, "Pending" to false)
             for ((label, isActive) in chipLabels) {
@@ -124,7 +126,7 @@ fun buildHistoryScreen(
 
         KColumn(
             modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20, bottom = 16)),
-            verticalArrangement = "spacedBy_8"
+            verticalArrangement = KArrangements.spacedBy(8)
         ) {
             for ((title, subtitle, amount) in transactions) {
                 val isIncome = amount.startsWith("+")
@@ -159,7 +161,7 @@ fun buildHistoryScreen(
             ) {
                 KRow(
                     modifier = kModifier(padding = kPadding(horizontal = 20, vertical = 12)),
-                    horizontalArrangement = "spacedBy_8",
+                    horizontalArrangement = KArrangements.spacedBy(8),
                     verticalAlignment = KAlignments.CenterVertically
                 ) {
                     KIcon(icon = KIcons.Add, size = 20, color = c.onPrimary(isDark))

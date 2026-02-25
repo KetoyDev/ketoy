@@ -4,6 +4,7 @@ import androidx.compose.runtime.Composable
 import com.developerstring.ketoy.screen.KetoyContent
 import com.developerstring.ketoy.screen.ProvideKetoyScreen
 import com.developerstring.ketoy.util.*
+import com.developerstring.ketoy_app.viewmodel.MainViewModel
 
 /**
  * Profile screen composable — wraps the DSL builder as a `@KScreen`
@@ -12,7 +13,7 @@ import com.developerstring.ketoy.util.*
 @Composable
 fun ProfileScreen(
     userName: String,
-    isDark: Boolean
+    isDark: Boolean,
 ) {
     ProvideKetoyScreen(screenName = "profile") {
         KetoyContent(
@@ -38,27 +39,17 @@ fun buildProfileScreen(
         modifier = kModifier(
             fillMaxSize = 1f,
             padding = kPadding(top = 16),
-            background = if (isDark) "#1C1B1F" else "#FFFBFE"
+            background = if (isDark) "#1C1B1F" else "#FFFBFE",
+            verticalScroll = true
         ),
-        verticalArrangement = "spacedBy_0"
+        verticalArrangement = KArrangements.spacedBy(0)
     ) {
-
-        // ── Header ────────────────────────────────────────
-        KText(
-            "Profile",
-            fontSize = 24,
-            fontWeight = KFontWeights.Bold,
-            color = c.onSurface(isDark),
-            modifier = kModifier(padding = kPadding(horizontal = 20))
-        )
-
-        KSpacer(height = 24)
 
         // ── Avatar + name ─────────────────────────────────
         KColumn(
             modifier = kModifier(fillMaxWidth = 1f),
             horizontalAlignment = KAlignments.CenterHorizontally,
-            verticalArrangement = "spacedBy_12"
+            verticalArrangement = KArrangements.spacedBy(12)
         ) {
             KComponent("AvatarBadge", mapOf("initials" to userName.take(2), "badgeCount" to 0, "size" to 80))
             KText(userName, fontSize = 22, fontWeight = KFontWeights.Bold, color = c.onSurface(isDark))
@@ -69,8 +60,8 @@ fun buildProfileScreen(
 
         // ── Account section ───────────────────────────────
         KText(
-            "Account",
-            fontSize = 13,
+            "Prakher",
+            fontSize = 23,
             fontWeight = KFontWeights.SemiBold,
             color = c.onSurfaceVariant(isDark),
             modifier = kModifier(padding = kPadding(horizontal = 20, bottom = 8))
@@ -78,22 +69,9 @@ fun buildProfileScreen(
 
         KColumn(
             modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20)),
-            verticalArrangement = "spacedBy_8"
+            verticalArrangement = KArrangements.spacedBy(8)
         ) {
-            profileItem(
-                KIcons.Person, "Edit Profile", c.surfaceContainerLow(isDark), c.primary(isDark),
-                isDark = isDark, actionId = "profile_edit"
-            ) { KFunctionCall("editProfile", "field" to "name") }
 
-            profileItem(
-                KIcons.Lock, "Change Password", c.surfaceContainerLow(isDark), c.primary(isDark),
-                isDark = isDark, actionId = "profile_password"
-            ) { KFunctionCall("showToast", "message" to "Change password") }
-
-            profileItem(
-                KIcons.Notifications, "Notifications", c.surfaceContainerLow(isDark), c.primary(isDark),
-                isDark = isDark, actionId = "profile_notifs"
-            ) { KFunctionCall("showToast", "message" to "Notification preferences") }
         }
 
         KSpacer(height = 20)
@@ -109,7 +87,7 @@ fun buildProfileScreen(
 
         KColumn(
             modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20)),
-            verticalArrangement = "spacedBy_8"
+            verticalArrangement = KArrangements.spacedBy(8)
         ) {
             // Dark mode toggle
             KCard(
@@ -125,7 +103,7 @@ fun buildProfileScreen(
                     horizontalArrangement = KArrangements.SpaceBetween,
                     verticalAlignment = KAlignments.CenterVertically
                 ) {
-                    KRow(horizontalArrangement = "spacedBy_14", verticalAlignment = KAlignments.CenterVertically) {
+                    KRow(horizontalArrangement = KArrangements.spacedBy(14), verticalAlignment = KAlignments.CenterVertically) {
                         KBox(modifier = kModifier(size = 42, background = c.primaryContainer(isDark), shape = KShapes.Rounded12), contentAlignment = KAlignments.Center) {
                             KIcon(icon = if (isDark) KIcons.DarkMode else KIcons.LightMode, size = 22, color = c.primary(isDark))
                         }
@@ -173,7 +151,7 @@ fun buildProfileScreen(
                     horizontalArrangement = KArrangements.Center,
                     verticalAlignment = KAlignments.CenterVertically
                 ) {
-                    KRow(horizontalArrangement = "spacedBy_8", verticalAlignment = KAlignments.CenterVertically) {
+                    KRow(horizontalArrangement = KArrangements.spacedBy(8), verticalAlignment = KAlignments.CenterVertically) {
                         KIcon(icon = KIcons.ExitToApp, size = 20, color = c.onErrorContainer(isDark))
                         KText("Sign Out", fontSize = 15, fontWeight = KFontWeights.SemiBold, color = c.onErrorContainer(isDark))
                     }

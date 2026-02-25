@@ -5,43 +5,43 @@
 5    <uses-sdk android:minSdkVersion="26" />
 6
 7    <uses-permission android:name="android.permission.INTERNET" />
-7-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:4:5-67
-7-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:4:22-64
+7-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:4:5-67
+7-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:4:22-64
 8    <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
-8-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:5:5-79
-8-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:5:22-76
+8-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:5:5-79
+8-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:5:22-76
 9    <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
-9-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:6:5-76
-9-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:6:22-73
+9-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:6:5-76
+9-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:6:22-73
 10
 11    <application>
-11-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:8:5-20:19
+11-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:8:5-20:19
 12
 13        <!-- Ketoy Dev Preview Activity — launchable via deep link ketoy://dev -->
 14        <activity
-14-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:10:9-19:20
+14-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:10:9-19:20
 15            android:name="com.developerstring.ketoy.devtools.KetoyDevActivity"
-15-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:11:13-45
+15-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:11:13-45
 16            android:exported="true"
-16-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:12:13-36
+16-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:12:13-36
 17            android:label="Ketoy Dev Preview" >
-17-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:13:13-46
+17-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:13:13-46
 18            <intent-filter>
-18-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:14:13-18:29
+18-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:14:13-18:29
 19                <action android:name="android.intent.action.VIEW" />
-19-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:15:17-69
-19-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:15:25-66
+19-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:15:17-69
+19-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:15:25-66
 20
 21                <category android:name="android.intent.category.DEFAULT" />
-21-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:16:17-76
-21-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:16:27-73
+21-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:16:17-76
+21-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:16:27-73
 22
 23                <data
-23-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:17:17-67
+23-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:17:17-67
 24                    android:host="dev"
-24-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:17:46-64
+24-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:17:46-64
 25                    android:scheme="ketoy" />
-25-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:17:23-45
+25-->/Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:17:23-45
 26            </intent-filter>
 27        </activity>
 28    </application>
