@@ -87,7 +87,7 @@ fun com.developerstring.ketoy.dsl.KUniversalScope.quickAction(
     actionId: String? = null,
     onClick: () -> Unit
 ) {
-    KColumn(verticalArrangement = "spacedBy_8", horizontalAlignment = KAlignments.CenterHorizontally) {
+    KColumn(verticalArrangement = KArrangements.spacedBy(8), horizontalAlignment = KAlignments.CenterHorizontally) {
         KCard(modifier = kModifier(size = 64), containerColor = bgColor, shape = KShapes.Rounded20, elevation = 0) {
             KBox(modifier = kModifier(fillMaxSize = 1f), contentAlignment = KAlignments.Center) {
                 KIconButton(icon = icon, iconColor = iconColor, iconSize = 28, onClick = onClick, actionId = actionId) {}
@@ -103,7 +103,7 @@ fun com.developerstring.ketoy.dsl.KUniversalScope.statCard(
     isDark: Boolean = false
 ) {
     KCard(modifier = modifier, containerColor = AppColors.cardBg(isDark), shape = KShapes.Rounded16, elevation = 1) {
-        KColumn(modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(all = 16)), verticalArrangement = "spacedBy_10") {
+        KColumn(modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(all = 16)), verticalArrangement = KArrangements.spacedBy(10)) {
             KRow(modifier = kModifier(fillMaxWidth = 1f), horizontalArrangement = KArrangements.SpaceBetween, verticalAlignment = KAlignments.CenterVertically) {
                 KBox(modifier = kModifier(size = 40, background = iconBg, shape = KShapes.Rounded12), contentAlignment = KAlignments.Center) {
                     KIcon(icon = icon, size = 22, color = iconColor)
@@ -124,7 +124,7 @@ fun com.developerstring.ketoy.dsl.KUniversalScope.walletCard(
 ) {
     KCard(modifier = kModifier(fillMaxWidth = 1f), shape = KShapes.Rounded24, elevation = 6) {
         KColumn(modifier = kModifier(fillMaxWidth = 1f, gradient = KGradients.linear(gradientColors, KGradients.Directions.Diagonal))) {
-            KColumn(modifier = kModifier(fillMaxWidth = 1f, padding = com.developerstring.ketoy.model.KPadding(all = 24)), verticalArrangement = "spacedBy_8") {
+            KColumn(modifier = kModifier(fillMaxWidth = 1f, padding = com.developerstring.ketoy.model.KPadding(all = 24)), verticalArrangement = KArrangements.spacedBy(8)) {
                 KRow(modifier = kModifier(fillMaxWidth = 1f), horizontalArrangement = KArrangements.SpaceBetween, verticalAlignment = KAlignments.CenterVertically) {
                     KText(cardName, fontSize = 16, fontWeight = KFontWeights.SemiBold, color = "#FFFFFF")
                     KIcon(icon = KIcons.CreditCard, size = 28, color = "#FFFFFFBB")
@@ -160,7 +160,7 @@ fun com.developerstring.ketoy.dsl.KUniversalScope.profileItem(
             horizontalArrangement = KArrangements.SpaceBetween,
             verticalAlignment = KAlignments.CenterVertically
         ) {
-            KRow(horizontalArrangement = "spacedBy_14", verticalAlignment = KAlignments.CenterVertically) {
+            KRow(horizontalArrangement = KArrangements.spacedBy(14), verticalAlignment = KAlignments.CenterVertically) {
                 KBox(modifier = kModifier(size = 42, background = AppColors.primaryContainer(isDark), shape = KShapes.Rounded12), contentAlignment = KAlignments.Center) {
                     KIcon(icon = icon, size = 22, color = iconColor)
                 }
@@ -181,7 +181,7 @@ fun com.developerstring.ketoy.dsl.KUniversalScope.categoryRow(
             modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 16, vertical = 14)),
             horizontalArrangement = KArrangements.SpaceBetween, verticalAlignment = KAlignments.CenterVertically
         ) {
-            KRow(horizontalArrangement = "spacedBy_12", verticalAlignment = KAlignments.CenterVertically) {
+            KRow(horizontalArrangement = KArrangements.spacedBy(12), verticalAlignment = KAlignments.CenterVertically) {
                 KBox(modifier = kModifier(size = 42, background = iconBg, shape = KShapes.Rounded12), contentAlignment = KAlignments.Center) {
                     KIcon(icon = icon, size = 22, color = iconColor)
                 }

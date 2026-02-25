@@ -50,7 +50,7 @@ fun buildAnalyticsScreen(
             background = if (isDark) "#1C1B1F" else "#FFFBFE",
             verticalScroll = true
         ),
-        verticalArrangement = "spacedBy_0"
+        verticalArrangement = KArrangements.spacedBy(0)
     ) {
 
         // ── Header ────────────────────────────────────────
@@ -74,7 +74,7 @@ fun buildAnalyticsScreen(
         // ── Overview stat cards ───────────────────────────
         KRow(
             modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20)),
-            horizontalArrangement = "spacedBy_12"
+            horizontalArrangement = KArrangements.spacedBy(12)
         ) {
             statCard(
                 modifier = kModifier(weight = 1f),
@@ -124,7 +124,7 @@ fun buildAnalyticsScreen(
 
         KColumn(
             modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20, bottom = 16)),
-            verticalArrangement = "spacedBy_8"
+            verticalArrangement = KArrangements.spacedBy(8)
         ) {
             categoryRow(KIcons.ShoppingCart, "Groceries", "\$420.50", c.primaryContainer(isDark), c.primary(isDark), isDark)
             categoryRow(KIcons.Restaurant, "Dining", "\$185.30", c.secondaryContainer(isDark), c.onSecondaryContainer(isDark), isDark)
@@ -145,11 +145,11 @@ fun buildAnalyticsScreen(
         ) {
             KRow(
                 modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(all = 16)),
-                horizontalArrangement = "spacedBy_12",
+                horizontalArrangement = KArrangements.spacedBy(12),
                 verticalAlignment = KAlignments.CenterVertically
             ) {
                 KIcon(icon = KIcons.BarChart, size = 28, color = c.primary(isDark))
-                KColumn(modifier = kModifier(weight = 1f), verticalArrangement = "spacedBy_2") {
+                KColumn(modifier = kModifier(weight = 1f), verticalArrangement = KArrangements.spacedBy(2)) {
                     KText("Budget Goal", fontSize = 14, fontWeight = KFontWeights.SemiBold, color = c.onSurface(isDark))
                     KText("You've used 68% of your monthly budget", fontSize = 12, color = c.onSurfaceVariant(isDark))
                 }

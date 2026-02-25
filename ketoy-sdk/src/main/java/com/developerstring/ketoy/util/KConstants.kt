@@ -37,6 +37,9 @@ object KArrangements {
     const val SpaceBetween = "spaceBetween"
     const val SpaceEvenly = "spaceEvenly"
     const val SpaceAround = "spaceAround"
+
+    /** Returns the `"spacedBy_<dp>"` string recognised by the arrangement parser. */
+    fun spacedBy(dp: Int): String = "spacedBy_$dp"
 }
 
 /**
@@ -98,6 +101,19 @@ object KTextAlign {
     const val Center = "center"
     const val End = "end"
     const val Justify = "justify"
+}
+
+/**
+ * String constants for Compose `TextOverflow` values.
+ *
+ * ```kotlin
+ * KText(overflow = KTextOverflow.Ellipsis)
+ * ```
+ */
+object KTextOverflow {
+    const val Clip = "Clip"
+    const val Ellipsis = "Ellipsis"
+    const val Visible = "Visible"
 }
 
 // ─────────────────────────────────────────────────────────────

@@ -89,7 +89,7 @@ open class KUniversalScope : KScope() {
      * @param color          Text colour string (e.g. `KColors.Black`).
      * @param textAlign      Text alignment — e.g. `"Center"`, `"Start"`, `"End"`.
      * @param maxLines       Maximum number of visible lines.
-     * @param overflow        Text overflow behaviour — e.g. `"Ellipsis"`, `"Clip"`.
+     * @param overflow       Text overflow behaviour — e.g. `"Ellipsis"`, `"Clip"`.
      * @param letterSpacing  Letter spacing in sp.
      * @param lineHeight     Line height in sp.
      */

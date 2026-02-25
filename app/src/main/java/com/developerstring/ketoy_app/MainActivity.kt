@@ -51,12 +51,12 @@ class MainActivity : ComponentActivity() {
         Ketoy.initialize(
             context = applicationContext,
             cloudConfig = KetoyCloudConfig(
-                apiKey = "your_api_key",
-                packageName = "package_name",
-                baseUrl = "api_base_url"
+                apiKey = "fa044a28d695b2fa4339a5caf568caa21ffeac1b9b9736bbaddc922515141dc6",
+                packageName = "com.developerstring.ketoy_app",
+                baseUrl = "https://ketoy-nodejs.vercel.app"
             ),
             cacheConfig = KetoyCacheConfig(
-                strategy = KetoyCacheStrategy.OPTIMISTIC,
+                strategy = KetoyCacheStrategy.CACHE_FIRST,
             )
         )
 

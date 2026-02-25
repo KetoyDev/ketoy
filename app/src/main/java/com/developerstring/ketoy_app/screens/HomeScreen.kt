@@ -14,6 +14,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.developerstring.ketoy.model.KIconImageSource
+import com.developerstring.ketoy.model.KScaleType
 import com.developerstring.ketoy.screen.KetoyContent
 import com.developerstring.ketoy.screen.ProvideKetoyScreen
 import com.developerstring.ketoy.util.*
@@ -254,7 +256,7 @@ fun buildHomeCards(
 
     KColumn(
         modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(top = 16)),
-        verticalArrangement = "spacedBy_0"
+        verticalArrangement = KArrangements.spacedBy(0)
     ) {
         // Header row
         KRow(
@@ -262,12 +264,16 @@ fun buildHomeCards(
             horizontalArrangement = KArrangements.SpaceBetween,
             verticalAlignment = KAlignments.CenterVertically
         ) {
+            KText(
+                fontWeight = KFontWeights.Bold, textAlign = KTextAlign.Center,
+                maxLines = 1, fontSize = 24, color = c.onSurface(isDark)
+            )
             KRow(
-                horizontalArrangement = "spacedBy_14",
+                horizontalArrangement = KArrangements.spacedBy(14),
                 verticalAlignment = KAlignments.CenterVertically
             ) {
                 KComponent("AvatarBadge", mapOf("initials" to userName.take(2), "badgeCount" to notificationCount, "size" to 48))
-                KColumn(verticalArrangement = "spacedBy_2") {
+                KColumn(verticalArrangement = KArrangements.spacedBy(2)) {
                     KText("Good morning, hello", fontSize = 13, color = c.onSurfaceVariant(isDark))
                     KText(userName, fontSize = 20, fontWeight = KFontWeights.Bold, color = c.onSurface(isDark))
                 }
@@ -330,7 +336,7 @@ fun buildHomeCards(
         // Income stat card
         KRow(
             modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20)),
-            horizontalArrangement = "spacedBy_12"
+            horizontalArrangement = KArrangements.spacedBy(12)
         ) {
             statCard(
                 modifier = kModifier(weight = 1f),
@@ -356,7 +362,7 @@ fun buildHomeTransactions(
 
     KColumn(
         modifier = kModifier(fillMaxWidth = 1f),
-        verticalArrangement = "spacedBy_0"
+        verticalArrangement = KArrangements.spacedBy(0)
     ) {
         // Recent transactions header
         KRow(
@@ -379,7 +385,7 @@ fun buildHomeTransactions(
         // Transaction list
         KColumn(
             modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20, bottom = 16)),
-            verticalArrangement = "spacedBy_8"
+            verticalArrangement = KArrangements.spacedBy(8)
         ) {
             for ((title, subtitle, amount) in transactions.take(5)) {
                 val isIncome = amount.startsWith("+")

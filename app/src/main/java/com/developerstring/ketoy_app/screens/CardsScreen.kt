@@ -58,7 +58,7 @@ fun buildCardsScreen(
             background = if (isDark) "#1C1B1F" else "#FFFBFE",
             verticalScroll = true
         ),
-        verticalArrangement = "spacedBy_0"
+        verticalArrangement = KArrangements.spacedBy(0)
     ) {
 
         // ── Header ────────────────────────────────────────
@@ -77,12 +77,20 @@ fun buildCardsScreen(
             ) {}
         }
 
+        KScaffold(topBar = {
+            KTopAppBar(title = {
+
+            })
+        }) {
+
+        }
+
         KSpacer(height = 20)
 
         // ── Card carousel ─────────────────────────────────
         KColumn(
             modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20)),
-            verticalArrangement = "spacedBy_16"
+            verticalArrangement = KArrangements.spacedBy(16)
         ) {
             cards.forEachIndexed { index, card ->
                 val isSelected = index == selectedCardIndex
@@ -128,7 +136,7 @@ fun buildCardsScreen(
             modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20)),
             horizontalArrangement = KArrangements.Center
         ) {
-            KRow(horizontalArrangement = "spacedBy_8") {
+            KRow(horizontalArrangement = KArrangements.spacedBy(8)) {
                 cards.forEachIndexed { index, card ->
                     val chipBg = if (index == selectedCardIndex) c.primary(isDark) else c.surfaceContainerLow(isDark)
                     val chipColor = if (index == selectedCardIndex) c.onPrimary(isDark) else c.onSurfaceVariant(isDark)
@@ -174,7 +182,7 @@ fun buildCardsScreen(
 
         KColumn(
             modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20, bottom = 16)),
-            verticalArrangement = "spacedBy_8"
+            verticalArrangement = KArrangements.spacedBy(8)
         ) {
             KComponent("TransactionRow", mapOf("title" to "Apple Store", "subtitle" to "Today", "amount" to "- \$999.00", "isIncome" to false))
             KComponent("TransactionRow", mapOf("title" to "Refund - Amazon", "subtitle" to "Yesterday", "amount" to "+ \$42.50", "isIncome" to true))

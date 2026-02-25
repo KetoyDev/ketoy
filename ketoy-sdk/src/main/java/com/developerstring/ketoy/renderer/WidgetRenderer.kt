@@ -41,6 +41,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import coil.compose.AsyncImage
@@ -93,9 +94,13 @@ private fun rememberOnClick(props: JsonObject): (() -> Unit)? {
  * |------|------|---------|-------------|
  * | `text` | string | `""` | Display text (supports `{{var}}` templates) |
  * | `fontSize` | int | `14` | Font size in sp |
- * | `fontWeight` | string | `"normal"` | `"bold"`, `"normal"`, or `"light"` |
+ * | `fontWeight` | string | `"normal"` | `"bold"`, `"normal"`, `"light"`, `"medium"`, `"semiBold"` |
  * | `color` | string | – | Text colour (supports `@theme/` references) |
- * | `textAlign` | string | `"start"` | `"center"`, `"start"`, or `"end"` |
+ * | `textAlign` | string | `"start"` | `"center"`, `"start"`, `"end"`, `"justify"` |
+ * | `maxLines` | int | – | Maximum visible lines before truncation |
+ * | `overflow` | string | – | `"Ellipsis"`, `"Clip"`, `"Visible"` |
+ * | `letterSpacing` | float | – | Letter spacing in sp |
+ * | `lineHeight` | float | – | Line height in sp |
  * | `modifier` | object | – | Standard Ketoy modifier JSON |
  *
  * @param component The [UIComponent] whose `type` is `"text"`.
@@ -113,6 +118,8 @@ internal fun RenderText(component: UIComponent) {
         "bold" -> FontWeight.Bold
         "normal" -> FontWeight.Normal
         "light" -> FontWeight.Light
+        "medium" -> FontWeight.Medium
+        "semiBold" -> FontWeight.SemiBold
         else -> FontWeight.Normal
     }
     val color = resolveKetoyColor(props["color"]?.jsonPrimitive?.content)
@@ -120,8 +127,18 @@ internal fun RenderText(component: UIComponent) {
         "center" -> TextAlign.Center
         "start" -> TextAlign.Start
         "end" -> TextAlign.End
+        "justify" -> TextAlign.Justify
         else -> TextAlign.Start
     }
+    val maxLines = props["maxLines"]?.jsonPrimitive?.intOrNull ?: Int.MAX_VALUE
+    val overflow = when (props["overflow"]?.jsonPrimitive?.content) {
+        "Ellipsis" -> TextOverflow.Ellipsis
+        "Clip" -> TextOverflow.Clip
+        "Visible" -> TextOverflow.Visible
+        else -> TextOverflow.Clip
+    }
+    val letterSpacing = props["letterSpacing"]?.jsonPrimitive?.floatOrNull?.sp ?: androidx.compose.ui.unit.TextUnit.Unspecified
+    val lineHeight = props["lineHeight"]?.jsonPrimitive?.floatOrNull?.sp ?: androidx.compose.ui.unit.TextUnit.Unspecified
     val modifier = parseModifier(props)
 
     Text(
@@ -130,6 +147,10 @@ internal fun RenderText(component: UIComponent) {
         fontWeight = fontWeight,
         color = color,
         textAlign = textAlign,
+        maxLines = maxLines,
+        overflow = overflow,
+        letterSpacing = letterSpacing,
+        lineHeight = lineHeight,
         modifier = modifier
     )
 }
