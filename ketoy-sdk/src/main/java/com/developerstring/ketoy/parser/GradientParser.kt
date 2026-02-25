@@ -1,3 +1,13 @@
+/**
+ * Gradient parser for the Ketoy SDUI engine.
+ *
+ * Converts a JSON gradient descriptor into a Jetpack Compose [Brush] that can
+ * be applied to backgrounds and other drawing surfaces. Supports linear,
+ * radial, and angular/sweep gradients with configurable colours, directions,
+ * angles, and centres.
+ *
+ * @see parseColor
+ */
 package com.developerstring.ketoy.parser
 
 import androidx.compose.ui.geometry.Offset
@@ -8,9 +18,22 @@ import kotlin.math.cos
 import kotlin.math.sin
 
 /**
- * Parse a gradient [JsonObject] to a Compose [Brush].
+ * Parses a gradient [JsonObject] into a Compose [Brush].
  *
- * Supported gradient types: `linear`, `radial`, `angular` / `sweep`.
+ * ### Supported gradient types
+ * | `type`               | Description                                       |
+ * |----------------------|---------------------------------------------------|
+ * | `"linear"` (default) | Linear gradient with `direction` or `angle`        |
+ * | `"radial"`           | Radial gradient with `centerX`, `centerY`, `radius`|
+ * | `"angular"` / `"sweep"` | Sweep gradient with `centerX`, `centerY`        |
+ *
+ * The `colors` array must contain at least two entries. Each entry may be a
+ * plain colour string or an object with `color` and optional `alpha` keys.
+ *
+ * @param gradientObject the JSON object describing the gradient.
+ * @return the resulting [Brush], or `null` if colours are missing/insufficient
+ *   or an error occurs.
+ * @see parseColor
  */
 fun parseGradient(gradientObject: JsonObject): Brush? {
     try {

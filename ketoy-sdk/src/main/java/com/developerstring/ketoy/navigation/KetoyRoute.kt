@@ -5,9 +5,15 @@ import kotlinx.serialization.Serializable
 /**
  * Marker interface for type-safe Ketoy navigation routes.
  *
- * Developers define their routes as `@Serializable data object` or
- * `@Serializable data class` types that implement this interface,
- * exactly how Navigation Compose 2.8+ handles type-safe navigation.
+ * Implement this interface on `@Serializable data object` or
+ * `@Serializable data class` types to define type-safe navigation
+ * destinations for [KetoyNavHost], following the Navigation Compose 2.8+
+ * pattern.
+ *
+ * Type-safe routes provide compile-time safety for navigation parameters
+ * and eliminate stringly-typed route errors. They work alongside
+ * string-based routes for a hybrid approach where some screens are
+ * defined in code and others are driven by JSON.
  *
  * ## Defining routes
  * ```kotlin
@@ -21,7 +27,10 @@ import kotlinx.serialization.Serializable
  * data class Detail(val id: String) : KetoyRoute
  *
  * @Serializable
- * data class Product(val productId: Int, val from: String = "home") : KetoyRoute
+ * data class Product(
+ *     val productId: Int,
+ *     val from: String = "home"   // default values supported
+ * ) : KetoyRoute
  * ```
  *
  * ## Using in KetoyNavHost
@@ -29,9 +38,11 @@ import kotlinx.serialization.Serializable
  * KetoyNavHost(startRoute = Home) {
  *     screen<Home> { HomeScreen() }
  *     screen<Profile> { ProfileScreen() }
- *     screen<Detail> { backStackEntry ->
- *         val detail: Detail = backStackEntry.toRoute()
- *         DetailScreen(id = detail.id)
+ *     screen<Detail> { route ->
+ *         DetailScreen(id = route.id)
+ *     }
+ *     screen<Product> { route ->
+ *         ProductScreen(productId = route.productId, from = route.from)
  *     }
  * }
  * ```
@@ -39,12 +50,23 @@ import kotlinx.serialization.Serializable
  * ## Navigating
  * ```kotlin
  * val nav = LocalKetoyNavController.current
- * nav.navigate(Detail(id = "42"))
- * nav.navigateAndReplace(Home)
- * nav.popBackStack()
+ * nav?.navigate(Detail(id = "42"))
+ * nav?.navigateAndReplace(Home)
+ * nav?.navigateAndClearBackStack(Home)
+ * nav?.popBackStack()
  * ```
  *
- * String-based routes remain supported for JSON-driven / dynamic
- * navigation via [KNavigateAction].
+ * ## Extracting the current route
+ * ```kotlin
+ * val detail: Detail? = nav?.currentRouteAs<Detail>()
+ * ```
+ *
+ * String-based routes remain fully supported for JSON-driven / dynamic
+ * navigation via [KNavigateAction] and [KetoyNavigator].
+ *
+ * @see KetoyNavHost
+ * @see KetoyNavController
+ * @see KetoyNavController.navigate
+ * @see KetoyNavController.currentRouteAs
  */
 interface KetoyRoute

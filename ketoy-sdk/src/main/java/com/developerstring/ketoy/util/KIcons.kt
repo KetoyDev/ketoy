@@ -1,3 +1,14 @@
+/**
+ * Material 3 icon registry for the Ketoy SDUI engine.
+ *
+ * Maps plain-string icon names to Jetpack Compose [ImageVector] instances.
+ * Icons are organised by style (Filled, Outlined, Rounded, Sharp, TwoTone).
+ * Consumers reference icons via string constants in the DSL or JSON payloads;
+ * the renderer resolves them through [resolveIcon] at render-time.
+ *
+ * @see resolveIcon
+ * @see KIconRef
+ */
 package com.developerstring.ketoy.util
 
 import androidx.compose.material.icons.Icons
@@ -13,9 +24,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 // ─────────────────────────────────────────────────────────────
 //  KIcons – Material3 icon registry
 //
-//  Maps icon names (strings) → ImageVector.
-//  Mirrors the approach used by stac.dev for Flutter, where each
-//  icon is referenced by a simple string key in JSON/DSL:
+//  Maps icon names (strings) → ImageVector, where each icon is
+//  referenced by a simple string key in JSON/DSL:
 //
 //    DSL  →  KIcon(icon = KIcons.Home)
 //    DSL  →  KIcon(icon = KIcons.Outlined.Home)
@@ -215,6 +225,7 @@ object KIcons {
     // ── Style-qualified icon references ──────────────────
     //    Usage: KIcons.Filled.Home, KIcons.Outlined.Search, etc.
 
+    /** Material Filled-style icon references. */
     object Filled {
         val Home get() = KIconRef(KIcons.Home, STYLE_FILLED)
         val Search get() = KIconRef(KIcons.Search, STYLE_FILLED)
@@ -339,6 +350,7 @@ object KIcons {
         val KeyboardArrowRight get() = KIconRef(KIcons.KeyboardArrowRight, STYLE_FILLED)
     }
 
+    /** Material Outlined-style icon references. */
     object Outlined {
         val Home get() = KIconRef(KIcons.Home, STYLE_OUTLINED)
         val Search get() = KIconRef(KIcons.Search, STYLE_OUTLINED)
@@ -463,6 +475,7 @@ object KIcons {
         val KeyboardArrowRight get() = KIconRef(KIcons.KeyboardArrowRight, STYLE_OUTLINED)
     }
 
+    /** Material Rounded-style icon references (subset of most common icons). */
     object Rounded {
         val Home get() = KIconRef(KIcons.Home, STYLE_ROUNDED)
         val Search get() = KIconRef(KIcons.Search, STYLE_ROUNDED)
@@ -512,6 +525,7 @@ object KIcons {
         val KeyboardArrowDown get() = KIconRef(KIcons.KeyboardArrowDown, STYLE_ROUNDED)
     }
 
+    /** Material Sharp-style icon references (subset of most common icons). */
     object Sharp {
         val Home get() = KIconRef(KIcons.Home, STYLE_SHARP)
         val Search get() = KIconRef(KIcons.Search, STYLE_SHARP)
@@ -552,6 +566,7 @@ object KIcons {
         val ArrowDropDown get() = KIconRef(KIcons.ArrowDropDown, STYLE_SHARP)
     }
 
+    /** Material TwoTone-style icon references (subset of most common icons). */
     object TwoTone {
         val Home get() = KIconRef(KIcons.Home, STYLE_TWO_TONE)
         val Search get() = KIconRef(KIcons.Search, STYLE_TWO_TONE)
@@ -592,7 +607,13 @@ object KIcons {
         val ArrowDropDown get() = KIconRef(KIcons.ArrowDropDown, STYLE_TWO_TONE)
     }
 
-    /** Create a [KIconRef] from any icon name and style. */
+    /**
+     * Creates a [KIconRef] from any icon name and optional style.
+     *
+     * @param name the icon name string (e.g. `"home"`).
+     * @param style the icon style (defaults to [STYLE_FILLED]).
+     * @return a [KIconRef] combining name and style.
+     */
     fun of(name: String, style: String = STYLE_FILLED) = KIconRef(name, style)
 }
 
@@ -603,7 +624,15 @@ object KIcons {
 /**
  * Resolves the [ImageVector] for the given icon [name] and [style].
  *
- * Returns `null` if the icon name is not recognised.
+ * Looks up the icon in the style-specific map; if the requested style does
+ * not contain the icon, falls back to the Filled map.
+ *
+ * @param name the icon name string (case-insensitive, e.g. `"home"`).
+ * @param style the icon style; one of [KIcons.STYLE_FILLED],
+ *   [KIcons.STYLE_OUTLINED], [KIcons.STYLE_ROUNDED], [KIcons.STYLE_SHARP],
+ *   or [KIcons.STYLE_TWO_TONE].
+ * @return the matching [ImageVector], or `null` if the icon name is not
+ *   recognised in any style map.
  */
 fun resolveIcon(name: String, style: String = KIcons.STYLE_FILLED): ImageVector? {
     val key = name.lowercase()
@@ -622,9 +651,15 @@ fun resolveIcon(name: String, style: String = KIcons.STYLE_FILLED): ImageVector?
 /**
  * Resolves the [ImageVector] for the given [KIconRef].
  *
+ * Convenience overload that extracts name and style from the reference.
+ *
  * ```kotlin
  * val icon = resolveIcon(KIcons.Outlined.Home)
  * ```
+ *
+ * @param ref the icon reference.
+ * @return the matching [ImageVector], or `null` if not recognised.
+ * @see resolveIcon
  */
 fun resolveIcon(ref: KIconRef): ImageVector? = resolveIcon(ref.name, ref.style)
 
@@ -641,6 +676,7 @@ private val filledIconMap: Map<String, ImageVector> by lazy {
         "arrow_back" to Icons.AutoMirrored.Filled.ArrowBack,
         "arrow_forward" to Icons.AutoMirrored.Filled.ArrowForward,
         "more_vert" to Icons.Filled.MoreVert,
+        "more_horiz" to Icons.Filled.MoreHoriz,
         "check" to Icons.Filled.Check,
         "add" to Icons.Filled.Add,
         "delete" to Icons.Filled.Delete,
@@ -661,6 +697,7 @@ private val filledIconMap: Map<String, ImageVector> by lazy {
         "call" to Icons.Filled.Call,
         "send" to Icons.AutoMirrored.Filled.Send,
         "notifications" to Icons.Filled.Notifications,
+        "notifications_none" to Icons.Outlined.Notifications,
 
         // People & accounts
         "person" to Icons.Filled.Person,
@@ -785,6 +822,7 @@ private val outlinedIconMap: Map<String, ImageVector> by lazy {
         "email" to Icons.Outlined.Email,
         "call" to Icons.Outlined.Call,
         "notifications" to Icons.Outlined.Notifications,
+        "notifications_none" to Icons.Outlined.Notifications,
         "person" to Icons.Outlined.Person,
         "account_circle" to Icons.Outlined.AccountCircle,
         "play_arrow" to Icons.Outlined.PlayArrow,

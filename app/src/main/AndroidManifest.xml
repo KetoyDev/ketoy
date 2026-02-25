@@ -14,7 +14,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Ketoy">
         <activity
-            android:name=".MainActivity"
+            android:name="com.developerstring.ketoy_app.MainActivity"
             android:exported="true"
             android:label="@string/app_name"
             android:theme="@style/Theme.Ketoy">

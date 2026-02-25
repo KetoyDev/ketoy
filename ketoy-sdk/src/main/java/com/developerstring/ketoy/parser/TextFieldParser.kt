@@ -1,3 +1,14 @@
+/**
+ * TextField-component parser for the Ketoy SDUI engine.
+ *
+ * Converts JSON descriptors into the Compose types needed to configure
+ * Material 3 `TextField` / `OutlinedTextField` components — including
+ * [TextStyle], [VisualTransformation], [KeyboardOptions], [KeyboardActions],
+ * and [TextFieldColors].
+ *
+ * @see resolveKetoyColor
+ * @see parseColor
+ */
 package com.developerstring.ketoy.parser
 
 import androidx.compose.foundation.text.KeyboardActions
@@ -20,6 +31,19 @@ import kotlinx.serialization.json.*
 
 // ─── TextStyle ────────────────────────────────────────────────────
 
+/**
+ * Parses a JSON object into a Compose [TextStyle].
+ *
+ * Recognised keys: `color`, `fontSize`, `fontWeight` (`"normal"`, `"bold"`,
+ * `"light"`, `"medium"`, `"semibold"`, `"black"`), `fontStyle` (`"normal"`,
+ * `"italic"`), `fontFamily` (`"default"`, `"serif"`, `"sansSerif"`,
+ * `"monospace"`, `"cursive"`), `letterSpacing`, `textDecoration` (`"none"`,
+ * `"underline"`, `"lineThrough"`), `lineHeight`, `background`.
+ *
+ * @param textStyleObject the JSON descriptor.
+ * @return the resulting [TextStyle]; unset properties fall back to
+ *   [TextStyle.Default].
+ */
 fun parseTextStyle(textStyleObject: JsonObject): TextStyle {
     return TextStyle(
         color = parseColor(textStyleObject["color"]?.jsonPrimitive?.content),
@@ -63,6 +87,15 @@ fun parseTextStyle(textStyleObject: JsonObject): TextStyle {
 
 // ─── Visual Transformation ────────────────────────────────────────
 
+/**
+ * Parses a visual-transformation JSON object for text fields.
+ *
+ * Currently supports `type = "password"` with an optional `mask` character;
+ * all other types return [VisualTransformation.None].
+ *
+ * @param visualTransObject the JSON descriptor (e.g. `{ "type": "password", "mask": "*" }`).
+ * @return the corresponding [VisualTransformation].
+ */
 fun parseVisualTransformation(visualTransObject: JsonObject): VisualTransformation {
     return when (visualTransObject["type"]?.jsonPrimitive?.content) {
         "password" -> {
@@ -74,8 +107,20 @@ fun parseVisualTransformation(visualTransObject: JsonObject): VisualTransformati
 }
 
 // ─── Keyboard Options ─────────────────────────────────────────────
-
-fun parseKeyboardOptions(keyboardObject: JsonObject): KeyboardOptions {
+/**
+ * Parses a JSON object into Compose [KeyboardOptions].
+ *
+ * Recognised keys:
+ * - `capitalization`: `"none"`, `"characters"`, `"words"`, `"sentences"`
+ * - `autoCorrect`: boolean
+ * - `keyboardType`: `"text"`, `"ascii"`, `"number"`, `"phone"`, `"uri"`,
+ *   `"email"`, `"password"`, `"numberPassword"`, `"decimal"`
+ * - `imeAction`: `"default"`, `"none"`, `"go"`, `"search"`, `"send"`,
+ *   `"previous"`, `"next"`, `"done"`
+ *
+ * @param keyboardObject the JSON descriptor.
+ * @return the configured [KeyboardOptions].
+ */fun parseKeyboardOptions(keyboardObject: JsonObject): KeyboardOptions {
     val capitalization = when (keyboardObject["capitalization"]?.jsonPrimitive?.content) {
         "none" -> KeyboardCapitalization.None
         "characters" -> KeyboardCapitalization.Characters
@@ -122,8 +167,17 @@ fun parseKeyboardOptions(keyboardObject: JsonObject): KeyboardOptions {
 }
 
 // ─── Keyboard Actions ─────────────────────────────────────────────
-
-@Composable
+/**
+ * Parses a JSON object into Compose [KeyboardActions].
+ *
+ * When a key is present (`onDone`, `onGo`, `onNext`, `onPrevious`,
+ * `onSearch`, `onSend`), a default action is wired — e.g. `onDone`
+ * hides the keyboard and clears focus, `onNext` / `onPrevious` move
+ * focus accordingly.
+ *
+ * @param keyboardActionsObject the JSON descriptor.
+ * @return the configured [KeyboardActions].
+ */@Composable
 fun parseKeyboardActions(keyboardActionsObject: JsonObject): KeyboardActions {
     val focusManager = LocalFocusManager.current
     val keyboardController = LocalSoftwareKeyboardController.current
@@ -145,8 +199,20 @@ fun parseKeyboardActions(keyboardActionsObject: JsonObject): KeyboardActions {
 }
 
 // ─── TextField Colours ────────────────────────────────────────────
-
-@Composable
+/**
+ * Parses a comprehensive JSON colour-scheme object into [TextFieldColors]
+ * for Material 3 text fields.
+ *
+ * Covers all text, container, cursor, indicator, icon, label, placeholder,
+ * supporting-text, prefix, and suffix colour slots across
+ * **focused / unfocused / disabled / error** states.
+ * All colour values are resolved via [resolveKetoyColor] (supports hex,
+ * named colours, and `@theme/` tokens).
+ *
+ * @param colorsObject the JSON descriptor with colour keys.
+ * @return the fully configured [TextFieldColors].
+ * @see resolveKetoyColor
+ */@Composable
 fun parseTextFieldColors(colorsObject: JsonObject): TextFieldColors {
     return TextFieldDefaults.colors(
         focusedTextColor = resolveKetoyColor(colorsObject["focusedTextColor"]?.jsonPrimitive?.content),

@@ -15,45 +15,58 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 /**
- * Primary composable for rendering a Ketoy screen by route name.
+ * Primary composable for rendering a Ketoy screen by its registered name.
  *
- * This is the Compose equivalent of Stac's `Stac(routeName: '/home')` widget.
- * It looks up a registered [KetoyScreen] and renders its content, with
- * support for loading and error states.
+ * Looks up a [KetoyScreen] in [KetoyScreenRegistry] and renders its content
+ * using the full resolution chain. Falls back to [errorContent] if the
+ * screen has not been registered.
  *
  * ## From a registered screen
  * ```kotlin
- * KetoyView(routeName = "home")
+ * // Ensure the screen is registered first:
+ * KetoyScreenRegistry.register(
+ *     KetoyScreen.fromJson("home", homeJson)
+ * )
+ *
+ * @Composable
+ * fun App() {
+ *     KetoyView(screenName = "home")
+ * }
  * ```
  *
- * ## From JSON string
+ * ## With custom error UI
  * ```kotlin
- * KetoyView.fromJson(jsonString)
+ * KetoyView(
+ *     screenName   = "settings",
+ *     errorContent = { msg -> Text("Error: $msg") }
+ * )
  * ```
  *
- * ## From an asset
- * ```kotlin
- * KetoyView.fromAsset("screens/home.json")
- * ```
- *
- * @param routeName    The route identifying the screen in [KetoyScreenRegistry].
- * @param modifier     Optional Modifier.
- * @param loadingContent Composable shown while loading (e.g. async screens).
- * @param errorContent   Composable shown when the screen cannot be found or loaded.
+ * @param screenName     The name identifying the screen in
+ *                       [KetoyScreenRegistry].
+ * @param modifier       Optional [Modifier] applied to the root container.
+ * @param loadingContent Composable shown while loading async screens.
+ *                       Defaults to a centred [CircularProgressIndicator].
+ * @param errorContent   Composable shown when the screen cannot be found
+ *                       or loaded. Receives a human-readable error message.
+ * @see KetoyViewFromJson
+ * @see KetoyViewFromAsset
+ * @see KetoyViewFromNetwork
+ * @see KetoyScreenRegistry
  */
 @Composable
 fun KetoyView(
-    routeName: String,
+    screenName: String,
     modifier: Modifier = Modifier,
     loadingContent: @Composable () -> Unit = { DefaultLoadingContent() },
     errorContent: @Composable (String) -> Unit = { msg -> DefaultErrorContent(msg) }
 ) {
     Box(modifier = modifier) {
-        val screen = KetoyScreenRegistry.get(routeName)
+        val screen = KetoyScreenRegistry.get(screenName)
         if (screen != null) {
             screen.Content()
         } else {
-            errorContent("Screen not found: $routeName")
+            errorContent("Screen not found: $screenName")
         }
     }
 }
@@ -61,7 +74,29 @@ fun KetoyView(
 /**
  * Render a Ketoy screen from a raw JSON string.
  *
- * Equivalent to Stac's `Stac.fromJson(json, context)`.
+ * Directly invokes the
+ * [JSONStringToUI][com.developerstring.ketoy.renderer.JSONStringToUI]
+ * renderer — no registry lookup or caching is involved.
+ *
+ * ## Expected JSON format
+ * ```json
+ * {
+ *   "type": "Column",
+ *   "children": [
+ *     { "type": "Text", "text": "Hello, World!" }
+ *   ]
+ * }
+ * ```
+ *
+ * ```kotlin
+ * val json = """{ "type": "Text", "text": "Hello" }"""
+ * KetoyViewFromJson(json = json)
+ * ```
+ *
+ * @param json     The raw JSON string describing the Ketoy UI tree.
+ * @param modifier Optional [Modifier] applied to the root container.
+ * @see KetoyView
+ * @see com.developerstring.ketoy.renderer.JSONStringToUI
  */
 @Composable
 fun KetoyViewFromJson(
@@ -74,9 +109,22 @@ fun KetoyViewFromJson(
 }
 
 /**
- * Render a Ketoy screen from a local asset JSON file.
+ * Render a Ketoy screen from a local Android asset JSON file.
  *
- * Equivalent to Stac's `Stac.fromAssets(assetPath)`.
+ * Loads the file asynchronously on [Dispatchers.IO] and renders
+ * the UI tree once the content is available.
+ *
+ * ```kotlin
+ * KetoyViewFromAsset(assetPath = "screens/onboarding.json")
+ * ```
+ *
+ * @param assetPath      Relative path inside the Android `assets/` directory
+ *                       (e.g. `"screens/home.json"`).
+ * @param modifier       Optional [Modifier] applied to the root container.
+ * @param loadingContent Composable shown while reading the file.
+ * @param errorContent   Composable shown when reading fails.
+ * @see KetoyView
+ * @see KetoyViewFromJson
  */
 @Composable
 fun KetoyViewFromAsset(
@@ -112,7 +160,25 @@ fun KetoyViewFromAsset(
 /**
  * Render a Ketoy screen from a network URL.
  *
- * Equivalent to Stac's `Stac.fromNetwork(request)`.
+ * Fetches the JSON asynchronously via [HttpURLConnection] and renders
+ * the UI tree once the download completes. Custom HTTP headers can be
+ * provided for authentication or caching.
+ *
+ * ```kotlin
+ * KetoyViewFromNetwork(
+ *     url     = "https://api.example.com/screens/promo",
+ *     headers = mapOf("Authorization" to "Bearer token123")
+ * )
+ * ```
+ *
+ * @param url            Fully-qualified URL returning a Ketoy JSON payload.
+ * @param modifier       Optional [Modifier] applied to the root container.
+ * @param headers        Optional HTTP headers appended to the request.
+ * @param loadingContent Composable shown while downloading.
+ * @param errorContent   Composable shown on network or parse failure.
+ * @see KetoyView
+ * @see KetoyViewFromJson
+ * @see com.developerstring.ketoy.cloud.KetoyCloudScreen
  */
 @Composable
 fun KetoyViewFromNetwork(

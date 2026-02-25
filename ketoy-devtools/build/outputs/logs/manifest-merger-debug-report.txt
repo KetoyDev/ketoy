@@ -1,0 +1,54 @@
+-- Merging decision tree log ---
+manifest
+ADDED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:2:1-22:12
+INJECTED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:2:1-22:12
+	package
+		INJECTED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml
+	xmlns:android
+		ADDED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:2:11-69
+uses-permission#android.permission.INTERNET
+ADDED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:4:5-67
+	android:name
+		ADDED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:4:22-64
+uses-permission#android.permission.ACCESS_NETWORK_STATE
+ADDED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:5:5-79
+	android:name
+		ADDED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:5:22-76
+uses-permission#android.permission.ACCESS_WIFI_STATE
+ADDED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:6:5-76
+	android:name
+		ADDED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:6:22-73
+application
+ADDED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:8:5-20:19
+activity#com.developerstring.ketoy.devtools.KetoyDevActivity
+ADDED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:10:9-19:20
+	android:label
+		ADDED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:13:13-46
+	android:exported
+		ADDED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:12:13-36
+	android:name
+		ADDED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:11:13-45
+intent-filter#action:name:android.intent.action.VIEW+category:name:android.intent.category.DEFAULT+data:host:dev+data:scheme:ketoy
+ADDED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:14:13-18:29
+action#android.intent.action.VIEW
+ADDED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:15:17-69
+	android:name
+		ADDED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:15:25-66
+category#android.intent.category.DEFAULT
+ADDED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:16:17-76
+	android:name
+		ADDED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:16:27-73
+data
+ADDED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:17:17-67
+	android:host
+		ADDED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:17:46-64
+	android:scheme
+		ADDED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml:17:23-45
+uses-sdk
+INJECTED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml reason: use-sdk injection requested
+INJECTED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml
+INJECTED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml
+	android:targetSdkVersion
+		INJECTED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml
+	android:minSdkVersion
+		INJECTED from /Users/adityashinde/Documents/Developer/OpenSource Android Libraries/Ketoy-Library/Ketoy/ketoy-devtools/src/main/AndroidManifest.xml
