@@ -87,9 +87,9 @@ class MainActivity : ComponentActivity() {
                 KetoyThemeProvider(
                     themeMode = if (isDark) KetoyThemeMode.Dark else KetoyThemeMode.Light
                 ) {
-                    KetoyDevWrapper {
+//                    KetoyDevWrapper {
                         MainApp(vm, isDark)
-                    }
+//                    }
                 }
             }
         }

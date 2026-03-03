@@ -109,7 +109,7 @@ internal fun RenderScaffold(component: UIComponent) {
         contentColor = contentColor,
         contentWindowInsets = contentWindowInsets
     ) { paddingValues ->
-        Box(modifier = Modifier.padding(paddingValues)) {
+        Box(modifier = Modifier.fillMaxSize().padding(paddingValues)) {
             component.children?.forEach { child -> RenderComponent(child) }
         }
     }
