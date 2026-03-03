@@ -29,6 +29,16 @@
             },
             "children": [
                 {
+                    "type": "Text",
+                    "props": {
+                        "fontSize": 24,
+                        "fontWeight": "bold",
+                        "color": "#E6E0E9",
+                        "textAlign": "center",
+                        "maxLines": 1
+                    }
+                },
+                {
                     "type": "Row",
                     "props": {
                         "horizontalArrangement": "spacedBy_14",

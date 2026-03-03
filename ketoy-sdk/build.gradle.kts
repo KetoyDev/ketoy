@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("org.jetbrains.kotlin.plugin.serialization") version "2.0.21"
+    alias(libs.plugins.vanniktech.mavenPublish)
 }
 
 android {
@@ -68,4 +69,45 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
     debugImplementation(libs.androidx.compose.ui.tooling)
+}
+
+mavenPublishing {
+    publishToMavenCentral()
+
+    signAllPublications()
+
+    coordinates("dev.ketoy", "sdk", "0.1-beta")
+
+    pom {
+        name = "Ketoy SDUI SDK"
+        description = "Update Android apps in seconds with Ketoy’s server-driven UI engine. The open source, server-driven UI engine for Jetpack Compose. Write K‑DSL, convert to JSON, render native UI. No Play Store approvals needed."
+        inceptionYear = "2026"
+        url = "https://github.com/KetoyDev/Ketoy/"
+        licenses {
+            license {
+                name = "The Apache License, Version 2.0"
+                url = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+                distribution = "http://www.apache.org/licenses/LICENSE-2.0.txt"
+            }
+        }
+        developers {
+            developer {
+                id = "developerchunk"
+                name = "Developer Chunk"
+                url = "https://github.com/developerchunk/"
+            }
+        }
+        scm {
+            url = "https://github.com/KetoyDev/Ketoy"
+            connection = "scm:git:git://github.com/KetoyDev/Ketoy.git"
+            developerConnection = "scm:git:ssh://git@github.com/KetoyDev/Ketoy.git"
+        }
+
+        withXml {
+            val repo = asNode().appendNode("repositories").appendNode("repository")
+            repo.appendNode("name", "Google")
+            repo.appendNode("id", "google")
+            repo.appendNode("url", "https://maven.google.com/")
+        }
+    }
 }

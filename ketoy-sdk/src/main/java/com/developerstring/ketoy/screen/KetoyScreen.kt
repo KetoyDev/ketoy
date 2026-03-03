@@ -15,6 +15,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import com.developerstring.ketoy.cloud.KetoyCloudService
+import com.developerstring.ketoy.cloud.cache.KetoyCacheStrategy
 import com.developerstring.ketoy.core.toJson
 import com.developerstring.ketoy.dsl.KUniversalScope
 import com.developerstring.ketoy.model.KNode
@@ -797,11 +798,19 @@ private fun CloudContent(
     errorContent: @Composable (String, () -> Unit) -> Unit,
     fallbackJson: String?
 ) {
+    val strategy = KetoyCloudService.cacheConfig.strategy
+    val showCacheFirst = strategy == KetoyCacheStrategy.CACHE_FIRST ||
+            strategy == KetoyCacheStrategy.OPTIMISTIC ||
+            strategy == KetoyCacheStrategy.CACHE_ONLY
+
     var fetchState by remember { mutableStateOf<CloudState>(CloudState.Loading) }
     var retryTrigger by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(screenName, retryTrigger) {
-        fetchState = CloudState.Loading
+        // Don't flash loading if we already have content (e.g. from a previous fetch)
+        if (fetchState !is CloudState.Loaded) {
+            fetchState = CloudState.Loading
+        }
         val result = KetoyCloudService.fetchScreen(screenName)
         fetchState = when (result) {
             is KetoyCloudService.FetchResult.Success -> {
@@ -810,12 +819,25 @@ private fun CloudContent(
                 val resolvedJson = extractContentJsonFromCloud(result.uiJson, contentName)
                 CloudState.Loaded(resolvedJson)
             }
-            is KetoyCloudService.FetchResult.Error -> CloudState.Error(result.message)
+            is KetoyCloudService.FetchResult.Error -> {
+                // Keep showing content if already loaded (don't regress to error)
+                val current = fetchState
+                if (current is CloudState.Loaded) current
+                else CloudState.Error(result.message)
+            }
         }
     }
 
     when (val state = fetchState) {
-        is CloudState.Loading -> loadingContent()
+        is CloudState.Loading -> {
+            // For cache-first strategies, show fallback content immediately
+            // instead of a loading spinner — this is the "cache first" UX.
+            if (showCacheFirst && fallbackJson != null) {
+                JSONStringToUI(value = fallbackJson, colorScheme = colorScheme)
+            } else {
+                loadingContent()
+            }
+        }
         is CloudState.Loaded -> JSONStringToUI(value = state.json, colorScheme = colorScheme)
         is CloudState.Error -> {
             if (fallbackJson != null) {
