@@ -13,6 +13,7 @@
             <option value="$PROJECT_DIR$/app" />
             <option value="$PROJECT_DIR$/ketoy-devtools" />
             <option value="$PROJECT_DIR$/ketoy-devtools-server" />
+            <option value="$PROJECT_DIR$/ketoy-gradle-plugin" />
             <option value="$PROJECT_DIR$/ketoy-sdk" />
           </set>
         </option>

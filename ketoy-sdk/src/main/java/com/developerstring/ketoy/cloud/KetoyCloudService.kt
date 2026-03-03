@@ -72,7 +72,7 @@ object KetoyCloudService {
     )
 
     /** Tracks screens currently being background-fetched to prevent duplicates. */
-    private val backgroundFetchInProgress = mutableSetOf<String>()
+    private val backgroundFetchInProgress = java.util.Collections.synchronizedSet(mutableSetOf<String>())
 
     private val json = Json {
         ignoreUnknownKeys = true

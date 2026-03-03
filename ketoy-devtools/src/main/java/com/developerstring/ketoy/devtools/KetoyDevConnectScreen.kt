@@ -29,40 +29,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
 /**
- * Detects whether the app is running on an Android emulator.
- *
- * Uses a combination of [android.os.Build] fingerprint, model, manufacturer,
- * brand, device, product, and hardware fields to cover the most common
- * emulators (Google AVD, Genymotion, etc.).
- *
- * This is used internally by [KetoyDevConnectScreen] to pre-fill the
- * server URL with `10.0.2.2` (the emulator-to-host loopback address).
- *
- * @return `true` if the current device is likely an emulator.
- */
-private fun isEmulator(): Boolean {
-    return (android.os.Build.FINGERPRINT.startsWith("generic")
-            || android.os.Build.FINGERPRINT.startsWith("unknown")
-            || android.os.Build.MODEL.contains("google_sdk")
-            || android.os.Build.MODEL.contains("Emulator")
-            || android.os.Build.MODEL.contains("Android SDK built for x86")
-            || android.os.Build.MANUFACTURER.contains("Genymotion")
-            || android.os.Build.BRAND.startsWith("generic")
-            || android.os.Build.DEVICE.startsWith("generic")
-            || android.os.Build.PRODUCT.contains("sdk")
-            || android.os.Build.HARDWARE.contains("goldfish")
-            || android.os.Build.HARDWARE.contains("ranchu"))
-}
-
-/**
  * Material 3 themed connection screen for the Ketoy Dev Tools suite.
  *
  * This is the first screen users see when [KetoyDevWrapper] (or
  * [KetoyDevActivity]) is launched without [KetoyDevConfig.autoConnect].
  * It handles the entire connection flow:
  *
- * - **Server URL input** with automatic emulator detection (pre-fills
- *   `10.0.2.2` when running on an AVD/Genymotion emulator).
+ * - **Server URL input** for entering your dev machine's local IP.
  * - **Connect button** that initiates [KetoyDevClient.connect].
  * - **Skip button** that allows loading the app directly without
  *   connecting to a dev server — useful for QA builds that ship the
@@ -111,8 +84,7 @@ fun KetoyDevConnectScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     val isDark = isSystemInDarkTheme()
 
-    val onEmulator = remember { isEmulator() }
-    var serverUrl by remember { mutableStateOf(if (onEmulator) "10.0.2.2" else "") }
+    var serverUrl by remember { mutableStateOf("") }
     var showAdvanced by remember { mutableStateOf(false) }
     var customPort by remember { mutableStateOf("8484") }
 
@@ -196,7 +168,7 @@ fun KetoyDevConnectScreen(
                             value = serverUrl,
                             onValueChange = { serverUrl = it },
                             placeholder = {
-                                Text(if (onEmulator) "10.0.2.2 (emulator → host)" else "192.168.1.5")
+                                Text("192.168.1.5")
                             },
                             modifier = Modifier.fillMaxWidth(),
                             singleLine = true,
@@ -357,46 +329,6 @@ fun KetoyDevConnectScreen(
 
                 // Instructions
                 M3InstructionsCard()
-
-                // Emulator hint
-                if (onEmulator) {
-                    Spacer(modifier = Modifier.height(12.dp))
-                    Card(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(12.dp),
-                        colors = CardDefaults.cardColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer
-                        )
-                    ) {
-                        Row(
-                            modifier = Modifier.padding(16.dp),
-                            verticalAlignment = Alignment.Top
-                        ) {
-                            Icon(
-                                Icons.Outlined.Info,
-                                contentDescription = null,
-                                tint = MaterialTheme.colorScheme.onPrimaryContainer,
-                                modifier = Modifier.size(20.dp)
-                            )
-                            Spacer(modifier = Modifier.width(12.dp))
-                            Column {
-                                Text(
-                                    text = "Emulator detected",
-                                    style = MaterialTheme.typography.labelLarge,
-                                    fontWeight = FontWeight.SemiBold,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer
-                                )
-                                Spacer(modifier = Modifier.height(4.dp))
-                                Text(
-                                    text = "Use 10.0.2.2 to reach your host machine's localhost. " +
-                                            "This is pre-filled for you.",
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
-                                )
-                            }
-                        }
-                    }
-                }
 
                 Spacer(modifier = Modifier.height(24.dp))
 

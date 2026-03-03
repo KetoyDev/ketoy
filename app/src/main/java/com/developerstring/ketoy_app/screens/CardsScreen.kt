@@ -77,14 +77,6 @@ fun buildCardsScreen(
             ) {}
         }
 
-        KScaffold(topBar = {
-            KTopAppBar(title = {
-
-            })
-        }) {
-
-        }
-
         KSpacer(height = 20)
 
         // ── Card carousel ─────────────────────────────────
