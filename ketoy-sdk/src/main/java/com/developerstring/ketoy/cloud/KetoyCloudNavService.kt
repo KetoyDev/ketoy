@@ -88,7 +88,7 @@ object KetoyCloudNavService {
     )
 
     /** Tracks nav graphs currently being background-fetched to prevent duplicates. */
-    private val backgroundFetchInProgress = mutableSetOf<String>()
+    private val backgroundFetchInProgress = java.util.Collections.synchronizedSet(mutableSetOf<String>())
 
     /** Delegates to the shared cache config from [KetoyCloudService]. */
     private val cacheConfig get() = KetoyCloudService.cacheConfig

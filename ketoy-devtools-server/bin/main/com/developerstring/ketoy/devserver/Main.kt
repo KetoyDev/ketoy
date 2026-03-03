@@ -77,7 +77,7 @@ fun main(args: Array<String>) {
 
     println("""
     ┌─────────────────────────────────────────────────┐
-    │          🚀 Ketoy Dev Server v1.1.0             │
+    │           Ketoy Dev Server v0.1-beta            │
     │       Hot-reload for Ketoy UI Framework         │
     └─────────────────────────────────────────────────┘
     """.trimIndent())

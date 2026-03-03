@@ -17,6 +17,12 @@
     },
     "children": [
         {
+            "type": "Text",
+            "props": {
+                "fontSize": 20
+            }
+        },
+        {
             "type": "Row",
             "props": {
                 "modifier": {
