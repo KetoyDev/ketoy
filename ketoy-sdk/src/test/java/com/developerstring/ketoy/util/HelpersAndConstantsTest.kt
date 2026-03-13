@@ -23,7 +23,7 @@ class HelpersAndConstantsTest {
             shape = "rounded_12", cornerRadius = 12,
             shadow = kShadow(elevation = 8),
             clickable = true, scale = 1.5f, rotation = 45f, alpha = 0.8f,
-            verticalScroll = true, horizontalScroll = false
+            verticalScroll = KScrollConfig.Default, horizontalScroll = KScrollConfig.Disabled
         )
         assertEquals(1f, mod.fillMaxSize!!, 0.001f)
         assertEquals(0.5f, mod.fillMaxWidth!!, 0.001f)
@@ -37,8 +37,8 @@ class HelpersAndConstantsTest {
         assertEquals(12, mod.cornerRadius)
         assertEquals(8, mod.shadow?.elevation)
         assertTrue(mod.clickable!!)
-        assertTrue(mod.verticalScroll!!)
-        assertFalse(mod.horizontalScroll!!)
+        assertTrue(mod.verticalScroll!!.enabled)
+        assertFalse(mod.horizontalScroll!!.enabled)
     }
 
     @Test

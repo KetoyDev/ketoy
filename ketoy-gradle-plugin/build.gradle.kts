@@ -5,7 +5,7 @@ plugins {
 }
 
 group = "dev.ketoy"
-version = "0.1-beta"
+version = "0.1.1-beta"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
@@ -19,6 +19,9 @@ kotlin {
 dependencies {
     implementation(gradleApi())
     implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+
+    // Embedded dev server (HTTP + WebSocket)
+    implementation("org.java-websocket:Java-WebSocket:1.5.7")
 
     // Test
     testImplementation(gradleTestKit())
@@ -46,19 +49,25 @@ gradlePlugin {
         create("ketoyDev") {
             id = "dev.ketoy.devtools"
             implementationClass = "dev.ketoy.gradle.KetoyDevPlugin"
-            displayName = "Ketoy Dev – Server Driven UI for Android"
-            description = "Gradle plugin for managing Ketoy SDUI screens — push, pull, rollback, " +
-                    "list, and delete cloud-hosted server-driven UI layouts from the command line."
-            tags.set(listOf("android", "sdui", "server-driven-ui", "jetpack-compose", "ketoy", "ui", "cloud"))
+            displayName = "Ketoy – Server-Driven UI Dev Toolchain for Android"
+            description = "Gradle plugin for the Ketoy SDUI SDK. 11 built-in tasks: cloud push, " +
+                    "pull, rollback, list, delete; DSL-to-JSON export (dev + prod with manifests); " +
+                    "and an HTTP + WebSocket dev server with file & source watchers for live " +
+                    "hot-reload preview of Jetpack Compose screens."
+            tags.set(listOf(
+                "android", "sdui", "server-driven-ui", "jetpack-compose", "compose",
+                "ketoy", "ui", "cloud", "hot-reload", "devtools", "export", "k-dsl"
+            ))
         }
     }
 }
 
 // ── Signing (GPG keys from gradle.properties) ────────────────────
-// Applies automatically to plugin-publish artifacts when the
-// signing plugin is present.  Keys are read from:
-//   signing.keyId / signing.password / signing.secretKeyRingFile
+// Only sign when publishing to Maven Central (requires signing.keyId,
+// signing.password, signing.secretKeyRingFile in gradle.properties).
+// Gradle Plugin Portal does NOT require GPG signing.
 signing {
+    isRequired = gradle.taskGraph.allTasks.any { it.name.contains("publishToMavenCentral") }
     sign(publishing.publications)
 }
 
@@ -68,11 +77,17 @@ publishing {
         pom {
             name.set("Ketoy Dev Gradle Plugin")
             description.set(
-                "Gradle plugin for managing Ketoy SDUI screens. Push, pull, rollback, " +
-                        "list, and delete cloud-hosted server-driven UI layouts from the CLI."
+                "The official Gradle plugin for the Ketoy server-driven UI SDK. Provides 11 " +
+                        "tasks across three groups: cloud (ketoyPush, ketoyPushAll, ketoyListScreens, " +
+                        "ketoyScreenVersions, ketoyScreenDetails, ketoyRollback, ketoyDeleteScreen), " +
+                        "export (ketoyExport, ketoyExportProd with screen + navigation manifests), " +
+                        "and dev server (ketoyServe, ketoyDev). Features an HTTP + WebSocket server " +
+                        "with JSON file watcher (100 ms debounce), Kotlin source watcher (1500 ms " +
+                        "debounce) that triggers auto-export on .kt/.kts changes, long-poll endpoint, " +
+                        "and real-time hot-reload broadcast to KetoyDevWrapper in the running app."
             )
             url.set("https://ketoy.dev")
-            inceptionYear.set("2025")
+            inceptionYear.set("2026")
 
             licenses {
                 license {

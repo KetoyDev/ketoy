@@ -1,6 +1,7 @@
 package com.developerstring.ketoy.model
 
 import kotlinx.serialization.*
+import kotlinx.serialization.json.JsonElement
 
 // ─────────────────────────────────────────────────────────────
 //  Scaffold & navigation component properties
@@ -177,7 +178,7 @@ data class KNavigationBarProps(
 @Serializable
 data class KFloatingActionButtonProps(
     val modifier: KModifier? = null,
-    val onClick: String? = null,
+    val onClick: JsonElement? = null,
     val shape: String? = null,
     val containerColor: String? = null,
     val contentColor: String? = null,
@@ -264,7 +265,7 @@ data class KSnackBarHostProps(
 @Serializable
 data class KNavigationDrawerItemProps(
     val selected: Boolean? = null,
-    val onClick: String? = null,
+    val onClick: JsonElement? = null,
     val icon: List<KNode>? = null,
     val modifier: KModifier? = null,
     val enabled: Boolean? = null,
@@ -302,7 +303,7 @@ data class KNavigationDrawerItemProps(
 @Serializable
 data class KCustomNavigationItemProps(
     val selected: Boolean? = null,
-    val onClick: String? = null,
+    val onClick: JsonElement? = null,
     val icon: List<KNode>? = null,
     val selectedIcon: List<KNode>? = null,
     val modifier: KModifier? = null,
@@ -361,7 +362,7 @@ data class KNavigationRailProps(
 @Serializable
 data class KNavigationRailItemProps(
     val selected: Boolean = false,
-    val onClick: String? = null,
+    val onClick: JsonElement? = null,
     val icon: List<KNode>? = null,
     val selectedIcon: List<KNode>? = null,
     val modifier: KModifier? = null,
@@ -387,7 +388,7 @@ data class KNavigationRailItemProps(
  */
 @Serializable
 data class KAppBarActionProps(
-    val onClick: String? = null,
+    val onClick: JsonElement? = null,
     val modifier: KModifier? = null,
     val enabled: Boolean? = null,
     val colors: KIconButtonColors? = null,
@@ -575,7 +576,7 @@ data class KIconButtonColors(
 @Serializable
 data class KNavigationBarItemProps(
     val selected: Boolean = false,
-    val onClick: String? = null,
+    val onClick: JsonElement? = null,
     val modifier: KModifier? = null,
     val enabled: Boolean? = null,
     val alwaysShowLabel: Boolean? = null,
@@ -649,7 +650,7 @@ data class KNavigationBarItemColors(
 @Serializable
 data class KModalBottomSheetProps(
     val modifier: KModifier? = null,
-    val onDismissRequest: String? = null,
+    val onDismissRequest: JsonElement? = null,
     val sheetState: String? = null,
     val shape: String? = null,
     val containerColor: String? = null,

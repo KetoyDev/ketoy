@@ -1,7 +1,5 @@
 package com.developerstring.ketoy.registry
 
-import android.util.Log
-
 /**
  * Global registry for Kotlin functions callable from Ketoy SDUI JSON.
  *
@@ -111,7 +109,7 @@ object KetoyFunctionRegistry {
             parameterTypes = parameterTypes,
             description = description
         )
-        Log.d(TAG, "Registered function '$name' with params: ${parameterTypes.keys}")
+        println("$TAG: Registered function '$name' with params: ${parameterTypes.keys}")
     }
 
     /**
@@ -147,14 +145,14 @@ object KetoyFunctionRegistry {
     fun call(name: String, arguments: Map<String, Any> = emptyMap()): Boolean {
         val func = functions[name]
         if (func == null) {
-            Log.w(TAG, "Function '$name' not registered")
+            println("$TAG: WARNING - Function '$name' not registered")
             return false
         }
         try {
             func.handler(arguments)
             return true
         } catch (e: Exception) {
-            Log.e(TAG, "Error executing function '$name': ${e.message}", e)
+            println("$TAG: ERROR executing function '$name': ${e.message}")
             return false
         }
     }

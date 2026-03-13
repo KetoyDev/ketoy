@@ -1,6 +1,7 @@
 {
   "screenName": "history_screen",
   "displayName": "History",
+  "description": "Full transaction history",
   "version": "1.0.0",
   "contents": {
     "main": {
@@ -11,7 +12,7 @@
             "padding": {
                 "top": 16
             },
-            "background": "#1C1B1F"
+            "background": "@theme/background"
         },
         "verticalArrangement": "spacedBy_0"
     },
@@ -41,16 +42,22 @@
                         "text": "Transaction History",
                         "fontSize": 24,
                         "fontWeight": "bold",
-                        "color": "#E6E0E9"
+                        "color": "@theme/onSurface"
                     }
                 },
                 {
                     "type": "IconButton",
                     "props": {
                         "icon": "filter_list",
-                        "onClick": "history_filter",
+                        "onClick": {
+                            "actionType": "callFunction",
+                            "functionName": "showToast",
+                            "arguments": {
+                                "message": "Filter options"
+                            }
+                        },
                         "iconSize": 24,
-                        "iconColor": "#CAC4D0"
+                        "iconColor": "@theme/onSurfaceVariant"
                     }
                 }
             ]
@@ -79,9 +86,15 @@
                             "fillMaxWidth": 1.0
                         },
                         "shape": "rounded_16",
-                        "containerColor": "#1D1B20",
+                        "containerColor": "@theme/surfaceContainerLow",
                         "elevation": 0,
-                        "onClick": "history_search"
+                        "onClick": {
+                            "actionType": "callFunction",
+                            "functionName": "showToast",
+                            "arguments": {
+                                "message": "Search transactions"
+                            }
+                        }
                     },
                     "children": [
                         {
@@ -103,7 +116,7 @@
                                     "props": {
                                         "icon": "search",
                                         "size": 22,
-                                        "color": "#938F99"
+                                        "color": "@theme/outline"
                                     }
                                 },
                                 {
@@ -111,7 +124,7 @@
                                     "props": {
                                         "text": "Search transactions...",
                                         "fontSize": 15,
-                                        "color": "#938F99"
+                                        "color": "@theme/outline"
                                     }
                                 }
                             ]
@@ -145,9 +158,15 @@
                             "height": 34
                         },
                         "shape": "rounded_50",
-                        "containerColor": "#D0BCFF",
+                        "containerColor": "@theme/primary",
                         "elevation": 0,
-                        "onClick": "history_chip_All"
+                        "onClick": {
+                            "actionType": "callFunction",
+                            "functionName": "showToast",
+                            "arguments": {
+                                "message": "All filter"
+                            }
+                        }
                     },
                     "children": [
                         {
@@ -168,7 +187,7 @@
                                         "text": "All",
                                         "fontSize": 13,
                                         "fontWeight": "medium",
-                                        "color": "#381E72"
+                                        "color": "@theme/onPrimary"
                                     }
                                 }
                             ]
@@ -182,9 +201,15 @@
                             "height": 34
                         },
                         "shape": "rounded_50",
-                        "containerColor": "#1D1B20",
+                        "containerColor": "@theme/surfaceContainerLow",
                         "elevation": 0,
-                        "onClick": "history_chip_Income"
+                        "onClick": {
+                            "actionType": "callFunction",
+                            "functionName": "showToast",
+                            "arguments": {
+                                "message": "Income filter"
+                            }
+                        }
                     },
                     "children": [
                         {
@@ -205,7 +230,7 @@
                                         "text": "Income",
                                         "fontSize": 13,
                                         "fontWeight": "medium",
-                                        "color": "#CAC4D0"
+                                        "color": "@theme/onSurfaceVariant"
                                     }
                                 }
                             ]
@@ -219,9 +244,15 @@
                             "height": 34
                         },
                         "shape": "rounded_50",
-                        "containerColor": "#1D1B20",
+                        "containerColor": "@theme/surfaceContainerLow",
                         "elevation": 0,
-                        "onClick": "history_chip_Expense"
+                        "onClick": {
+                            "actionType": "callFunction",
+                            "functionName": "showToast",
+                            "arguments": {
+                                "message": "Expense filter"
+                            }
+                        }
                     },
                     "children": [
                         {
@@ -242,7 +273,7 @@
                                         "text": "Expense",
                                         "fontSize": 13,
                                         "fontWeight": "medium",
-                                        "color": "#CAC4D0"
+                                        "color": "@theme/onSurfaceVariant"
                                     }
                                 }
                             ]
@@ -256,9 +287,15 @@
                             "height": 34
                         },
                         "shape": "rounded_50",
-                        "containerColor": "#1D1B20",
+                        "containerColor": "@theme/surfaceContainerLow",
                         "elevation": 0,
-                        "onClick": "history_chip_Pending"
+                        "onClick": {
+                            "actionType": "callFunction",
+                            "functionName": "showToast",
+                            "arguments": {
+                                "message": "Pending filter"
+                            }
+                        }
                     },
                     "children": [
                         {
@@ -279,7 +316,7 @@
                                         "text": "Pending",
                                         "fontSize": 13,
                                         "fontWeight": "medium",
-                                        "color": "#CAC4D0"
+                                        "color": "@theme/onSurfaceVariant"
                                     }
                                 }
                             ]
@@ -306,7 +343,7 @@
                 },
                 "fontSize": 13,
                 "fontWeight": "semiBold",
-                "color": "#CAC4D0"
+                "color": "@theme/onSurfaceVariant"
             }
         },
         {
@@ -323,61 +360,32 @@
             },
             "children": [
                 {
-                    "type": "Component",
+                    "type": "DataList",
                     "props": {
-                        "name": "TransactionRow",
-                        "componentName": "TransactionRow",
-                        "properties": {
-                            "title": "Salary",
-                            "subtitle": "Today",
-                            "amount": "+$4,200.00",
-                            "isIncome": true
-                        },
-                        "props": {
-                            "title": "Salary",
-                            "subtitle": "Today",
-                            "amount": "+$4,200.00",
-                            "isIncome": true
+                        "dataSource": "user.transactions",
+                        "itemAlias": "txn"
+                    },
+                    "children": [
+                        {
+                            "type": "Component",
+                            "props": {
+                                "name": "TransactionRow",
+                                "componentName": "TransactionRow",
+                                "properties": {
+                                    "title": "{{data:txn:title}}",
+                                    "subtitle": "{{data:txn:subtitle}}",
+                                    "amount": "{{data:txn:amount}}",
+                                    "isIncome": "{{data:txn:isIncome}}"
+                                },
+                                "props": {
+                                    "title": "{{data:txn:title}}",
+                                    "subtitle": "{{data:txn:subtitle}}",
+                                    "amount": "{{data:txn:amount}}",
+                                    "isIncome": "{{data:txn:isIncome}}"
+                                }
+                            }
                         }
-                    }
-                },
-                {
-                    "type": "Component",
-                    "props": {
-                        "name": "TransactionRow",
-                        "componentName": "TransactionRow",
-                        "properties": {
-                            "title": "Groceries",
-                            "subtitle": "Yesterday",
-                            "amount": "-$85.50",
-                            "isIncome": false
-                        },
-                        "props": {
-                            "title": "Groceries",
-                            "subtitle": "Yesterday",
-                            "amount": "-$85.50",
-                            "isIncome": false
-                        }
-                    }
-                },
-                {
-                    "type": "Component",
-                    "props": {
-                        "name": "TransactionRow",
-                        "componentName": "TransactionRow",
-                        "properties": {
-                            "title": "Netflix",
-                            "subtitle": "Feb 1",
-                            "amount": "-$15.99",
-                            "isIncome": false
-                        },
-                        "props": {
-                            "title": "Netflix",
-                            "subtitle": "Feb 1",
-                            "amount": "-$15.99",
-                            "isIncome": false
-                        }
-                    }
+                    ]
                 }
             ]
         },
@@ -404,9 +412,17 @@
                     "type": "Card",
                     "props": {
                         "shape": "rounded_50",
-                        "containerColor": "#D0BCFF",
+                        "containerColor": "@theme/primary",
                         "elevation": 4,
-                        "onClick": "history_add_txn"
+                        "onClick": {
+                            "actionType": "callFunction",
+                            "functionName": "addTransaction",
+                            "arguments": {
+                                "title": "New Purchase",
+                                "amount": 25.0,
+                                "isIncome": false
+                            }
+                        }
                     },
                     "children": [
                         {
@@ -427,7 +443,7 @@
                                     "props": {
                                         "icon": "add",
                                         "size": 20,
-                                        "color": "#381E72"
+                                        "color": "@theme/onPrimary"
                                     }
                                 },
                                 {
@@ -436,7 +452,7 @@
                                         "text": "Add Transaction",
                                         "fontSize": 14,
                                         "fontWeight": "semiBold",
-                                        "color": "#381E72"
+                                        "color": "@theme/onPrimary"
                                     }
                                 }
                             ]

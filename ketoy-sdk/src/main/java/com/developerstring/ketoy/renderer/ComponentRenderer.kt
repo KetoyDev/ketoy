@@ -20,6 +20,7 @@ package com.developerstring.ketoy.renderer
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import com.developerstring.ketoy.core.KetoyVariableRegistry
 import com.developerstring.ketoy.registry.KComponentRegistry
 import kotlinx.serialization.json.*
 
@@ -90,20 +91,37 @@ internal fun RenderRegisteredComponent(componentName: String, component: UICompo
             when (value) {
                 is JsonPrimitive -> {
                     when {
-                        value.isString -> properties[key] = value.content
+                        value.isString -> properties[key] = resolveTyped(value.content)
                         value.booleanOrNull != null -> properties[key] = value.boolean
                         value.intOrNull != null -> properties[key] = value.int
                         value.floatOrNull != null -> properties[key] = value.float
                         value.doubleOrNull != null -> properties[key] = value.double
-                        else -> properties[key] = value.content
+                        else -> properties[key] = resolveTyped(value.content)
                     }
                 }
+                is JsonArray -> properties[key] = extractJsonArray(value)
+                is JsonObject -> properties[key] = extractJsonObject(value)
                 else -> properties[key] = value.toString()
             }
         }
     }
 
     componentInfo.renderer?.let { it(properties) }
+}
+
+/**
+ * If the entire string is a single `{{…}}` template, returns the raw registry
+ * value (preserving its original type — Boolean, Int, etc.).  Otherwise falls
+ * back to the normal string-based [KetoyVariableRegistry.resolveTemplate].
+ */
+private fun resolveTyped(template: String): Any {
+    val fullMatch = Regex("^\\{\\{data:([^:]+):([^}]+)\\}\\}$").matchEntire(template)
+    if (fullMatch != null) {
+        val key = "${fullMatch.groupValues[1]}.${fullMatch.groupValues[2]}"
+        val raw = KetoyVariableRegistry.getValue(key)
+        if (raw != null) return raw
+    }
+    return KetoyVariableRegistry.resolveTemplate(template)
 }
 
 // ─── Private helpers ──────────────────────────────────────────────
@@ -122,7 +140,57 @@ private fun extractProperties(propsObject: JsonObject?): Map<String, Any> {
         when (value) {
             is JsonPrimitive -> {
                 when {
-                    value.isString -> result[key] = value.content
+                    value.isString -> result[key] = resolveTyped(value.content)
+                    value.booleanOrNull != null -> result[key] = value.boolean
+                    value.intOrNull != null -> result[key] = value.int
+                    value.floatOrNull != null -> result[key] = value.float
+                    value.doubleOrNull != null -> result[key] = value.double
+                    else -> result[key] = resolveTyped(value.content)
+                }
+            }
+            is JsonArray -> result[key] = extractJsonArray(value)
+            is JsonObject -> result[key] = extractJsonObject(value)
+            else -> result[key] = value.toString()
+        }
+    }
+    return result
+}
+
+/**
+ * Recursively converts a [JsonArray] into a `List<Any>`, resolving
+ * templates in string elements and nesting arrays/objects as needed.
+ */
+private fun extractJsonArray(array: JsonArray): List<Any> {
+    return array.map { element ->
+        when (element) {
+            is JsonPrimitive -> {
+                when {
+                    element.isString -> KetoyVariableRegistry.resolveTemplate(element.content)
+                    element.booleanOrNull != null -> element.boolean
+                    element.intOrNull != null -> element.int
+                    element.floatOrNull != null -> element.float
+                    element.doubleOrNull != null -> element.double
+                    else -> element.content
+                }
+            }
+            is JsonArray -> extractJsonArray(element)
+            is JsonObject -> extractJsonObject(element)
+            else -> element.toString()
+        }
+    }
+}
+
+/**
+ * Recursively converts a [JsonObject] into a `Map<String, Any>`, resolving
+ * templates in string values and nesting arrays/objects as needed.
+ */
+private fun extractJsonObject(obj: JsonObject): Map<String, Any> {
+    val result = mutableMapOf<String, Any>()
+    obj.forEach { (key, value) ->
+        when (value) {
+            is JsonPrimitive -> {
+                when {
+                    value.isString -> result[key] = KetoyVariableRegistry.resolveTemplate(value.content)
                     value.booleanOrNull != null -> result[key] = value.boolean
                     value.intOrNull != null -> result[key] = value.int
                     value.floatOrNull != null -> result[key] = value.float
@@ -130,6 +198,8 @@ private fun extractProperties(propsObject: JsonObject?): Map<String, Any> {
                     else -> result[key] = value.content
                 }
             }
+            is JsonArray -> result[key] = extractJsonArray(value)
+            is JsonObject -> result[key] = extractJsonObject(value)
             else -> result[key] = value.toString()
         }
     }

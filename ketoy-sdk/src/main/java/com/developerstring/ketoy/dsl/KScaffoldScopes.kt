@@ -12,6 +12,7 @@ package com.developerstring.ketoy.dsl
 
 import com.developerstring.ketoy.core.ActionRegistry
 import com.developerstring.ketoy.model.*
+import kotlinx.serialization.json.JsonPrimitive
 
 // ─────────────────────────────────────────────────────────────
 //  Scaffold-related scopes
@@ -82,7 +83,7 @@ class KAppBarScope : KUniversalScope() {
             ActionRegistry.registerAction(actionId, onClick); actionId
         } else ActionRegistry.register(onClick)
         addChild(KAppBarActionNode(
-            KAppBarActionProps(resolvedId, modifier, enabled, colors, interactionSource),
+            KAppBarActionProps(JsonPrimitive(resolvedId), modifier, enabled, colors, interactionSource),
             scope.children
         ))
     }
@@ -160,7 +161,7 @@ class KNavigationScope : KScope() {
         val lc = label?.let { KUniversalScope().apply(it).children }
         val bc = badge?.let { KUniversalScope().apply(it).children }
         addChild(KNavigationDrawerItemNode(
-            KNavigationDrawerItemProps(selected, resolvedId, ic, modifier, enabled, lc, bc, colors, shape)
+            KNavigationDrawerItemProps(selected, JsonPrimitive(resolvedId), ic, modifier, enabled, lc, bc, colors, shape)
         ))
     }
 
@@ -207,7 +208,7 @@ class KNavigationScope : KScope() {
         val sic = selectedIcon?.let { KUniversalScope().apply(it).children }
         val lc = label?.let { KUniversalScope().apply(it).children }
         addChild(KNavigationBarItemNode(
-            KNavigationBarItemProps(selected, resolvedId, modifier, enabled, alwaysShowLabel, ic, sic, lc, colors)
+            KNavigationBarItemProps(selected, JsonPrimitive(resolvedId), modifier, enabled, alwaysShowLabel, ic, sic, lc, colors)
         ))
     }
 
@@ -253,7 +254,7 @@ class KNavigationScope : KScope() {
         val sic = selectedIcon?.let { KUniversalScope().apply(it).children }
         val lc = label?.let { KUniversalScope().apply(it).children }
         addChild(KCustomNavigationItemNode(
-            KCustomNavigationItemProps(selected, resolvedId, ic, sic, modifier, enabled, lc, alwaysShowLabel,
+            KCustomNavigationItemProps(selected, JsonPrimitive(resolvedId), ic, sic, modifier, enabled, lc, alwaysShowLabel,
                 containerColor, contentColor, selectedContainerColor, selectedContentColor, indicatorColor, rippleColor)
         ))
     }
@@ -359,7 +360,7 @@ class KNavigationRailScope : KScope() {
         val sic = selectedIcon?.let { KUniversalScope().apply(it).children }
         val lc = label?.let { KUniversalScope().apply(it).children }
         addChild(KNavigationRailItemNode(
-            KNavigationRailItemProps(selected, resolvedId, ic, sic, modifier, enabled, lc, alwaysShowLabel)
+            KNavigationRailItemProps(selected, JsonPrimitive(resolvedId), ic, sic, modifier, enabled, lc, alwaysShowLabel)
         ))
     }
 }

@@ -18,3 +18,5 @@ gradle.properties
 *.class
 *.jar
 *.aar
+
+gradle.properties

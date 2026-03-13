@@ -12,6 +12,12 @@ import org.gradle.api.provider.Property
  *     packageName.set("com.example.myapp")
  *     baseUrl.set("https://api.ketoy.dev")        // optional
  *     screensDir.set("ketoy-screens")               // optional
+ *     prodExportDir.set("ketoy-export")              // optional
+ *     exportTestClass.set("KetoyAutoExportTest")    // optional
+ *     appModule.set("app")                            // optional
+ *     testTaskName.set("testDebugUnitTest")           // optional
+ *     serverModule.set("ketoy-devtools-server")       // optional
+ *     serverPort.set(8484)                              // optional
  * }
  * ```
  *
@@ -55,4 +61,51 @@ abstract class KetoyDevExtension {
      * Defaults to `"ketoy-screens"`.
      */
     abstract val screensDir: Property<String>
+
+    // ── Export & Dev Server ──────────────────────────────────────
+
+    /**
+     * Directory (relative to the root project) for production export output.
+     * Defaults to `"ketoy-export"`.
+     */
+    abstract val prodExportDir: Property<String>
+
+    /**
+     * Simple name of the auto-export test class.
+     * Defaults to `"KetoyAutoExportTest"`.
+     *
+     * The plugin configures the unit test task to run only this class when
+     * `ketoyExport` or `ketoyExportProd` is invoked. The test class has
+     * two methods: `exportForDevServer` and `exportForProduction`.
+     */
+    abstract val exportTestClass: Property<String>
+
+    /**
+     * @deprecated Use [exportTestClass] instead. Both dev and prod exports
+     * now use the same auto-export test class (`KetoyAutoExportTest`).
+     */
+    @Deprecated("Use exportTestClass instead", ReplaceWith("exportTestClass"))
+    abstract val prodExportTestClass: Property<String>
+
+    /**
+     * Gradle project path of the Android app module that contains the
+     * export test classes. Defaults to `"app"`.
+     *
+     * Used to resolve the test task for `ketoyExport` / `ketoyExportProd`.
+     */
+    abstract val appModule: Property<String>
+
+    /**
+     * Name of the Android unit test task to execute for screen export.
+     * Defaults to `"testDebugUnitTest"`.
+     */
+    abstract val testTaskName: Property<String>
+
+    /**
+     * HTTP port for the embedded Ketoy Dev Server.
+     * Defaults to `8484`. The WebSocket server uses `port + 1`.
+     *
+     * Used by `ketoyServe` and `ketoyDev` tasks.
+     */
+    abstract val serverPort: Property<Int>
 }

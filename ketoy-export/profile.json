@@ -12,31 +12,14 @@
             "padding": {
                 "top": 16
             },
-            "background": "#FFFBFE"
+            "background": "@theme/background",
+            "verticalScroll": {
+                "enabled": true
+            }
         },
         "verticalArrangement": "spacedBy_0"
     },
     "children": [
-        {
-            "type": "Text",
-            "props": {
-                "text": "Profile",
-                "modifier": {
-                    "padding": {
-                        "horizontal": 20
-                    }
-                },
-                "fontSize": 24,
-                "fontWeight": "bold",
-                "color": "#1D1B20"
-            }
-        },
-        {
-            "type": "Spacer",
-            "props": {
-                "height": 24
-            }
-        },
         {
             "type": "Column",
             "props": {
@@ -53,12 +36,12 @@
                         "name": "AvatarBadge",
                         "componentName": "AvatarBadge",
                         "properties": {
-                            "initials": "{{",
+                            "initials": "{{data:user:name}}",
                             "badgeCount": 0,
                             "size": 80
                         },
                         "props": {
-                            "initials": "{{",
+                            "initials": "{{data:user:name}}",
                             "badgeCount": 0,
                             "size": 80
                         }
@@ -70,7 +53,7 @@
                         "text": "{{data:user:name}}",
                         "fontSize": 22,
                         "fontWeight": "bold",
-                        "color": "#1D1B20"
+                        "color": "@theme/onSurface"
                     }
                 },
                 {
@@ -78,7 +61,7 @@
                     "props": {
                         "text": "{{data:user:name}}@ketoy.dev",
                         "fontSize": 14,
-                        "color": "#49454F"
+                        "color": "@theme/onSurfaceVariant"
                     }
                 }
             ]
@@ -92,16 +75,16 @@
         {
             "type": "Text",
             "props": {
-                "text": "Account",
+                "text": "Settings",
                 "modifier": {
                     "padding": {
                         "horizontal": 20,
                         "bottom": 8
                     }
                 },
-                "fontSize": 13,
+                "fontSize": 23,
                 "fontWeight": "semiBold",
-                "color": "#49454F"
+                "color": "@theme/onSurfaceVariant"
             }
         },
         {
@@ -114,240 +97,7 @@
                     }
                 },
                 "verticalArrangement": "spacedBy_8"
-            },
-            "children": [
-                {
-                    "type": "Card",
-                    "props": {
-                        "modifier": {
-                            "fillMaxWidth": 1.0
-                        },
-                        "shape": "rounded_16",
-                        "containerColor": "#F7F2FA",
-                        "elevation": 0,
-                        "onClick": "profile_edit"
-                    },
-                    "children": [
-                        {
-                            "type": "Row",
-                            "props": {
-                                "modifier": {
-                                    "fillMaxWidth": 1.0,
-                                    "padding": {
-                                        "horizontal": 16,
-                                        "vertical": 14
-                                    }
-                                },
-                                "horizontalArrangement": "spaceBetween",
-                                "verticalAlignment": "centerVertically"
-                            },
-                            "children": [
-                                {
-                                    "type": "Row",
-                                    "props": {
-                                        "horizontalArrangement": "spacedBy_14",
-                                        "verticalAlignment": "centerVertically"
-                                    },
-                                    "children": [
-                                        {
-                                            "type": "Box",
-                                            "props": {
-                                                "modifier": {
-                                                    "size": 42,
-                                                    "background": "#EADDFF",
-                                                    "shape": "rounded_12"
-                                                },
-                                                "contentAlignment": "center"
-                                            },
-                                            "children": [
-                                                {
-                                                    "type": "Icon",
-                                                    "props": {
-                                                        "icon": "person",
-                                                        "size": 22,
-                                                        "color": "#6750A4"
-                                                    }
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "type": "Text",
-                                            "props": {
-                                                "text": "Edit Profile",
-                                                "fontSize": 15,
-                                                "fontWeight": "medium",
-                                                "color": "#1D1B20"
-                                            }
-                                        }
-                                    ]
-                                },
-                                {
-                                    "type": "Icon",
-                                    "props": {
-                                        "icon": "chevron_right",
-                                        "size": 20,
-                                        "color": "#79747E"
-                                    }
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "type": "Card",
-                    "props": {
-                        "modifier": {
-                            "fillMaxWidth": 1.0
-                        },
-                        "shape": "rounded_16",
-                        "containerColor": "#F7F2FA",
-                        "elevation": 0,
-                        "onClick": "profile_password"
-                    },
-                    "children": [
-                        {
-                            "type": "Row",
-                            "props": {
-                                "modifier": {
-                                    "fillMaxWidth": 1.0,
-                                    "padding": {
-                                        "horizontal": 16,
-                                        "vertical": 14
-                                    }
-                                },
-                                "horizontalArrangement": "spaceBetween",
-                                "verticalAlignment": "centerVertically"
-                            },
-                            "children": [
-                                {
-                                    "type": "Row",
-                                    "props": {
-                                        "horizontalArrangement": "spacedBy_14",
-                                        "verticalAlignment": "centerVertically"
-                                    },
-                                    "children": [
-                                        {
-                                            "type": "Box",
-                                            "props": {
-                                                "modifier": {
-                                                    "size": 42,
-                                                    "background": "#EADDFF",
-                                                    "shape": "rounded_12"
-                                                },
-                                                "contentAlignment": "center"
-                                            },
-                                            "children": [
-                                                {
-                                                    "type": "Icon",
-                                                    "props": {
-                                                        "icon": "lock",
-                                                        "size": 22,
-                                                        "color": "#6750A4"
-                                                    }
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "type": "Text",
-                                            "props": {
-                                                "text": "Change Password",
-                                                "fontSize": 15,
-                                                "fontWeight": "medium",
-                                                "color": "#1D1B20"
-                                            }
-                                        }
-                                    ]
-                                },
-                                {
-                                    "type": "Icon",
-                                    "props": {
-                                        "icon": "chevron_right",
-                                        "size": 20,
-                                        "color": "#79747E"
-                                    }
-                                }
-                            ]
-                        }
-                    ]
-                },
-                {
-                    "type": "Card",
-                    "props": {
-                        "modifier": {
-                            "fillMaxWidth": 1.0
-                        },
-                        "shape": "rounded_16",
-                        "containerColor": "#F7F2FA",
-                        "elevation": 0,
-                        "onClick": "profile_notifs"
-                    },
-                    "children": [
-                        {
-                            "type": "Row",
-                            "props": {
-                                "modifier": {
-                                    "fillMaxWidth": 1.0,
-                                    "padding": {
-                                        "horizontal": 16,
-                                        "vertical": 14
-                                    }
-                                },
-                                "horizontalArrangement": "spaceBetween",
-                                "verticalAlignment": "centerVertically"
-                            },
-                            "children": [
-                                {
-                                    "type": "Row",
-                                    "props": {
-                                        "horizontalArrangement": "spacedBy_14",
-                                        "verticalAlignment": "centerVertically"
-                                    },
-                                    "children": [
-                                        {
-                                            "type": "Box",
-                                            "props": {
-                                                "modifier": {
-                                                    "size": 42,
-                                                    "background": "#EADDFF",
-                                                    "shape": "rounded_12"
-                                                },
-                                                "contentAlignment": "center"
-                                            },
-                                            "children": [
-                                                {
-                                                    "type": "Icon",
-                                                    "props": {
-                                                        "icon": "notifications",
-                                                        "size": 22,
-                                                        "color": "#6750A4"
-                                                    }
-                                                }
-                                            ]
-                                        },
-                                        {
-                                            "type": "Text",
-                                            "props": {
-                                                "text": "Notifications",
-                                                "fontSize": 15,
-                                                "fontWeight": "medium",
-                                                "color": "#1D1B20"
-                                            }
-                                        }
-                                    ]
-                                },
-                                {
-                                    "type": "Icon",
-                                    "props": {
-                                        "icon": "chevron_right",
-                                        "size": 20,
-                                        "color": "#79747E"
-                                    }
-                                }
-                            ]
-                        }
-                    ]
-                }
-            ]
+            }
         },
         {
             "type": "Spacer",
@@ -367,7 +117,7 @@
                 },
                 "fontSize": 13,
                 "fontWeight": "semiBold",
-                "color": "#49454F"
+                "color": "@theme/onSurfaceVariant"
             }
         },
         {
@@ -389,9 +139,12 @@
                             "fillMaxWidth": 1.0
                         },
                         "shape": "rounded_16",
-                        "containerColor": "#F7F2FA",
+                        "containerColor": "@theme/surfaceContainerLow",
                         "elevation": 0,
-                        "onClick": "profile_dark_mode"
+                        "onClick": {
+                            "actionType": "callFunction",
+                            "functionName": "toggleDarkMode"
+                        }
                     },
                     "children": [
                         {
@@ -420,7 +173,7 @@
                                             "props": {
                                                 "modifier": {
                                                     "size": 42,
-                                                    "background": "#EADDFF",
+                                                    "background": "@theme/primaryContainer",
                                                     "shape": "rounded_12"
                                                 },
                                                 "contentAlignment": "center"
@@ -429,9 +182,9 @@
                                                 {
                                                     "type": "Icon",
                                                     "props": {
-                                                        "icon": "light_mode",
+                                                        "icon": "{{data:user:darkModeIcon}}",
                                                         "size": 22,
-                                                        "color": "#6750A4"
+                                                        "color": "@theme/primary"
                                                     }
                                                 }
                                             ]
@@ -442,7 +195,7 @@
                                                 "text": "Dark Mode",
                                                 "fontSize": 15,
                                                 "fontWeight": "medium",
-                                                "color": "#1D1B20"
+                                                "color": "@theme/onSurface"
                                             }
                                         }
                                     ]
@@ -454,7 +207,7 @@
                                             "height": 28
                                         },
                                         "shape": "rounded_50",
-                                        "containerColor": "#79747E",
+                                        "containerColor": "{{data:user:darkModeToggleBg}}",
                                         "elevation": 0
                                     },
                                     "children": [
@@ -473,10 +226,10 @@
                                                 {
                                                     "type": "Text",
                                                     "props": {
-                                                        "text": "OFF",
+                                                        "text": "{{data:user:darkModeLabel}}",
                                                         "fontSize": 11,
                                                         "fontWeight": "bold",
-                                                        "color": "#FFFFFF"
+                                                        "color": "{{data:user:darkModeToggleTextColor}}"
                                                     }
                                                 }
                                             ]
@@ -494,9 +247,15 @@
                             "fillMaxWidth": 1.0
                         },
                         "shape": "rounded_16",
-                        "containerColor": "#F7F2FA",
+                        "containerColor": "@theme/surfaceContainerLow",
                         "elevation": 0,
-                        "onClick": "profile_language"
+                        "onClick": {
+                            "actionType": "callFunction",
+                            "functionName": "showToast",
+                            "arguments": {
+                                "message": "Language settings"
+                            }
+                        }
                     },
                     "children": [
                         {
@@ -525,7 +284,7 @@
                                             "props": {
                                                 "modifier": {
                                                     "size": 42,
-                                                    "background": "#EADDFF",
+                                                    "background": "@theme/primaryContainer",
                                                     "shape": "rounded_12"
                                                 },
                                                 "contentAlignment": "center"
@@ -536,7 +295,7 @@
                                                     "props": {
                                                         "icon": "language",
                                                         "size": 22,
-                                                        "color": "#6750A4"
+                                                        "color": "@theme/primary"
                                                     }
                                                 }
                                             ]
@@ -547,7 +306,7 @@
                                                 "text": "Language",
                                                 "fontSize": 15,
                                                 "fontWeight": "medium",
-                                                "color": "#1D1B20"
+                                                "color": "@theme/onSurface"
                                             }
                                         }
                                     ]
@@ -557,7 +316,7 @@
                                     "props": {
                                         "icon": "chevron_right",
                                         "size": 20,
-                                        "color": "#79747E"
+                                        "color": "@theme/outline"
                                     }
                                 }
                             ]
@@ -571,9 +330,15 @@
                             "fillMaxWidth": 1.0
                         },
                         "shape": "rounded_16",
-                        "containerColor": "#F7F2FA",
+                        "containerColor": "@theme/surfaceContainerLow",
                         "elevation": 0,
-                        "onClick": "profile_privacy"
+                        "onClick": {
+                            "actionType": "callFunction",
+                            "functionName": "showToast",
+                            "arguments": {
+                                "message": "Privacy settings"
+                            }
+                        }
                     },
                     "children": [
                         {
@@ -602,7 +367,7 @@
                                             "props": {
                                                 "modifier": {
                                                     "size": 42,
-                                                    "background": "#EADDFF",
+                                                    "background": "@theme/primaryContainer",
                                                     "shape": "rounded_12"
                                                 },
                                                 "contentAlignment": "center"
@@ -613,7 +378,7 @@
                                                     "props": {
                                                         "icon": "lock",
                                                         "size": 22,
-                                                        "color": "#6750A4"
+                                                        "color": "@theme/primary"
                                                     }
                                                 }
                                             ]
@@ -624,7 +389,7 @@
                                                 "text": "Privacy",
                                                 "fontSize": 15,
                                                 "fontWeight": "medium",
-                                                "color": "#1D1B20"
+                                                "color": "@theme/onSurface"
                                             }
                                         }
                                     ]
@@ -634,7 +399,7 @@
                                     "props": {
                                         "icon": "chevron_right",
                                         "size": 20,
-                                        "color": "#79747E"
+                                        "color": "@theme/outline"
                                     }
                                 }
                             ]
@@ -667,9 +432,12 @@
                             "fillMaxWidth": 1.0
                         },
                         "shape": "rounded_16",
-                        "containerColor": "#F9DEDC",
+                        "containerColor": "@theme/errorContainer",
                         "elevation": 0,
-                        "onClick": "profile_logout"
+                        "onClick": {
+                            "actionType": "callFunction",
+                            "functionName": "logout"
+                        }
                     },
                     "children": [
                         {
@@ -697,7 +465,7 @@
                                             "props": {
                                                 "icon": "exit_to_app",
                                                 "size": 20,
-                                                "color": "#410E0B"
+                                                "color": "@theme/onErrorContainer"
                                             }
                                         },
                                         {
@@ -706,7 +474,7 @@
                                                 "text": "Sign Out",
                                                 "fontSize": 15,
                                                 "fontWeight": "semiBold",
-                                                "color": "#410E0B"
+                                                "color": "@theme/onErrorContainer"
                                             }
                                         }
                                     ]

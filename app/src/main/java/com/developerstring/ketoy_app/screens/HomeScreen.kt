@@ -2,7 +2,9 @@ package com.developerstring.ketoy_app.screens
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDownward
 import androidx.compose.material.icons.filled.ArrowUpward
@@ -14,11 +16,32 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.developerstring.ketoy.export.ketoyExport
 import com.developerstring.ketoy.model.KIconImageSource
 import com.developerstring.ketoy.model.KScaleType
 import com.developerstring.ketoy.screen.KetoyContent
 import com.developerstring.ketoy.screen.ProvideKetoyScreen
 import com.developerstring.ketoy.util.*
+
+/**
+ * Export definition for the Home screen — single source of truth for JSON export.
+ *
+ * Uses [KData] template variables so the exported JSON contains
+ * `{{data:user:name}}` etc. At runtime the SDK resolves these to real values.
+ */
+val homeExport = ketoyExport("home", displayName = "Home", description = "Main dashboard with balance and transactions") {
+    content("cards") {
+        buildHomeCards(
+            userName = KData.user("name"),
+            totalBalance = KData.user("totalBalance"),
+            income = KData.user("income"),
+            notificationCount = KData.user("notificationCount"),
+        )
+    }
+    content("transactions") {
+        buildHomeTransactions()
+    }
+}
 
 /**
  * Home screen composable — demonstrates the **mixed Compose + DSL** pattern.
@@ -44,13 +67,13 @@ fun HomeScreen(
     savings: String,
     notificationCount: Int,
     isDark: Boolean,
-    transactions: List<Triple<String, String, String>>
 ) {
     ProvideKetoyScreen(screenName = "home") {
         Column(
             modifier = Modifier
                 .fillMaxSize()
                 .background(if (isDark) Color(0xFF1C1B1F) else Color(0xFFFFFBFE))
+                .verticalScroll(rememberScrollState())
         ) {
 
             // ── 1. Cards section (DSL) ────────────────────────
@@ -62,7 +85,6 @@ fun HomeScreen(
                         totalBalance = totalBalance,
                         income = income,
                         notificationCount = notificationCount,
-                        isDark = isDark
                     )
                 }
             )
@@ -78,10 +100,7 @@ fun HomeScreen(
             KetoyContent(
                 name = "transactions",
                 nodeBuilder = {
-                    buildHomeTransactions(
-                        transactions = transactions,
-                        isDark = isDark
-                    )
+                    buildHomeTransactions()
                 }
             )
 
@@ -248,11 +267,8 @@ fun buildHomeCards(
     userName: String,
     totalBalance: String,
     income: String,
-    notificationCount: Int,
-    isDark: Boolean
+    notificationCount: Any,
 ): com.developerstring.ketoy.model.KNode = ketoyRoot {
-
-    val c = AppColors
 
     KColumn(
         modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(top = 16)),
@@ -266,24 +282,23 @@ fun buildHomeCards(
         ) {
             KText(
                 fontWeight = KFontWeights.Bold, textAlign = KTextAlign.Center,
-                maxLines = 1, fontSize = 24, color = c.onSurface(isDark)
+                maxLines = 1, fontSize = 24, color = KColors.OnSurface
             )
             KRow(
                 horizontalArrangement = KArrangements.spacedBy(14),
                 verticalAlignment = KAlignments.CenterVertically
             ) {
-                KComponent("AvatarBadge", mapOf("initials" to userName.take(2), "badgeCount" to notificationCount, "size" to 48))
+                KComponent("AvatarBadge", mapOf("initials" to userName, "badgeCount" to notificationCount, "size" to 48))
                 KColumn(verticalArrangement = KArrangements.spacedBy(2)) {
-                    KText("Good morning, hello", fontSize = 13, color = c.onSurfaceVariant(isDark))
-                    KText(userName, fontSize = 20, fontWeight = KFontWeights.Bold, color = c.onSurface(isDark))
+                    KText(userName, fontSize = 20, fontWeight = KFontWeights.Bold, color = KColors.OnSurface)
                 }
             }
 
             KIconButton(
                 icon = KIcons.NotificationsNone,
-                iconColor = c.onSurface(isDark),
+                iconColor = KColors.OnSurface,
                 iconSize = 26,
-                onClick = { KFunctionCall("clearNotifications") },
+                onClickAction = KFunctionAction("clearNotifications"),
                 actionId = "home_clear_notifs"
             ) {}
         }
@@ -311,24 +326,28 @@ fun buildHomeCards(
             horizontalArrangement = KArrangements.SpaceEvenly
         ) {
             quickAction(
-                KIcons.Send, "Send", c.primaryContainer(isDark), c.primary(isDark),
-                isDark = isDark, actionId = "home_send"
-            ) { KFunctionCall("sendMoney", "amount" to 50.0, "recipient" to "Alex") }
+                KIcons.Send, "Send", KColors.PrimaryContainer, KColors.Primary,
+                actionId = "home_send",
+                onClickAction = KFunctionAction("sendMoney", "amount" to 50.0, "recipient" to "Alex")
+            )
 
             quickAction(
-                KIcons.Download, "Receive", c.secondaryContainer(isDark), c.onSecondaryContainer(isDark),
-                isDark = isDark, actionId = "home_receive"
-            ) { KFunctionCall("showToast", "message" to "Receive link copied") }
+                KIcons.Download, "Receive", KColors.SecondaryContainer, KColors.OnSecondaryContainer,
+                actionId = "home_receive",
+                onClickAction = KFunctionAction("showToast", "message" to "Receive link copied")
+            )
 
             quickAction(
-                KIcons.SwapHoriz, "Swap", c.tertiaryContainer(isDark), c.onTertiaryContainer(isDark),
-                isDark = isDark, actionId = "home_swap"
-            ) { KFunctionCall("showToast", "message" to "Swap feature coming soon") }
+                KIcons.SwapHoriz, "Swap", KColors.TertiaryContainer, KColors.OnTertiaryContainer,
+                actionId = "home_swap",
+                onClickAction = KFunctionAction("showToast", "message" to "Swap feature coming soon")
+            )
 
             quickAction(
-                KIcons.MoreHoriz, "More", c.surfaceContainerLow(isDark), c.onSurfaceVariant(isDark),
-                isDark = isDark, actionId = "home_more"
-            ) { KFunctionCall("showToast", "message" to "More options") }
+                KIcons.MoreHoriz, "More", KColors.SurfaceContainerLow, KColors.OnSurfaceVariant,
+                actionId = "home_more",
+                onClickAction = KFunctionAction("showToast", "message" to "More options")
+            )
         }
 
         KSpacer(height = 24)
@@ -342,8 +361,8 @@ fun buildHomeCards(
                 modifier = kModifier(weight = 1f),
                 icon = KIcons.TrendingUp, label = "Income", value = income,
                 trend = "+8.2%",
-                iconBg = c.greenContainer(isDark), iconColor = c.green(isDark),
-                trendColor = c.green(isDark), isDark = isDark
+                iconBg = KColors.SuccessContainer, iconColor = KColors.Success,
+                trendColor = KColors.Success
             )
         }
     }
@@ -354,11 +373,8 @@ fun buildHomeCards(
  * list with header and see-all button.
  */
 fun buildHomeTransactions(
-    transactions: List<Triple<String, String, String>>,
-    isDark: Boolean
+    dataSource: String = "user.transactions",
 ): com.developerstring.ketoy.model.KNode = ketoyRoot {
-
-    val c = AppColors
 
     KColumn(
         modifier = kModifier(fillMaxWidth = 1f),
@@ -370,13 +386,13 @@ fun buildHomeTransactions(
             horizontalArrangement = KArrangements.SpaceBetween,
             verticalAlignment = KAlignments.CenterVertically
         ) {
-            KText("Recent Transactions", fontSize = 17, fontWeight = KFontWeights.SemiBold, color = c.onSurface(isDark))
+            KText("Recent Transactions", fontSize = 17, fontWeight = KFontWeights.SemiBold, color = KColors.OnSurface)
             KButton(
                 containerColor = "#00000000", elevation = 0,
-                onClick = { KFunctionCall("showToast", "message" to "View all transactions") },
+                onClickAction = KFunctionAction("showToast", "message" to "View all transactions"),
                 actionId = "home_see_all"
             ) {
-                KText("See All", fontSize = 13, fontWeight = KFontWeights.Medium, color = c.primary(isDark))
+                KText("See All", fontSize = 13, fontWeight = KFontWeights.Medium, color = KColors.Primary)
             }
         }
 
@@ -387,15 +403,14 @@ fun buildHomeTransactions(
             modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20, bottom = 16)),
             verticalArrangement = KArrangements.spacedBy(8)
         ) {
-            for ((title, subtitle, amount) in transactions.take(5)) {
-                val isIncome = amount.startsWith("+")
+            KDataList(dataSource = dataSource, itemAlias = "txn") {
                 KComponent(
                     "TransactionRow",
                     mapOf(
-                        "title" to title,
-                        "subtitle" to subtitle,
-                        "amount" to amount,
-                        "isIncome" to isIncome
+                        "title" to "{{data:txn:title}}",
+                        "subtitle" to "{{data:txn:subtitle}}",
+                        "amount" to "{{data:txn:amount}}",
+                        "isIncome" to "{{data:txn:isIncome}}"
                     )
                 )
             }

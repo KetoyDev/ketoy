@@ -54,9 +54,10 @@ import com.developerstring.ketoy.model.*
  * @param scale uniform scale factor.
  * @param rotation rotation in degrees.
  * @param alpha opacity (0–1).
- * @param verticalScroll enable vertical scrolling.
- * @param horizontalScroll enable horizontal scrolling.
+ * @param verticalScroll vertical scroll configuration (use `kScrollConfig()` or `KScrollConfig.Default`).
+ * @param horizontalScroll horizontal scroll configuration (use `kScrollConfig()` or `KScrollConfig.Default`).
  * @return a [KModifier] instance.
+ * @see kScrollConfig
  */
 
 fun kModifier(
@@ -79,13 +80,47 @@ fun kModifier(
     scale: Float? = null,
     rotation: Float? = null,
     alpha: Float? = null,
-    verticalScroll: Boolean? = null,
-    horizontalScroll: Boolean? = null
+    verticalScroll: KScrollConfig? = null,
+    horizontalScroll: KScrollConfig? = null
 ) = KModifier(
     fillMaxSize, fillMaxWidth, fillMaxHeight, weight, size, width, height,
     padding, margin, background, gradient, border, shape, cornerRadius,
     shadow, clickable, scale, rotation, alpha, verticalScroll, horizontalScroll
 )
+
+/**
+ * Creates a [KScrollConfig] for scroll behavior customization.
+ *
+ * Use this helper with [kModifier]'s `verticalScroll` or `horizontalScroll`
+ * parameters to enable scrolling with custom behavior.
+ *
+ * ```kotlin
+ * val scrollableColumn = KColumn(
+ *     modifier = kModifier(
+ *         fillMaxSize = 1f,
+ *         verticalScroll = kScrollConfig(
+ *             enabled = true,
+ *             reverseScrolling = false,
+ *             flingBehavior = KScrollConfig.FLING_DEFAULT
+ *         )
+ *     )
+ * )
+ * ```
+ *
+ * @param enabled whether scrolling is enabled (default: `true`).
+ * @param reverseScrolling when `true`, reverses scroll direction (default: `false`).
+ * @param flingBehavior fling behavior preset: [KScrollConfig.FLING_DEFAULT] or
+ *   [KScrollConfig.FLING_NONE] (default: `null` for default behavior).
+ * @return a [KScrollConfig] instance.
+ * @see KModifier.verticalScroll
+ * @see KModifier.horizontalScroll
+ */
+fun kScrollConfig(
+    enabled: Boolean = true,
+    reverseScrolling: Boolean = false,
+    flingBehavior: String? = null
+) = KScrollConfig(enabled, reverseScrolling, flingBehavior)
+
 /**
  * Creates a [KPadding] model.
  *

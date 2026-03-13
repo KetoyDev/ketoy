@@ -1,9 +1,23 @@
 package com.developerstring.ketoy_app.screens
 
 import androidx.compose.runtime.Composable
+import com.developerstring.ketoy.export.ketoyExport
 import com.developerstring.ketoy.screen.KetoyContent
 import com.developerstring.ketoy.screen.ProvideKetoyScreen
 import com.developerstring.ketoy.util.*
+
+/**
+ * Export definition for the Analytics screen.
+ */
+val analyticsExport = ketoyExport("analytics", displayName = "Analytics", description = "Income, expenses, and spending breakdown") {
+    content {
+        buildAnalyticsScreen(
+            income = KData.analytics("income"),
+            expenses = KData.analytics("expenses"),
+            savings = KData.analytics("savings"),
+        )
+    }
+}
 
 /**
  * Analytics screen composable — wraps the DSL builder as a `@KScreen`
@@ -14,7 +28,6 @@ fun AnalyticsScreen(
     income: String,
     expenses: String,
     savings: String,
-    isDark: Boolean
 ) {
     ProvideKetoyScreen(screenName = "analytics") {
         KetoyContent(
@@ -23,7 +36,6 @@ fun AnalyticsScreen(
                     income = income,
                     expenses = expenses,
                     savings = savings,
-                    isDark = isDark
                 )
             }
         )
@@ -38,17 +50,13 @@ fun buildAnalyticsScreen(
     income: String,
     expenses: String,
     savings: String,
-    isDark: Boolean
 ): com.developerstring.ketoy.model.KNode = ketoyRoot {
-
-    val c = AppColors
 
     KColumn(
         modifier = kModifier(
             fillMaxSize = 1f,
             padding = kPadding(top = 16),
-            background = if (isDark) "#1C1B1F" else "#FFFBFE",
-            verticalScroll = true
+            background = KColors.Background,
         ),
         verticalArrangement = KArrangements.spacedBy(0)
     ) {
@@ -59,12 +67,12 @@ fun buildAnalyticsScreen(
             horizontalArrangement = KArrangements.SpaceBetween,
             verticalAlignment = KAlignments.CenterVertically
         ) {
-            KText("Analytics", fontSize = 24, fontWeight = KFontWeights.Bold, color = c.onSurface(isDark))
+            KText("Analytics", fontSize = 24, fontWeight = KFontWeights.Bold, color = KColors.OnSurface)
             KIconButton(
                 icon = KIcons.DateRange,
-                iconColor = c.onSurfaceVariant(isDark),
+                iconColor = KColors.OnSurfaceVariant,
                 iconSize = 24,
-                onClick = { KFunctionCall("showToast", "message" to "Date filter coming soon") },
+                onClickAction = KFunctionAction("showToast", "message" to "Date filter coming soon"),
                 actionId = "analytics_calendar"
             ) {}
         }
@@ -79,14 +87,14 @@ fun buildAnalyticsScreen(
             statCard(
                 modifier = kModifier(weight = 1f),
                 icon = KIcons.TrendingUp, label = "Income", value = income, trend = "+8.2%",
-                iconBg = c.greenContainer(isDark), iconColor = c.green(isDark),
-                trendColor = c.green(isDark), isDark = isDark
+                iconBg = KColors.SuccessContainer, iconColor = KColors.Success,
+                trendColor = KColors.Success
             )
             statCard(
                 modifier = kModifier(weight = 1f),
                 icon = KIcons.TrendingDown, label = "Expenses", value = expenses, trend = "-3.1%",
-                iconBg = c.errorContainer(isDark), iconColor = c.red(isDark),
-                trendColor = c.red(isDark), isDark = isDark
+                iconBg = KColors.ErrorContainer, iconColor = KColors.Error,
+                trendColor = KColors.Error
             )
         }
 
@@ -97,8 +105,8 @@ fun buildAnalyticsScreen(
             statCard(
                 modifier = kModifier(fillMaxWidth = 1f),
                 icon = KIcons.Savings, label = "Total Savings", value = savings, trend = "+15.4%",
-                iconBg = c.primaryContainer(isDark), iconColor = c.primary(isDark),
-                trendColor = c.green(isDark), isDark = isDark
+                iconBg = KColors.PrimaryContainer, iconColor = KColors.Primary,
+                trendColor = KColors.Success
             )
         }
 
@@ -110,13 +118,13 @@ fun buildAnalyticsScreen(
             horizontalArrangement = KArrangements.SpaceBetween,
             verticalAlignment = KAlignments.CenterVertically
         ) {
-            KText("Spending by Category", fontSize = 17, fontWeight = KFontWeights.SemiBold, color = c.onSurface(isDark))
+            KText("Spending by Category", fontSize = 17, fontWeight = KFontWeights.SemiBold, color = KColors.OnSurface)
             KButton(
                 containerColor = "#00000000", elevation = 0,
-                onClick = { KFunctionCall("showToast", "message" to "Month filter") },
+                onClickAction = KFunctionAction("showToast", "message" to "Month filter"),
                 actionId = "analytics_month_filter"
             ) {
-                KText("This Month", fontSize = 13, fontWeight = KFontWeights.Medium, color = c.primary(isDark))
+                KText("This Month", fontSize = 13, fontWeight = KFontWeights.Medium, color = KColors.Primary)
             }
         }
 
@@ -126,12 +134,12 @@ fun buildAnalyticsScreen(
             modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20, bottom = 16)),
             verticalArrangement = KArrangements.spacedBy(8)
         ) {
-            categoryRow(KIcons.ShoppingCart, "Groceries", "\$420.50", c.primaryContainer(isDark), c.primary(isDark), isDark)
-            categoryRow(KIcons.Restaurant, "Dining", "\$185.30", c.secondaryContainer(isDark), c.onSecondaryContainer(isDark), isDark)
-            categoryRow(KIcons.DirectionsCar, "Transport", "\$98.00", c.tertiaryContainer(isDark), c.onTertiaryContainer(isDark), isDark)
-            categoryRow(KIcons.Movie, "Entertainment", "\$65.99", c.errorContainer(isDark), c.red(isDark), isDark)
-            categoryRow(KIcons.LocalHospital, "Health", "\$250.00", c.greenContainer(isDark), c.green(isDark), isDark)
-            categoryRow(KIcons.Settings, "Utilities", "\$135.20", c.surfaceContainerLow(isDark), c.onSurfaceVariant(isDark), isDark)
+            categoryRow(KIcons.ShoppingCart, "Groceries", "\$420.50", KColors.PrimaryContainer, KColors.Primary)
+            categoryRow(KIcons.Restaurant, "Dining", "\$185.30", KColors.SecondaryContainer, KColors.OnSecondaryContainer)
+            categoryRow(KIcons.DirectionsCar, "Transport", "\$98.00", KColors.TertiaryContainer, KColors.OnTertiaryContainer)
+            categoryRow(KIcons.Movie, "Entertainment", "\$65.99", KColors.ErrorContainer, KColors.Error)
+            categoryRow(KIcons.LocalHospital, "Health", "\$250.00", KColors.SuccessContainer, KColors.Success)
+            categoryRow(KIcons.Settings, "Utilities", "\$135.20", KColors.SurfaceContainerLow, KColors.OnSurfaceVariant)
         }
 
         KSpacer(height = 24)
@@ -139,7 +147,7 @@ fun buildAnalyticsScreen(
         // ── Budget progress hint ──────────────────────────
         KCard(
             modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20)),
-            containerColor = c.primaryContainer(isDark),
+            containerColor = KColors.PrimaryContainer,
             shape = KShapes.Rounded20,
             elevation = 0
         ) {
@@ -148,10 +156,10 @@ fun buildAnalyticsScreen(
                 horizontalArrangement = KArrangements.spacedBy(12),
                 verticalAlignment = KAlignments.CenterVertically
             ) {
-                KIcon(icon = KIcons.BarChart, size = 28, color = c.primary(isDark))
+                KIcon(icon = KIcons.BarChart, size = 28, color = KColors.Primary)
                 KColumn(modifier = kModifier(weight = 1f), verticalArrangement = KArrangements.spacedBy(2)) {
-                    KText("Budget Goal", fontSize = 14, fontWeight = KFontWeights.SemiBold, color = c.onSurface(isDark))
-                    KText("You've used 68% of your monthly budget", fontSize = 12, color = c.onSurfaceVariant(isDark))
+                    KText("Budget Goal", fontSize = 14, fontWeight = KFontWeights.SemiBold, color = KColors.OnSurface)
+                    KText("You've used 68% of your monthly budget", fontSize = 12, color = KColors.OnSurfaceVariant)
                 }
             }
         }

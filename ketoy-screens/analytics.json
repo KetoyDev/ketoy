@@ -1,6 +1,7 @@
 {
   "screenName": "analytics",
   "displayName": "Analytics",
+  "description": "Income, expenses, and spending breakdown",
   "version": "1.0.0",
   "contents": {
     "main": {
@@ -11,8 +12,7 @@
             "padding": {
                 "top": 16
             },
-            "background": "#1C1B1F",
-            "verticalScroll": true
+            "background": "@theme/background"
         },
         "verticalArrangement": "spacedBy_0"
     },
@@ -36,16 +36,22 @@
                         "text": "Analytics",
                         "fontSize": 24,
                         "fontWeight": "bold",
-                        "color": "#E6E0E9"
+                        "color": "@theme/onSurface"
                     }
                 },
                 {
                     "type": "IconButton",
                     "props": {
                         "icon": "date_range",
-                        "onClick": "analytics_calendar",
+                        "onClick": {
+                            "actionType": "callFunction",
+                            "functionName": "showToast",
+                            "arguments": {
+                                "message": "Date filter coming soon"
+                            }
+                        },
                         "iconSize": 24,
-                        "iconColor": "#CAC4D0"
+                        "iconColor": "@theme/onSurfaceVariant"
                     }
                 }
             ]
@@ -75,7 +81,7 @@
                             "weight": 1.0
                         },
                         "shape": "rounded_16",
-                        "containerColor": "#2B2930",
+                        "containerColor": "@theme/surface",
                         "elevation": 1
                     },
                     "children": [
@@ -106,7 +112,7 @@
                                             "props": {
                                                 "modifier": {
                                                     "size": 40,
-                                                    "background": "#0A5C30",
+                                                    "background": "@theme/successContainer",
                                                     "shape": "rounded_12"
                                                 },
                                                 "contentAlignment": "center"
@@ -117,7 +123,7 @@
                                                     "props": {
                                                         "icon": "trending_up",
                                                         "size": 22,
-                                                        "color": "#6DD58C"
+                                                        "color": "@theme/success"
                                                     }
                                                 }
                                             ]
@@ -128,7 +134,7 @@
                                                 "text": "+8.2%",
                                                 "fontSize": 12,
                                                 "fontWeight": "bold",
-                                                "color": "#6DD58C"
+                                                "color": "@theme/success"
                                             }
                                         }
                                     ]
@@ -138,16 +144,16 @@
                                     "props": {
                                         "text": "Income",
                                         "fontSize": 12,
-                                        "color": "#CAC4D0"
+                                        "color": "@theme/onSurfaceVariant"
                                     }
                                 },
                                 {
                                     "type": "Text",
                                     "props": {
-                                        "text": "$4,200.00",
+                                        "text": "{{data:analytics:income}}",
                                         "fontSize": 20,
                                         "fontWeight": "bold",
-                                        "color": "#E6E0E9"
+                                        "color": "@theme/onSurface"
                                     }
                                 }
                             ]
@@ -161,7 +167,7 @@
                             "weight": 1.0
                         },
                         "shape": "rounded_16",
-                        "containerColor": "#2B2930",
+                        "containerColor": "@theme/surface",
                         "elevation": 1
                     },
                     "children": [
@@ -192,7 +198,7 @@
                                             "props": {
                                                 "modifier": {
                                                     "size": 40,
-                                                    "background": "#8C1D18",
+                                                    "background": "@theme/errorContainer",
                                                     "shape": "rounded_12"
                                                 },
                                                 "contentAlignment": "center"
@@ -203,7 +209,7 @@
                                                     "props": {
                                                         "icon": "trending_down",
                                                         "size": 22,
-                                                        "color": "#FFB4AB"
+                                                        "color": "@theme/error"
                                                     }
                                                 }
                                             ]
@@ -214,7 +220,7 @@
                                                 "text": "-3.1%",
                                                 "fontSize": 12,
                                                 "fontWeight": "bold",
-                                                "color": "#FFB4AB"
+                                                "color": "@theme/error"
                                             }
                                         }
                                     ]
@@ -224,16 +230,16 @@
                                     "props": {
                                         "text": "Expenses",
                                         "fontSize": 12,
-                                        "color": "#CAC4D0"
+                                        "color": "@theme/onSurfaceVariant"
                                     }
                                 },
                                 {
                                     "type": "Text",
                                     "props": {
-                                        "text": "$2,150.00",
+                                        "text": "{{data:analytics:expenses}}",
                                         "fontSize": 20,
                                         "fontWeight": "bold",
-                                        "color": "#E6E0E9"
+                                        "color": "@theme/onSurface"
                                     }
                                 }
                             ]
@@ -266,7 +272,7 @@
                             "fillMaxWidth": 1.0
                         },
                         "shape": "rounded_16",
-                        "containerColor": "#2B2930",
+                        "containerColor": "@theme/surface",
                         "elevation": 1
                     },
                     "children": [
@@ -297,7 +303,7 @@
                                             "props": {
                                                 "modifier": {
                                                     "size": 40,
-                                                    "background": "#4F378B",
+                                                    "background": "@theme/primaryContainer",
                                                     "shape": "rounded_12"
                                                 },
                                                 "contentAlignment": "center"
@@ -308,7 +314,7 @@
                                                     "props": {
                                                         "icon": "savings",
                                                         "size": 22,
-                                                        "color": "#D0BCFF"
+                                                        "color": "@theme/primary"
                                                     }
                                                 }
                                             ]
@@ -319,7 +325,7 @@
                                                 "text": "+15.4%",
                                                 "fontSize": 12,
                                                 "fontWeight": "bold",
-                                                "color": "#6DD58C"
+                                                "color": "@theme/success"
                                             }
                                         }
                                     ]
@@ -329,16 +335,16 @@
                                     "props": {
                                         "text": "Total Savings",
                                         "fontSize": 12,
-                                        "color": "#CAC4D0"
+                                        "color": "@theme/onSurfaceVariant"
                                     }
                                 },
                                 {
                                     "type": "Text",
                                     "props": {
-                                        "text": "$2,050.00",
+                                        "text": "{{data:analytics:savings}}",
                                         "fontSize": 20,
                                         "fontWeight": "bold",
-                                        "color": "#E6E0E9"
+                                        "color": "@theme/onSurface"
                                     }
                                 }
                             ]
@@ -372,13 +378,19 @@
                         "text": "Spending by Category",
                         "fontSize": 17,
                         "fontWeight": "semiBold",
-                        "color": "#E6E0E9"
+                        "color": "@theme/onSurface"
                     }
                 },
                 {
                     "type": "Button",
                     "props": {
-                        "onClick": "analytics_month_filter",
+                        "onClick": {
+                            "actionType": "callFunction",
+                            "functionName": "showToast",
+                            "arguments": {
+                                "message": "Month filter"
+                            }
+                        },
                         "containerColor": "#00000000",
                         "elevation": 0
                     },
@@ -389,7 +401,7 @@
                                 "text": "This Month",
                                 "fontSize": 13,
                                 "fontWeight": "medium",
-                                "color": "#D0BCFF"
+                                "color": "@theme/primary"
                             }
                         }
                     ]
@@ -422,7 +434,7 @@
                             "fillMaxWidth": 1.0
                         },
                         "shape": "rounded_16",
-                        "containerColor": "#2B2930",
+                        "containerColor": "@theme/surface",
                         "elevation": 0
                     },
                     "children": [
@@ -452,7 +464,7 @@
                                             "props": {
                                                 "modifier": {
                                                     "size": 42,
-                                                    "background": "#4F378B",
+                                                    "background": "@theme/primaryContainer",
                                                     "shape": "rounded_12"
                                                 },
                                                 "contentAlignment": "center"
@@ -463,7 +475,7 @@
                                                     "props": {
                                                         "icon": "shopping_cart",
                                                         "size": 22,
-                                                        "color": "#D0BCFF"
+                                                        "color": "@theme/primary"
                                                     }
                                                 }
                                             ]
@@ -474,7 +486,7 @@
                                                 "text": "Groceries",
                                                 "fontSize": 15,
                                                 "fontWeight": "medium",
-                                                "color": "#E6E0E9"
+                                                "color": "@theme/onSurface"
                                             }
                                         }
                                     ]
@@ -485,7 +497,7 @@
                                         "text": "$420.50",
                                         "fontSize": 15,
                                         "fontWeight": "bold",
-                                        "color": "#CAC4D0"
+                                        "color": "@theme/onSurfaceVariant"
                                     }
                                 }
                             ]
@@ -499,7 +511,7 @@
                             "fillMaxWidth": 1.0
                         },
                         "shape": "rounded_16",
-                        "containerColor": "#2B2930",
+                        "containerColor": "@theme/surface",
                         "elevation": 0
                     },
                     "children": [
@@ -529,7 +541,7 @@
                                             "props": {
                                                 "modifier": {
                                                     "size": 42,
-                                                    "background": "#4A4458",
+                                                    "background": "@theme/secondaryContainer",
                                                     "shape": "rounded_12"
                                                 },
                                                 "contentAlignment": "center"
@@ -540,7 +552,7 @@
                                                     "props": {
                                                         "icon": "restaurant",
                                                         "size": 22,
-                                                        "color": "#CCC5DC"
+                                                        "color": "@theme/onSecondaryContainer"
                                                     }
                                                 }
                                             ]
@@ -551,7 +563,7 @@
                                                 "text": "Dining",
                                                 "fontSize": 15,
                                                 "fontWeight": "medium",
-                                                "color": "#E6E0E9"
+                                                "color": "@theme/onSurface"
                                             }
                                         }
                                     ]
@@ -562,7 +574,7 @@
                                         "text": "$185.30",
                                         "fontSize": 15,
                                         "fontWeight": "bold",
-                                        "color": "#CAC4D0"
+                                        "color": "@theme/onSurfaceVariant"
                                     }
                                 }
                             ]
@@ -576,7 +588,7 @@
                             "fillMaxWidth": 1.0
                         },
                         "shape": "rounded_16",
-                        "containerColor": "#2B2930",
+                        "containerColor": "@theme/surface",
                         "elevation": 0
                     },
                     "children": [
@@ -606,7 +618,7 @@
                                             "props": {
                                                 "modifier": {
                                                     "size": 42,
-                                                    "background": "#633B48",
+                                                    "background": "@theme/tertiaryContainer",
                                                     "shape": "rounded_12"
                                                 },
                                                 "contentAlignment": "center"
@@ -617,7 +629,7 @@
                                                     "props": {
                                                         "icon": "directions_car",
                                                         "size": 22,
-                                                        "color": "#EFB8C8"
+                                                        "color": "@theme/onTertiaryContainer"
                                                     }
                                                 }
                                             ]
@@ -628,7 +640,7 @@
                                                 "text": "Transport",
                                                 "fontSize": 15,
                                                 "fontWeight": "medium",
-                                                "color": "#E6E0E9"
+                                                "color": "@theme/onSurface"
                                             }
                                         }
                                     ]
@@ -639,7 +651,7 @@
                                         "text": "$98.00",
                                         "fontSize": 15,
                                         "fontWeight": "bold",
-                                        "color": "#CAC4D0"
+                                        "color": "@theme/onSurfaceVariant"
                                     }
                                 }
                             ]
@@ -653,7 +665,7 @@
                             "fillMaxWidth": 1.0
                         },
                         "shape": "rounded_16",
-                        "containerColor": "#2B2930",
+                        "containerColor": "@theme/surface",
                         "elevation": 0
                     },
                     "children": [
@@ -683,7 +695,7 @@
                                             "props": {
                                                 "modifier": {
                                                     "size": 42,
-                                                    "background": "#8C1D18",
+                                                    "background": "@theme/errorContainer",
                                                     "shape": "rounded_12"
                                                 },
                                                 "contentAlignment": "center"
@@ -694,7 +706,7 @@
                                                     "props": {
                                                         "icon": "movie",
                                                         "size": 22,
-                                                        "color": "#FFB4AB"
+                                                        "color": "@theme/error"
                                                     }
                                                 }
                                             ]
@@ -705,7 +717,7 @@
                                                 "text": "Entertainment",
                                                 "fontSize": 15,
                                                 "fontWeight": "medium",
-                                                "color": "#E6E0E9"
+                                                "color": "@theme/onSurface"
                                             }
                                         }
                                     ]
@@ -716,7 +728,7 @@
                                         "text": "$65.99",
                                         "fontSize": 15,
                                         "fontWeight": "bold",
-                                        "color": "#CAC4D0"
+                                        "color": "@theme/onSurfaceVariant"
                                     }
                                 }
                             ]
@@ -730,7 +742,7 @@
                             "fillMaxWidth": 1.0
                         },
                         "shape": "rounded_16",
-                        "containerColor": "#2B2930",
+                        "containerColor": "@theme/surface",
                         "elevation": 0
                     },
                     "children": [
@@ -760,7 +772,7 @@
                                             "props": {
                                                 "modifier": {
                                                     "size": 42,
-                                                    "background": "#0A5C30",
+                                                    "background": "@theme/successContainer",
                                                     "shape": "rounded_12"
                                                 },
                                                 "contentAlignment": "center"
@@ -771,7 +783,7 @@
                                                     "props": {
                                                         "icon": "local_hospital",
                                                         "size": 22,
-                                                        "color": "#6DD58C"
+                                                        "color": "@theme/success"
                                                     }
                                                 }
                                             ]
@@ -782,7 +794,7 @@
                                                 "text": "Health",
                                                 "fontSize": 15,
                                                 "fontWeight": "medium",
-                                                "color": "#E6E0E9"
+                                                "color": "@theme/onSurface"
                                             }
                                         }
                                     ]
@@ -793,7 +805,7 @@
                                         "text": "$250.00",
                                         "fontSize": 15,
                                         "fontWeight": "bold",
-                                        "color": "#CAC4D0"
+                                        "color": "@theme/onSurfaceVariant"
                                     }
                                 }
                             ]
@@ -807,7 +819,7 @@
                             "fillMaxWidth": 1.0
                         },
                         "shape": "rounded_16",
-                        "containerColor": "#2B2930",
+                        "containerColor": "@theme/surface",
                         "elevation": 0
                     },
                     "children": [
@@ -837,7 +849,7 @@
                                             "props": {
                                                 "modifier": {
                                                     "size": 42,
-                                                    "background": "#1D1B20",
+                                                    "background": "@theme/surfaceContainerLow",
                                                     "shape": "rounded_12"
                                                 },
                                                 "contentAlignment": "center"
@@ -848,7 +860,7 @@
                                                     "props": {
                                                         "icon": "settings",
                                                         "size": 22,
-                                                        "color": "#CAC4D0"
+                                                        "color": "@theme/onSurfaceVariant"
                                                     }
                                                 }
                                             ]
@@ -859,7 +871,7 @@
                                                 "text": "Utilities",
                                                 "fontSize": 15,
                                                 "fontWeight": "medium",
-                                                "color": "#E6E0E9"
+                                                "color": "@theme/onSurface"
                                             }
                                         }
                                     ]
@@ -870,7 +882,7 @@
                                         "text": "$135.20",
                                         "fontSize": 15,
                                         "fontWeight": "bold",
-                                        "color": "#CAC4D0"
+                                        "color": "@theme/onSurfaceVariant"
                                     }
                                 }
                             ]
@@ -895,7 +907,7 @@
                     }
                 },
                 "shape": "rounded_20",
-                "containerColor": "#4F378B",
+                "containerColor": "@theme/primaryContainer",
                 "elevation": 0
             },
             "children": [
@@ -917,7 +929,7 @@
                             "props": {
                                 "icon": "bar_chart",
                                 "size": 28,
-                                "color": "#D0BCFF"
+                                "color": "@theme/primary"
                             }
                         },
                         {
@@ -935,7 +947,7 @@
                                         "text": "Budget Goal",
                                         "fontSize": 14,
                                         "fontWeight": "semiBold",
-                                        "color": "#E6E0E9"
+                                        "color": "@theme/onSurface"
                                     }
                                 },
                                 {
@@ -943,7 +955,7 @@
                                     "props": {
                                         "text": "You've used 68% of your monthly budget",
                                         "fontSize": 12,
-                                        "color": "#CAC4D0"
+                                        "color": "@theme/onSurfaceVariant"
                                     }
                                 }
                             ]

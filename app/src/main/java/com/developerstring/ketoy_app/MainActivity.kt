@@ -28,6 +28,8 @@ import com.developerstring.ketoy.navigation.*
 import com.developerstring.ketoy.theme.KetoyThemeMode
 import com.developerstring.ketoy.theme.KetoyThemeProvider
 import com.developerstring.ketoy_app.ui.theme.KetoyTheme
+import com.developerstring.ketoy.util.KColors
+import com.developerstring.ketoy.util.KIcons
 import com.developerstring.ketoy.util.resolveIcon
 import com.developerstring.ketoy_app.screens.AnalyticsScreen
 import com.developerstring.ketoy_app.screens.AppNavGraphs
@@ -51,9 +53,9 @@ class MainActivity : ComponentActivity() {
         Ketoy.initialize(
             context = applicationContext,
             cloudConfig = KetoyCloudConfig(
-                apiKey = "your_api_key",
-                packageName = "package",
-                baseUrl = "base_url"
+                apiKey = "api_key",
+                packageName = "package_name",
+                baseUrl = "base_url",
             ),
             cacheConfig = KetoyCacheConfig(
                 strategy = KetoyCacheStrategy.CACHE_FIRST,
@@ -69,8 +71,12 @@ class MainActivity : ComponentActivity() {
         setContent {
             val vm: MainViewModel = viewModel()
 
-            // Register ViewModel functions with the SDK
+            // Register ViewModel functions and sync data variables
             LaunchedEffect(Unit) { vm.registerFunctions() }
+            // Re-sync variables whenever ViewModel state changes
+            LaunchedEffect(vm.userName, vm.totalBalance, vm.income, vm.expenses, vm.savings, vm.notificationCount) {
+                vm.syncVariables()
+            }
 
             // ── Fetch cloud nav graphs (overwrites local when available) ──
             LaunchedEffect(Unit) {
@@ -87,9 +93,9 @@ class MainActivity : ComponentActivity() {
                 KetoyThemeProvider(
                     themeMode = if (isDark) KetoyThemeMode.Dark else KetoyThemeMode.Light
                 ) {
-//                    KetoyDevWrapper {
+                    KetoyDevWrapper {
                         MainApp(vm, isDark)
-//                    }
+                    }
                 }
             }
         }
@@ -198,9 +204,6 @@ private fun MainApp(vm: MainViewModel, isDark: Boolean) {
                         savings = "\$${"%,.2f".format(vm.savings)}",
                         notificationCount = vm.notificationCount,
                         isDark = isDark,
-                        transactions = vm.transactions.map {
-                            Triple(it.title, it.subtitle, it.amount)
-                        }
                     )
                 }
 
@@ -209,30 +212,28 @@ private fun MainApp(vm: MainViewModel, isDark: Boolean) {
                         income = "\$${"%,.2f".format(vm.income)}",
                         expenses = "\$${"%,.2f".format(vm.expenses)}",
                         savings = "\$${"%,.2f".format(vm.savings)}",
-                        isDark = isDark
+
                     )
                 }
 
                 composable("cards") {
                     CardsScreen(
                         selectedCardIndex = vm.selectedCardIndex,
-                        isDark = isDark
                     )
                 }
 
                 composable("history") {
-                    HistoryScreen(
-                        transactions = vm.transactions.map {
-                            Triple(it.title, it.subtitle, it.amount)
-                        },
-                        isDark = isDark
-                    )
+                    HistoryScreen()
                 }
 
                 composable("profile") {
+                    val darkMode = vm.isDarkMode
                     ProfileScreen(
                         userName = vm.userName,
-                        isDark = isDark
+                        darkModeIcon = if (darkMode) KIcons.DarkMode else KIcons.LightMode,
+                        darkModeLabel = if (darkMode) "ON" else "OFF",
+                        darkModeToggleBg = if (darkMode) KColors.Primary else KColors.Outline,
+                        darkModeToggleTextColor = if (darkMode) KColors.OnPrimary else "#FFFFFF",
                     )
                 }
 

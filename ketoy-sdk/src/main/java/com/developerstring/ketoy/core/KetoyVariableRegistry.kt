@@ -1,5 +1,6 @@
 package com.developerstring.ketoy.core
 
+import androidx.compose.runtime.mutableLongStateOf
 import com.developerstring.ketoy.model.KetoyVariable
 import kotlinx.serialization.Serializable
 
@@ -8,15 +9,27 @@ import kotlinx.serialization.Serializable
  *
  * Variables are stored by a string [id] and can be immutable or mutable.
  * Templates such as `{{data:userId:name}}` are resolved at render time.
+ *
+ * The [revision] counter is backed by Compose state so that any composable
+ * reading it will automatically recompose when a variable value changes.
  */
 object KetoyVariableRegistry {
 
     private val variables = mutableMapOf<String, KetoyVariable<*>>()
 
+    /**
+     * Compose-observable revision counter. Incremented on every [register],
+     * [updateValue], or [clear] call. Read this inside a `@Composable`
+     * function to subscribe to variable changes.
+     */
+    private val _revision = mutableLongStateOf(0L)
+    val revision: Long get() = _revision.longValue
+
     /* ── CRUD ────────────────────────────────────────── */
 
     fun <T> register(variable: KetoyVariable<T>): KetoyVariable<T> {
         variables[variable.id] = variable
+        _revision.longValue++
         return variable
     }
 
@@ -31,6 +44,7 @@ object KetoyVariableRegistry {
             is KetoyVariable.Mutable<*> -> {
                 @Suppress("UNCHECKED_CAST")
                 variables[id] = (variable as KetoyVariable.Mutable<T>).copy(value = newValue)
+                _revision.longValue++
                 true
             }
             else -> false
@@ -39,6 +53,7 @@ object KetoyVariableRegistry {
 
     fun clear() {
         variables.clear()
+        _revision.longValue++
     }
 
     fun getAllVariables(): Map<String, KetoyVariable<*>> = variables.toMap()

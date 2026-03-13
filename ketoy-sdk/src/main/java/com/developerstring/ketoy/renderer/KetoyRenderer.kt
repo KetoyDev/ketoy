@@ -31,6 +31,7 @@ package com.developerstring.ketoy.renderer
 
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import com.developerstring.ketoy.core.ActionRegistry
 import com.developerstring.ketoy.core.KetoyVariableRegistry
 import com.developerstring.ketoy.model.KetoyVariable
@@ -83,16 +84,19 @@ data class UIComponent(
  * @see RenderComponent
  * @see KetoyThemeProvider
  */
+private val ketoyJson = Json {
+    ignoreUnknownKeys = true
+    encodeDefaults = false
+}
+
 @Composable
 fun JSONStringToUI(
     value: String,
     colorScheme: KetoyColorScheme? = null,
 ) {
-    val jsonConfig = Json {
-        ignoreUnknownKeys = true
-        encodeDefaults = false
+    val component = remember(value) {
+        ketoyJson.decodeFromString<UIComponent>(value)
     }
-    val component = jsonConfig.decodeFromString<UIComponent>(value)
 
     if (colorScheme != null) {
         KetoyThemeProvider(colorScheme = colorScheme) {
@@ -186,6 +190,33 @@ fun RenderComponent(component: UIComponent) {
             KetoyVariableRegistry.register(KetoyVariable.Mutable("${id}_selectedValue", selectedValue))
             KetoyVariableRegistry.register(KetoyVariable.Immutable("${id}_values", values))
             KetoyVariableRegistry.register(KetoyVariable.Immutable("${id}_enumName", enumName))
+        }
+
+        // Render-time list iteration
+        "datalist" -> {
+            val props = component.props ?: JsonObject(emptyMap())
+            val dataSource = props["dataSource"]?.jsonPrimitive?.content ?: ""
+            val itemAlias = props["itemAlias"]?.jsonPrimitive?.content ?: "item"
+            val count = (KetoyVariableRegistry.getValue("$dataSource.count") as? Number)?.toInt() ?: 0
+
+            // Discover field names from the first item registered in the registry
+            val fieldNames = if (count > 0) {
+                val prefix = "$dataSource.0."
+                KetoyVariableRegistry.getAllVariables().keys
+                    .filter { it.startsWith(prefix) }
+                    .map { it.removePrefix(prefix) }
+            } else emptyList()
+
+            for (i in 0 until count) {
+                // Register alias variables so {{data:itemAlias:field}} resolves
+                fieldNames.forEach { field ->
+                    val value = KetoyVariableRegistry.getValue("$dataSource.$i.$field")
+                    KetoyVariableRegistry.register(
+                        KetoyVariable.Immutable("$itemAlias.$field", value ?: "")
+                    )
+                }
+                component.children?.forEach { child -> RenderComponent(child) }
+            }
         }
 
         // Fallback – check custom widget parsers first, then legacy registry

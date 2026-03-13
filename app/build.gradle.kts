@@ -3,6 +3,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     id("org.jetbrains.kotlin.plugin.serialization") version "2.0.21"
+    id("dev.ketoy.devtools")
 }
 
 android {
@@ -43,11 +44,8 @@ android {
 }
 
 dependencies {
-    // Ketoy SDK
+    // Ketoy SDK (includes dev tools)
     implementation(project(":ketoy-sdk"))
-
-    // Ketoy Dev Tools (debug only — hot-reload preview)
-    debugImplementation(project(":ketoy-devtools"))
 
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)

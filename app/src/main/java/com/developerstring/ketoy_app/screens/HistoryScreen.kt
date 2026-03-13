@@ -1,26 +1,30 @@
 package com.developerstring.ketoy_app.screens
 
 import androidx.compose.runtime.Composable
+import com.developerstring.ketoy.export.ketoyExport
 import com.developerstring.ketoy.screen.KetoyContent
 import com.developerstring.ketoy.screen.ProvideKetoyScreen
 import com.developerstring.ketoy.util.*
+
+/**
+ * Export definition for the History screen.
+ */
+val historyExport = ketoyExport("history_screen", displayName = "History", description = "Full transaction history") {
+    content {
+        buildHistoryScreen()
+    }
+}
 
 /**
  * History screen composable — wraps the DSL builder as a `@KScreen`
  * with a single `KetoyContent` child for cloud / hot-reload support.
  */
 @Composable
-fun HistoryScreen(
-    transactions: List<Triple<String, String, String>>,
-    isDark: Boolean
-) {
+fun HistoryScreen() {
     ProvideKetoyScreen(screenName = "history_screen") {
         KetoyContent(
             nodeBuilder = {
-                buildHistoryScreen(
-                    transactions = transactions,
-                    isDark = isDark
-                )
+                buildHistoryScreen()
             }
         )
     }
@@ -31,17 +35,14 @@ fun HistoryScreen(
  * transaction list, search hint, and filter chips.
  */
 fun buildHistoryScreen(
-    transactions: List<Triple<String, String, String>>,
-    isDark: Boolean
+    dataSource: String = "user.transactions",
 ): com.developerstring.ketoy.model.KNode = ketoyRoot {
-
-    val c = AppColors
 
     KColumn(
         modifier = kModifier(
             fillMaxSize = 1f,
             padding = kPadding(top = 16),
-            background = if (isDark) "#1C1B1F" else "#FFFBFE"
+            background = KColors.Background
         ),
         verticalArrangement = KArrangements.spacedBy(0)
     ) {
@@ -54,12 +55,12 @@ fun buildHistoryScreen(
             horizontalArrangement = KArrangements.SpaceBetween,
             verticalAlignment = KAlignments.CenterVertically
         ) {
-            KText("Transaction History", fontSize = 24, fontWeight = KFontWeights.Bold, color = c.onSurface(isDark))
+            KText("Transaction History", fontSize = 24, fontWeight = KFontWeights.Bold, color = KColors.OnSurface)
             KIconButton(
                 icon = KIcons.FilterList,
-                iconColor = c.onSurfaceVariant(isDark),
+                iconColor = KColors.OnSurfaceVariant,
                 iconSize = 24,
-                onClick = { KFunctionCall("showToast", "message" to "Filter options") },
+                onClickAction = KFunctionAction("showToast", "message" to "Filter options"),
                 actionId = "history_filter"
             ) {}
         }
@@ -70,10 +71,10 @@ fun buildHistoryScreen(
         KBox(modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20))) {
             KCard(
                 modifier = kModifier(fillMaxWidth = 1f),
-                containerColor = c.surfaceContainerLow(isDark),
+                containerColor = KColors.SurfaceContainerLow,
                 shape = KShapes.Rounded16,
                 elevation = 0,
-                onClick = { KFunctionCall("showToast", "message" to "Search transactions") },
+                onClickAction = KFunctionAction("showToast", "message" to "Search transactions"),
                 actionId = "history_search"
             ) {
                 KRow(
@@ -81,8 +82,8 @@ fun buildHistoryScreen(
                     horizontalArrangement = KArrangements.spacedBy(12),
                     verticalAlignment = KAlignments.CenterVertically
                 ) {
-                    KIcon(icon = KIcons.Search, size = 22, color = c.outline(isDark))
-                    KText("Search transactions...", fontSize = 15, color = c.outline(isDark))
+                    KIcon(icon = KIcons.Search, size = 22, color = KColors.Outline)
+                    KText("Search transactions...", fontSize = 15, color = KColors.Outline)
                 }
             }
         }
@@ -96,14 +97,14 @@ fun buildHistoryScreen(
         ) {
             val chipLabels = listOf("All" to true, "Income" to false, "Expense" to false, "Pending" to false)
             for ((label, isActive) in chipLabels) {
-                val bg = if (isActive) c.primary(isDark) else c.surfaceContainerLow(isDark)
-                val textColor = if (isActive) c.onPrimary(isDark) else c.onSurfaceVariant(isDark)
+                val bg = if (isActive) KColors.Primary else KColors.SurfaceContainerLow
+                val textColor = if (isActive) KColors.OnPrimary else KColors.OnSurfaceVariant
                 KCard(
                     modifier = kModifier(height = 34),
                     containerColor = bg,
                     shape = KShapes.rounded(50),
                     elevation = 0,
-                    onClick = { KFunctionCall("showToast", "message" to "$label filter") },
+                    onClickAction = KFunctionAction("showToast", "message" to "$label filter"),
                     actionId = "history_chip_$label"
                 ) {
                     KBox(modifier = kModifier(fillMaxHeight = 1f, padding = kPadding(horizontal = 16)), contentAlignment = KAlignments.Center) {
@@ -120,7 +121,7 @@ fun buildHistoryScreen(
             "February 2025",
             fontSize = 13,
             fontWeight = KFontWeights.SemiBold,
-            color = c.onSurfaceVariant(isDark),
+            color = KColors.OnSurfaceVariant,
             modifier = kModifier(padding = kPadding(horizontal = 20, bottom = 8))
         )
 
@@ -128,15 +129,14 @@ fun buildHistoryScreen(
             modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20, bottom = 16)),
             verticalArrangement = KArrangements.spacedBy(8)
         ) {
-            for ((title, subtitle, amount) in transactions) {
-                val isIncome = amount.startsWith("+")
+            KDataList(dataSource = dataSource, itemAlias = "txn") {
                 KComponent(
                     "TransactionRow",
                     mapOf(
-                        "title" to title,
-                        "subtitle" to subtitle,
-                        "amount" to amount,
-                        "isIncome" to isIncome
+                        "title" to "{{data:txn:title}}",
+                        "subtitle" to "{{data:txn:subtitle}}",
+                        "amount" to "{{data:txn:amount}}",
+                        "isIncome" to "{{data:txn:isIncome}}"
                     )
                 )
             }
@@ -146,17 +146,15 @@ fun buildHistoryScreen(
         KSpacer(height = 8)
         KBox(modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20, bottom = 16)), contentAlignment = KAlignments.Center) {
             KCard(
-                containerColor = c.primary(isDark),
+                containerColor = KColors.Primary,
                 shape = KShapes.rounded(50),
                 elevation = 4,
-                onClick = {
-                    KFunctionCall(
-                        "addTransaction",
-                        "title" to "New Purchase",
-                        "amount" to 25.0,
-                        "isIncome" to false
-                    )
-                },
+                onClickAction = KFunctionAction(
+                    "addTransaction",
+                    "title" to "New Purchase",
+                    "amount" to 25.0,
+                    "isIncome" to false
+                ),
                 actionId = "history_add_txn"
             ) {
                 KRow(
@@ -164,8 +162,8 @@ fun buildHistoryScreen(
                     horizontalArrangement = KArrangements.spacedBy(8),
                     verticalAlignment = KAlignments.CenterVertically
                 ) {
-                    KIcon(icon = KIcons.Add, size = 20, color = c.onPrimary(isDark))
-                    KText("Add Transaction", fontSize = 14, fontWeight = KFontWeights.SemiBold, color = c.onPrimary(isDark))
+                    KIcon(icon = KIcons.Add, size = 20, color = KColors.OnPrimary)
+                    KText("Add Transaction", fontSize = 14, fontWeight = KFontWeights.SemiBold, color = KColors.OnPrimary)
                 }
             }
         }

@@ -78,22 +78,31 @@ class KModifierTest {
     }
 
     @Test
-    fun `verticalScroll can be set to true`() {
-        val mod = KModifier(verticalScroll = true)
-        assertTrue(mod.verticalScroll!!)
+    fun `verticalScroll can be set with KScrollConfig`() {
+        val mod = KModifier(verticalScroll = KScrollConfig.Default)
+        assertTrue(mod.verticalScroll!!.enabled)
     }
 
     @Test
-    fun `horizontalScroll can be set to true`() {
-        val mod = KModifier(horizontalScroll = true)
-        assertTrue(mod.horizontalScroll!!)
+    fun `horizontalScroll can be set with KScrollConfig`() {
+        val mod = KModifier(horizontalScroll = KScrollConfig.Default)
+        assertTrue(mod.horizontalScroll!!.enabled)
     }
 
     @Test
     fun `both scroll directions can be enabled simultaneously`() {
-        val mod = KModifier(verticalScroll = true, horizontalScroll = true)
-        assertTrue(mod.verticalScroll!!)
-        assertTrue(mod.horizontalScroll!!)
+        val mod = KModifier(verticalScroll = KScrollConfig.Default, horizontalScroll = KScrollConfig.Default)
+        assertTrue(mod.verticalScroll!!.enabled)
+        assertTrue(mod.horizontalScroll!!.enabled)
+    }
+
+    @Test
+    fun `KScrollConfig stores reverseScrolling and flingBehavior`() {
+        val config = KScrollConfig(enabled = true, reverseScrolling = true, flingBehavior = "none")
+        val mod = KModifier(verticalScroll = config)
+        assertEquals(true, mod.verticalScroll!!.enabled)
+        assertEquals(true, mod.verticalScroll!!.reverseScrolling)
+        assertEquals("none", mod.verticalScroll!!.flingBehavior)
     }
 
     // ─── Appearance ─────────────────────────────────────────────

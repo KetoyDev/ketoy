@@ -50,13 +50,19 @@ dependencies {
     implementation("androidx.compose.material:material-icons-core")
     implementation("androidx.compose.material:material-icons-extended")
 
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
+    api("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
     // Coil for async image loading
     implementation("io.coil-kt:coil-compose:2.7.0")
 
     // Navigation Compose (Navigation2 library)
     implementation("androidx.navigation:navigation-compose:2.8.9")
+
+    // Dev Tools dependencies
+    implementation("com.squareup.okhttp3:okhttp:4.12.0")
+    implementation("androidx.lifecycle:lifecycle-process:2.8.7")
+    implementation(libs.androidx.activity.compose)
+    implementation("androidx.compose.animation:animation")
 
     // Unit tests
     testImplementation(libs.junit)
@@ -80,7 +86,17 @@ mavenPublishing {
 
     pom {
         name = "Ketoy SDUI SDK"
-        description = "Update Android apps in seconds with Ketoy’s server-driven UI engine. The open source, server-driven UI engine for Jetpack Compose. Write K‑DSL, convert to JSON, render native UI. No Play Store approvals needed."
+        description = "The open-source, server-driven UI engine for Jetpack Compose. Write K-DSL, " +
+                "serialize to JSON, render native UI — no Play Store approval needed. Features: " +
+                "15 K-DSL builders (KText, KButton, KCard, KColumn, KRow, KBox, KLazyColumn, " +
+                "KLazyRow, KImage, KIcon, KIconButton, KSpacer, KDivider, KComponent, KFunctionCall); " +
+                "35+ type-safe theme tokens including Material 3 surface containers and custom " +
+                "success tokens; reactive variable system with Compose state-backed revision " +
+                "tracking; type-safe navigation (Navigation Compose 2.8+) with server-driven " +
+                "nav graph support; custom widget, action, and component registration; multi-content " +
+                "screen system with per-block dev-server overrides; production export with screen " +
+                "and navigation manifests; cloud service with NETWORK_FIRST/CACHE_FIRST strategies; " +
+                "and integrated KetoyDevWrapper with WebSocket hot-reload."
         inceptionYear = "2026"
         url = "https://github.com/KetoyDev/Ketoy/"
         licenses {

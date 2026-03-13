@@ -1,4 +1,5 @@
 pluginManagement {
+    includeBuild("ketoy-gradle-plugin")
     repositories {
         google {
             content {
@@ -22,6 +23,3 @@ dependencyResolutionManagement {
 rootProject.name = "Ketoy"
 include(":app")
 include(":ketoy-sdk")
-include(":ketoy-devtools")
-include(":ketoy-devtools-server")
-include(":ketoy-gradle-plugin")

@@ -8,7 +8,7 @@
   <a href="https://central.sonatype.com/artifact/dev.ketoy/sdk"><img src="https://img.shields.io/maven-central/v/dev.ketoy/sdk?label=Maven%20Central&color=blue" alt="Maven Central"/></a>
   <a href="https://kotlinlang.org"><img src="https://img.shields.io/badge/Kotlin-2.0+-7F52FF.svg?logo=kotlin&logoColor=white" alt="Kotlin"/></a>
   <a href="https://developer.android.com/jetpack/compose"><img src="https://img.shields.io/badge/Jetpack%20Compose-Material3-4285F4.svg?logo=android&logoColor=white" alt="Compose"/></a>
-  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-blue.svg" alt="License"/></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/license-Apache%20License%202.0-blue" alt="License"/></a>
   <img src="https://img.shields.io/badge/Min%20SDK-26-brightgreen.svg" alt="Min SDK"/>
 </p>
 
@@ -226,7 +226,7 @@ More features, tutorials, and sample projects are on the way. **Star the repo to
 ## License
 
 ```
-MIT License — Copyright (c) 2026 KetoyDev
+Apache License 2.0 — Copyright (c) 2026 KetoyDev
 ```
 
 See [LICENSE](LICENSE) for full text.

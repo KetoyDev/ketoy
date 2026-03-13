@@ -1,5 +1,6 @@
 package com.developerstring.ketoy_app.screens
 
+import com.developerstring.ketoy.export.ketoyNavExport
 import com.developerstring.ketoy.navigation.KetoyNavAction
 import com.developerstring.ketoy.navigation.KetoyNavDestination
 import com.developerstring.ketoy.navigation.KetoyNavGraph
@@ -108,3 +109,8 @@ object AppNavGraphs {
         KetoyNavRegistry.register(demo)
     }
 }
+
+// ── Auto-export registrations ───────────────────────────────
+// These register the nav graphs with the export system automatically.
+val mainNavExport = ketoyNavExport(AppNavGraphs.main)
+val demoNavExport = ketoyNavExport(AppNavGraphs.demo)

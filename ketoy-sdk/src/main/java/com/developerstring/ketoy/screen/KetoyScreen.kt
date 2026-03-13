@@ -96,6 +96,7 @@ val LocalKetoyScreen = staticCompositionLocalOf<KetoyScreen?> { null }
 @Composable
 fun ProvideKetoyScreen(
     screenName: String,
+    version: String = "1.0.0",
     cloudEnabled: Boolean = true,
     colorScheme: KetoyColorScheme? = null,
     content: @Composable () -> Unit
@@ -104,6 +105,7 @@ fun ProvideKetoyScreen(
         KetoyScreenRegistry.get(screenName)
             ?: KetoyScreen(
                 screenName = screenName,
+                version = version,
                 cloudEnabled = cloudEnabled,
                 colorScheme = colorScheme
             ).also { KetoyScreenRegistry.register(it) }
@@ -500,10 +502,14 @@ class KetoyScreen(
     ) {
         val entry = _contents[name]
 
+        // Subscribe to variable changes so template-bearing JSON re-renders
+        // when KetoyVariableRegistry values are updated.
+        val varRevision = com.developerstring.ketoy.core.KetoyVariableRegistry.revision
+
         // 1. Dev-server override (hot-reload)
         val devJson = _devOverrides[name]
         if (devJson != null) {
-            key(devJson) {
+            key(devJson, varRevision) {
                 JSONStringToUI(value = devJson, colorScheme = colorScheme)
             }
             return
@@ -514,7 +520,7 @@ class KetoyScreen(
         if (screenDevJson != null) {
             val contentJson = extractContentFromScreenJson(screenDevJson, name)
             if (contentJson != null) {
-                key(contentJson) {
+                key(contentJson, varRevision) {
                     JSONStringToUI(value = contentJson, colorScheme = colorScheme)
                 }
                 return
@@ -803,11 +809,20 @@ private fun CloudContent(
             strategy == KetoyCacheStrategy.OPTIMISTIC ||
             strategy == KetoyCacheStrategy.CACHE_ONLY
 
-    var fetchState by remember { mutableStateOf<CloudState>(CloudState.Loading) }
+    // For cache-first strategies with fallback content, start in Loaded state
+    // immediately so the UI never flashes a loading spinner. The LaunchedEffect
+    // will silently replace the content when the cloud response arrives.
+    var fetchState by remember {
+        mutableStateOf<CloudState>(
+            if (showCacheFirst && fallbackJson != null) CloudState.Loaded(fallbackJson)
+            else CloudState.Loading
+        )
+    }
     var retryTrigger by remember { mutableIntStateOf(0) }
 
     LaunchedEffect(screenName, retryTrigger) {
-        // Don't flash loading if we already have content (e.g. from a previous fetch)
+        // Don't flash loading if we already have content (e.g. from a previous fetch
+        // or from the initial cache-first fallback)
         if (fetchState !is CloudState.Loaded) {
             fetchState = CloudState.Loading
         }
@@ -829,15 +844,7 @@ private fun CloudContent(
     }
 
     when (val state = fetchState) {
-        is CloudState.Loading -> {
-            // For cache-first strategies, show fallback content immediately
-            // instead of a loading spinner — this is the "cache first" UX.
-            if (showCacheFirst && fallbackJson != null) {
-                JSONStringToUI(value = fallbackJson, colorScheme = colorScheme)
-            } else {
-                loadingContent()
-            }
-        }
+        is CloudState.Loading -> loadingContent()
         is CloudState.Loaded -> JSONStringToUI(value = state.json, colorScheme = colorScheme)
         is CloudState.Error -> {
             if (fallbackJson != null) {

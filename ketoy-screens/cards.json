@@ -1,6 +1,7 @@
 {
   "screenName": "cards",
   "displayName": "Cards",
+  "description": "Wallet cards and card management",
   "version": "1.0.0",
   "contents": {
     "main": {
@@ -11,8 +12,10 @@
             "padding": {
                 "top": 16
             },
-            "background": "#1C1B1F",
-            "verticalScroll": true
+            "background": "@theme/background",
+            "verticalScroll": {
+                "enabled": true
+            }
         },
         "verticalArrangement": "spacedBy_0"
     },
@@ -36,16 +39,22 @@
                         "text": "My Cards",
                         "fontSize": 24,
                         "fontWeight": "bold",
-                        "color": "#E6E0E9"
+                        "color": "@theme/onSurface"
                     }
                 },
                 {
                     "type": "IconButton",
                     "props": {
                         "icon": "add",
-                        "onClick": "cards_add",
+                        "onClick": {
+                            "actionType": "callFunction",
+                            "functionName": "showToast",
+                            "arguments": {
+                                "message": "Add card flow"
+                            }
+                        },
                         "iconSize": 26,
-                        "iconColor": "#D0BCFF"
+                        "iconColor": "@theme/primary"
                     }
                 }
             ]
@@ -243,7 +252,7 @@
                                             "size": 64
                                         },
                                         "shape": "rounded_20",
-                                        "containerColor": "#8C1D18",
+                                        "containerColor": "@theme/errorContainer",
                                         "elevation": 0
                                     },
                                     "children": [
@@ -260,9 +269,15 @@
                                                     "type": "IconButton",
                                                     "props": {
                                                         "icon": "lock",
-                                                        "onClick": "cards_freeze_0",
+                                                        "onClick": {
+                                                            "actionType": "callFunction",
+                                                            "functionName": "freezeCard",
+                                                            "arguments": {
+                                                                "cardName": "Visa Platinum"
+                                                            }
+                                                        },
                                                         "iconSize": 28,
-                                                        "iconColor": "#FFB4AB"
+                                                        "iconColor": "@theme/error"
                                                     }
                                                 }
                                             ]
@@ -275,7 +290,7 @@
                                         "text": "Freeze",
                                         "fontSize": 12,
                                         "fontWeight": "medium",
-                                        "color": "#CAC4D0"
+                                        "color": "@theme/onSurfaceVariant"
                                     }
                                 }
                             ]
@@ -294,7 +309,7 @@
                                             "size": 64
                                         },
                                         "shape": "rounded_20",
-                                        "containerColor": "#4A4458",
+                                        "containerColor": "@theme/secondaryContainer",
                                         "elevation": 0
                                     },
                                     "children": [
@@ -311,9 +326,15 @@
                                                     "type": "IconButton",
                                                     "props": {
                                                         "icon": "settings",
-                                                        "onClick": "cards_settings_0",
+                                                        "onClick": {
+                                                            "actionType": "callFunction",
+                                                            "functionName": "showToast",
+                                                            "arguments": {
+                                                                "message": "Visa Platinum settings"
+                                                            }
+                                                        },
                                                         "iconSize": 28,
-                                                        "iconColor": "#CCC5DC"
+                                                        "iconColor": "@theme/onSecondaryContainer"
                                                     }
                                                 }
                                             ]
@@ -326,7 +347,7 @@
                                         "text": "Settings",
                                         "fontSize": 12,
                                         "fontWeight": "medium",
-                                        "color": "#CAC4D0"
+                                        "color": "@theme/onSurfaceVariant"
                                     }
                                 }
                             ]
@@ -345,7 +366,7 @@
                                             "size": 64
                                         },
                                         "shape": "rounded_20",
-                                        "containerColor": "#4F378B",
+                                        "containerColor": "@theme/primaryContainer",
                                         "elevation": 0
                                     },
                                     "children": [
@@ -362,9 +383,15 @@
                                                     "type": "IconButton",
                                                     "props": {
                                                         "icon": "visibility",
-                                                        "onClick": "cards_details_0",
+                                                        "onClick": {
+                                                            "actionType": "callFunction",
+                                                            "functionName": "showToast",
+                                                            "arguments": {
+                                                                "message": "Card details for Visa Platinum"
+                                                            }
+                                                        },
                                                         "iconSize": 28,
-                                                        "iconColor": "#D0BCFF"
+                                                        "iconColor": "@theme/primary"
                                                     }
                                                 }
                                             ]
@@ -377,7 +404,7 @@
                                         "text": "Details",
                                         "fontSize": 12,
                                         "fontWeight": "medium",
-                                        "color": "#CAC4D0"
+                                        "color": "@theme/onSurfaceVariant"
                                     }
                                 }
                             ]
@@ -721,9 +748,15 @@
                                     "height": 36
                                 },
                                 "shape": "rounded_50",
-                                "containerColor": "#D0BCFF",
+                                "containerColor": "@theme/primary",
                                 "elevation": 0,
-                                "onClick": "cards_select_0"
+                                "onClick": {
+                                    "actionType": "callFunction",
+                                    "functionName": "selectCard",
+                                    "arguments": {
+                                        "index": 0
+                                    }
+                                }
                             },
                             "children": [
                                 {
@@ -744,7 +777,7 @@
                                                 "text": "Card 1",
                                                 "fontSize": 13,
                                                 "fontWeight": "medium",
-                                                "color": "#381E72"
+                                                "color": "@theme/onPrimary"
                                             }
                                         }
                                     ]
@@ -758,9 +791,15 @@
                                     "height": 36
                                 },
                                 "shape": "rounded_50",
-                                "containerColor": "#1D1B20",
+                                "containerColor": "@theme/surfaceContainerLow",
                                 "elevation": 0,
-                                "onClick": "cards_select_1"
+                                "onClick": {
+                                    "actionType": "callFunction",
+                                    "functionName": "selectCard",
+                                    "arguments": {
+                                        "index": 1
+                                    }
+                                }
                             },
                             "children": [
                                 {
@@ -781,7 +820,7 @@
                                                 "text": "Card 2",
                                                 "fontSize": 13,
                                                 "fontWeight": "medium",
-                                                "color": "#CAC4D0"
+                                                "color": "@theme/onSurfaceVariant"
                                             }
                                         }
                                     ]
@@ -795,9 +834,15 @@
                                     "height": 36
                                 },
                                 "shape": "rounded_50",
-                                "containerColor": "#1D1B20",
+                                "containerColor": "@theme/surfaceContainerLow",
                                 "elevation": 0,
-                                "onClick": "cards_select_2"
+                                "onClick": {
+                                    "actionType": "callFunction",
+                                    "functionName": "selectCard",
+                                    "arguments": {
+                                        "index": 2
+                                    }
+                                }
                             },
                             "children": [
                                 {
@@ -818,7 +863,7 @@
                                                 "text": "Card 3",
                                                 "fontSize": 13,
                                                 "fontWeight": "medium",
-                                                "color": "#CAC4D0"
+                                                "color": "@theme/onSurfaceVariant"
                                             }
                                         }
                                     ]
@@ -854,13 +899,19 @@
                         "text": "Card Activity",
                         "fontSize": 17,
                         "fontWeight": "semiBold",
-                        "color": "#E6E0E9"
+                        "color": "@theme/onSurface"
                     }
                 },
                 {
                     "type": "Button",
                     "props": {
-                        "onClick": "cards_view_all",
+                        "onClick": {
+                            "actionType": "callFunction",
+                            "functionName": "showToast",
+                            "arguments": {
+                                "message": "View all card activity"
+                            }
+                        },
                         "containerColor": "#00000000",
                         "elevation": 0
                     },
@@ -871,7 +922,7 @@
                                 "text": "View All",
                                 "fontSize": 13,
                                 "fontWeight": "medium",
-                                "color": "#D0BCFF"
+                                "color": "@theme/primary"
                             }
                         }
                     ]

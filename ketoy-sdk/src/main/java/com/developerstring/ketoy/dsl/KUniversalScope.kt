@@ -12,6 +12,15 @@ import com.developerstring.ketoy.util.KIconRef
 import com.developerstring.ketoy.util.KShapes
 import com.developerstring.ketoy.util.KSnackBarDuration
 import com.developerstring.ketoy.util.KTopAppBarType
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonObject
+import kotlinx.serialization.json.JsonPrimitive
+import kotlinx.serialization.json.booleanOrNull
+import kotlinx.serialization.json.contentOrNull
+import kotlinx.serialization.json.doubleOrNull
+import kotlinx.serialization.json.intOrNull
+import kotlinx.serialization.json.jsonObject
+import kotlinx.serialization.json.jsonPrimitive
 
 // ─────────────────────────────────────────────────────────────
 //  Base scope
@@ -135,17 +144,16 @@ open class KUniversalScope : KScope() {
      * @param content        Lambda with [KUniversalScope] receiver for the button’s children.
      */
     fun KButton(
-        modifier: KModifier? = null, onClick: () -> Unit = {},
+        modifier: KModifier? = null, onClick: (() -> Unit)? = null,
+        onClickAction: JsonElement? = null,
         enabled: Boolean? = null, containerColor: String? = null,
         contentColor: String? = null, elevation: Int? = null,
         shape: String? = null, actionId: String? = null,
         content: KUniversalScope.() -> Unit = {}
     ) {
-        val resolvedId = if (actionId != null) {
-            ActionRegistry.registerAction(actionId, onClick); actionId
-        } else ActionRegistry.register(onClick)
+        val resolvedOnClick: JsonElement = resolveOnClick(onClickAction, onClick, actionId)
         val scope = KUniversalScope().apply(content)
-        addChild(KButtonNode(KButtonProps(modifier, resolvedId, enabled, containerColor, contentColor, elevation, shape), scope.children))
+        addChild(KButtonNode(KButtonProps(modifier, resolvedOnClick, enabled, containerColor, contentColor, elevation, shape), scope.children))
     }
 
     // ── Column ──────────────────────────────────────────
@@ -481,7 +489,8 @@ open class KUniversalScope : KScope() {
      * @param content                 Lambda for additional custom content.
      */
     fun KIconButton(
-        icon: String = "", onClick: () -> Unit = {},
+        icon: String = "", onClick: (() -> Unit)? = null,
+        onClickAction: JsonElement? = null,
         modifier: KModifier? = null, enabled: Boolean? = null,
         iconSize: Int? = null, iconColor: String? = null,
         iconStyle: String? = null, containerColor: String? = null,
@@ -490,12 +499,10 @@ open class KUniversalScope : KScope() {
         actionId: String? = null,
         content: KUniversalScope.() -> Unit = {}
     ) {
-        val resolvedId = if (actionId != null) {
-            ActionRegistry.registerAction(actionId, onClick); actionId
-        } else ActionRegistry.register(onClick)
+        val resolvedOnClick: JsonElement = resolveOnClick(onClickAction, onClick, actionId)
         val scope = KUniversalScope().apply(content)
         addChild(KIconButtonNode(
-            KIconButtonProps(icon, modifier, resolvedId, enabled, iconSize, iconColor, iconStyle,
+            KIconButtonProps(icon, modifier, resolvedOnClick, enabled, iconSize, iconColor, iconStyle,
                 containerColor, contentColor, disabledContainerColor, disabledContentColor, contentDescription),
             scope.children
         ))
@@ -524,7 +531,8 @@ open class KUniversalScope : KScope() {
      * @param content                 Lambda for additional custom content.
      */
     fun KIconButton(
-        icon: KIconRef, onClick: () -> Unit = {},
+        icon: KIconRef, onClick: (() -> Unit)? = null,
+        onClickAction: JsonElement? = null,
         modifier: KModifier? = null, enabled: Boolean? = null,
         iconSize: Int? = null, iconColor: String? = null,
         containerColor: String? = null, contentColor: String? = null,
@@ -532,12 +540,10 @@ open class KUniversalScope : KScope() {
         contentDescription: String? = null, actionId: String? = null,
         content: KUniversalScope.() -> Unit = {}
     ) {
-        val resolvedId = if (actionId != null) {
-            ActionRegistry.registerAction(actionId, onClick); actionId
-        } else ActionRegistry.register(onClick)
+        val resolvedOnClick: JsonElement = resolveOnClick(onClickAction, onClick, actionId)
         val scope = KUniversalScope().apply(content)
         addChild(KIconButtonNode(
-            KIconButtonProps(icon.name, modifier, resolvedId, enabled, iconSize, iconColor, icon.style,
+            KIconButtonProps(icon.name, modifier, resolvedOnClick, enabled, iconSize, iconColor, icon.style,
                 containerColor, contentColor, disabledContainerColor, disabledContentColor, contentDescription),
             scope.children
         ))
@@ -580,14 +586,12 @@ open class KUniversalScope : KScope() {
         modifier: KModifier? = null, shape: String? = null,
         containerColor: String? = null, contentColor: String? = null,
         elevation: Int? = null, border: KBorder? = null,
-        onClick: (() -> Unit)? = null, enabled: Boolean? = null,
-        actionId: String? = null,
+        onClick: (() -> Unit)? = null, onClickAction: JsonElement? = null,
+        enabled: Boolean? = null, actionId: String? = null,
         content: KUniversalScope.() -> Unit
     ) {
-        val resolvedOnClick = if (onClick != null) {
-            if (actionId != null) {
-                ActionRegistry.registerAction(actionId, onClick); actionId
-            } else ActionRegistry.register(onClick)
+        val resolvedOnClick: JsonElement? = if (onClickAction != null || onClick != null) {
+            resolveOnClick(onClickAction, onClick, actionId)
         } else null
         val node = KCardNode(KCardProps(
             modifier, shape ?: KShapes.Rounded12, containerColor, contentColor,
@@ -711,61 +715,99 @@ open class KUniversalScope : KScope() {
         KComponent(name = name, properties = properties, modifier = modifier)
     }
 
+    // ── onClick resolution helper ──────────────────────
+
+    /**
+     * Resolves an onClick value for storage in widget props.
+     *
+     * Prefers [onClickAction] (a [JsonElement] action object) over a raw [onClick] lambda.
+     * When [onClickAction] is a `callFunction` action object, a local handler is
+     * also registered in [ActionRegistry] so that DSL-local clicks work immediately.
+     *
+     * @param onClickAction A JSON action object (e.g. from [KFunctionAction]).
+     * @param onClick       A plain Kotlin lambda (legacy API).
+     * @param actionId      Optional custom action ID for [ActionRegistry].
+     * @return A [JsonElement] suitable for storing in props.
+     */
+    private fun resolveOnClick(
+        onClickAction: JsonElement?,
+        onClick: (() -> Unit)?,
+        actionId: String?
+    ): JsonElement = when {
+        onClickAction != null -> {
+            // Register a local handler so DSL-built UI works without JSON round-trip
+            if (onClickAction is JsonObject) {
+                val actionType = onClickAction["actionType"]?.jsonPrimitive?.contentOrNull
+                if (actionType == "callFunction") {
+                    val fn = onClickAction["functionName"]?.jsonPrimitive?.contentOrNull ?: ""
+                    val argsJson = onClickAction["arguments"]?.jsonObject
+                    val params = mutableMapOf<String, Any>()
+                    argsJson?.forEach { (k, v) ->
+                        if (v is JsonPrimitive) {
+                            when {
+                                v.isString -> params[k] = v.content
+                                v.booleanOrNull != null -> params[k] = v.booleanOrNull!!
+                                v.intOrNull != null -> params[k] = v.intOrNull!!
+                                v.doubleOrNull != null -> params[k] = v.doubleOrNull!!
+                                else -> params[k] = v.content
+                            }
+                        }
+                    }
+                    val handler: () -> Unit = { KetoyFunctionRegistry.call(fn, params) }
+                    if (actionId != null) ActionRegistry.registerAction(actionId, handler)
+                    else ActionRegistry.register(handler)
+                }
+            }
+            onClickAction
+        }
+        onClick != null -> {
+            val id = if (actionId != null) {
+                ActionRegistry.registerAction(actionId, onClick); actionId
+            } else ActionRegistry.register(onClick)
+            JsonPrimitive(id)
+        }
+        else -> JsonPrimitive("function")
+    }
+
     // ── Function call (for onClick / server-driven actions) ──
 
     /**
-     * Creates an onClick action that calls a registered [KetoyFunctionRegistry] function.
+     * Directly calls a registered [KetoyFunctionRegistry] function.
      *
-     * Returns the action ID string for use in onClick props. The function is
-     * invoked at render time when the user taps the component.
-     *
+     * Use inside `onClick` lambdas for DSL-local execution:
      * ```kotlin
-     * KButton(
-     *     onClick = { KetoyFunctionRegistry.call("addToCart", mapOf("id" to "123")) },
-     *     actionId = "add_to_cart_btn"
-     * ) {
-     *     KText("Add to Cart")
+     * KButton(onClick = { KFunctionCall("showToast", "message" to "Hello") }) {
+     *     KText("Click me")
      * }
      * ```
      *
-     * Or use [KFunctionCall] to generate an onClick that maps directly
-     * to a registered function, which serialises to JSON so the server
-     * can trigger the same function:
-     *
-     * ```kotlin
-     * val onClickId = KFunctionCall("addToCart", "id" to "SKU-123", "quantity" to 2)
-     * ```
+     * **Prefer [KFunctionAction] with `onClickAction`** for production use —
+     * it serializes the function call into JSON so it also works when the
+     * JSON is loaded from Cloud / export.
      *
      * @param functionName Name of the function registered in [KetoyFunctionRegistry].
      * @param arguments    Key-value pairs passed as function arguments.
-     * @return The generated action ID string.
      */
     fun KFunctionCall(
         functionName: String,
         vararg arguments: Pair<String, Any>
-    ): String {
-        val args = mapOf(*arguments)
-        return ActionRegistry.register {
-            KetoyFunctionRegistry.call(functionName, args)
-        }
+    ) {
+        KetoyFunctionRegistry.call(functionName, mapOf(*arguments))
     }
 
     /**
-     * Creates an onClick action from a function name + argument map.
+     * Directly calls a registered [KetoyFunctionRegistry] function.
      *
      * Overload of [KFunctionCall] that accepts a pre-built `Map` instead of vararg pairs.
      *
      * @param functionName Name of the function registered in [KetoyFunctionRegistry].
      * @param arguments    Argument map passed to the function (defaults to empty).
-     * @return The generated action ID string.
      */
     fun KFunctionCall(
         functionName: String,
         arguments: Map<String, Any> = emptyMap()
-    ): String {
-        return ActionRegistry.register {
-            KetoyFunctionRegistry.call(functionName, arguments)
-        }
+    ) {
+        KetoyFunctionRegistry.call(functionName, arguments)
     }
 
     // ── Scaffold ────────────────────────────────────────
@@ -994,7 +1036,7 @@ open class KUniversalScope : KScope() {
         val resolvedId = if (actionId != null) {
             ActionRegistry.registerAction(actionId, onClick); actionId
         } else ActionRegistry.register(onClick)
-        addChild(KFloatingActionButtonNode(KFloatingActionButtonProps(modifier, resolvedId, shape ?: KShapes.Circle, containerColor, contentColor, elevation, interactionSource, type ?: KFabType.Regular), scope.children))
+        addChild(KFloatingActionButtonNode(KFloatingActionButtonProps(modifier, JsonPrimitive(resolvedId), shape ?: KShapes.Circle, containerColor, contentColor, elevation, interactionSource, type ?: KFabType.Regular), scope.children))
     }
 
     // ── SnackBar ────────────────────────────────────────
@@ -1083,7 +1125,7 @@ open class KUniversalScope : KScope() {
         val body = KUniversalScope().apply(content)
         val dragNodes = dragHandle?.let { KUniversalScope().apply(it).children }
         addChild(KModalBottomSheetNode(
-            KModalBottomSheetProps(modifier, resolvedId, null, shape, containerColor, contentColor, tonalElevation, scrimColor, dragNodes),
+            KModalBottomSheetProps(modifier, JsonPrimitive(resolvedId), null, shape, containerColor, contentColor, tonalElevation, scrimColor, dragNodes),
             body.children
         ))
     }
@@ -1165,6 +1207,39 @@ open class KUniversalScope : KScope() {
         repeat(times) { content(it) }
     }
 
+    // ── Data-bound list ─────────────────────────────────
+
+    /**
+     * Adds a data-bound list node whose [content] template is repeated
+     * at render time for each item in the [dataSource].
+     *
+     * During export the template children contain `{{data:itemAlias:field}}`
+     * placeholders. At runtime the SDK reads the list count from
+     * `"$dataSource.count"` and per-item fields from `"$dataSource.$index.$field"`,
+     * then substitutes them for each repetition.
+     *
+     * ```kotlin
+     * KDataList("user.transactions", "txn") {
+     *     KComponent("TransactionRow", mapOf(
+     *         "title" to "{{data:txn:title}}",
+     *         "amount" to "{{data:txn:amount}}"
+     *     ))
+     * }
+     * ```
+     *
+     * @param dataSource  Registry key prefix (e.g., `"user.transactions"`).
+     * @param itemAlias   Template alias for the current item (default `"item"`).
+     * @param content     Lambda building the template children for one item.
+     */
+    fun KDataList(
+        dataSource: String,
+        itemAlias: String = "item",
+        content: KUniversalScope.() -> Unit
+    ) {
+        val body = KUniversalScope().apply(content)
+        addChild(KDataListNode(KDataListProps(dataSource, itemAlias), body.children))
+    }
+
     // ── Data structures ─────────────────────────────────
 
     fun KDataClass(id: String, className: String, vararg fields: Pair<String, Any>) {
@@ -1189,8 +1264,9 @@ open class KUniversalScope : KScope() {
         actionId: String? = null
     ) {
         val resolvedId = onSelectionChange?.let { cb ->
-            if (actionId != null) { ActionRegistry.registerAction(actionId, cb); actionId }
+            val id = if (actionId != null) { ActionRegistry.registerAction(actionId, cb); actionId }
             else ActionRegistry.register(cb)
+            JsonPrimitive(id)
         }
         addChild(KEnumNode(KEnumProps(id, enumName, values, selectedValue, resolvedId)))
         KetoyVariableRegistry.register(KetoyVariable.Mutable("$id.selectedValue", selectedValue))

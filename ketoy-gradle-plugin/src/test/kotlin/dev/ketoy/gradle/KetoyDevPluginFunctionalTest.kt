@@ -42,7 +42,7 @@ class KetoyDevPluginFunctionalTest {
         buildFile.writeText(
             """
             plugins {
-                id("dev.ketoy.ketoy-dev")
+                id("dev.ketoy.devtools")
             }
             """.trimIndent()
         )
@@ -66,7 +66,7 @@ class KetoyDevPluginFunctionalTest {
         buildFile.writeText(
             """
             plugins {
-                id("dev.ketoy.ketoy-dev")
+                id("dev.ketoy.devtools")
             }
 
             ketoyDev {
@@ -112,7 +112,7 @@ class KetoyDevPluginFunctionalTest {
         buildFile.writeText(
             """
             plugins {
-                id("dev.ketoy.ketoy-dev")
+                id("dev.ketoy.devtools")
             }
 
             tasks.register("printConfig") {
@@ -151,7 +151,7 @@ class KetoyDevPluginFunctionalTest {
         buildFile.writeText(
             """
             plugins {
-                id("dev.ketoy.ketoy-dev")
+                id("dev.ketoy.devtools")
             }
             ketoyDev {
                 packageName.set("com.example.test")
@@ -173,7 +173,7 @@ class KetoyDevPluginFunctionalTest {
         buildFile.writeText(
             """
             plugins {
-                id("dev.ketoy.ketoy-dev")
+                id("dev.ketoy.devtools")
             }
             ketoyDev {
                 apiKey.set("test-key")
@@ -195,7 +195,7 @@ class KetoyDevPluginFunctionalTest {
         buildFile.writeText(
             """
             plugins {
-                id("dev.ketoy.ketoy-dev")
+                id("dev.ketoy.devtools")
             }
             ketoyDev {
                 apiKey.set("test-key")
@@ -221,7 +221,7 @@ class KetoyDevPluginFunctionalTest {
         buildFile.writeText(
             """
             plugins {
-                id("dev.ketoy.ketoy-dev")
+                id("dev.ketoy.devtools")
             }
             ketoyDev {
                 apiKey.set("test-key")
@@ -245,7 +245,7 @@ class KetoyDevPluginFunctionalTest {
         buildFile.writeText(
             """
             plugins {
-                id("dev.ketoy.ketoy-dev")
+                id("dev.ketoy.devtools")
             }
             ketoyDev {
                 apiKey.set("test-key")
@@ -267,7 +267,7 @@ class KetoyDevPluginFunctionalTest {
         buildFile.writeText(
             """
             plugins {
-                id("dev.ketoy.ketoy-dev")
+                id("dev.ketoy.devtools")
             }
             ketoyDev {
                 apiKey.set("test-key")
@@ -289,7 +289,7 @@ class KetoyDevPluginFunctionalTest {
         buildFile.writeText(
             """
             plugins {
-                id("dev.ketoy.ketoy-dev")
+                id("dev.ketoy.devtools")
             }
             ketoyDev {
                 apiKey.set("test-key")
@@ -311,7 +311,7 @@ class KetoyDevPluginFunctionalTest {
         buildFile.writeText(
             """
             plugins {
-                id("dev.ketoy.ketoy-dev")
+                id("dev.ketoy.devtools")
             }
             ketoyDev {
                 apiKey.set("test-key")
@@ -333,7 +333,7 @@ class KetoyDevPluginFunctionalTest {
         buildFile.writeText(
             """
             plugins {
-                id("dev.ketoy.ketoy-dev")
+                id("dev.ketoy.devtools")
             }
             ketoyDev {
                 apiKey.set("test-key")
@@ -355,7 +355,7 @@ class KetoyDevPluginFunctionalTest {
         buildFile.writeText(
             """
             plugins {
-                id("dev.ketoy.ketoy-dev")
+                id("dev.ketoy.devtools")
             }
             ketoyDev {
                 apiKey.set("test-key")
@@ -386,7 +386,7 @@ class KetoyDevPluginFunctionalTest {
         buildFile.writeText(
             """
             plugins {
-                id("dev.ketoy.ketoy-dev")
+                id("dev.ketoy.devtools")
             }
 
             ketoyDev {

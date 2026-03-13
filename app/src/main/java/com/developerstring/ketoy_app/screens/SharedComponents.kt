@@ -2,6 +2,7 @@ package com.developerstring.ketoy_app.screens
 
 import com.developerstring.ketoy.dsl.KUniversalScope
 import com.developerstring.ketoy.util.*
+import kotlinx.serialization.json.JsonElement
 
 /**
  * Build a KNode tree from a KUniversalScope DSL block.
@@ -83,26 +84,25 @@ object AppColors {
 
 fun com.developerstring.ketoy.dsl.KUniversalScope.quickAction(
     icon: String, label: String, bgColor: String, iconColor: String,
-    isDark: Boolean = false,
     actionId: String? = null,
-    onClick: () -> Unit
+    onClickAction: JsonElement? = null,
+    onClick: (() -> Unit)? = null
 ) {
     KColumn(verticalArrangement = KArrangements.spacedBy(8), horizontalAlignment = KAlignments.CenterHorizontally) {
         KCard(modifier = kModifier(size = 64), containerColor = bgColor, shape = KShapes.Rounded20, elevation = 0) {
             KBox(modifier = kModifier(fillMaxSize = 1f), contentAlignment = KAlignments.Center) {
-                KIconButton(icon = icon, iconColor = iconColor, iconSize = 28, onClick = onClick, actionId = actionId) {}
+                KIconButton(icon = icon, iconColor = iconColor, iconSize = 28, onClick = onClick, onClickAction = onClickAction, actionId = actionId) {}
             }
         }
-        KText(label, fontSize = 12, fontWeight = KFontWeights.Medium, color = AppColors.onSurfaceVariant(isDark))
+        KText(label, fontSize = 12, fontWeight = KFontWeights.Medium, color = KColors.OnSurfaceVariant)
     }
 }
 
 fun com.developerstring.ketoy.dsl.KUniversalScope.statCard(
     modifier: com.developerstring.ketoy.model.KModifier, icon: String, label: String, value: String, trend: String,
     iconBg: String, iconColor: String, trendColor: String,
-    isDark: Boolean = false
 ) {
-    KCard(modifier = modifier, containerColor = AppColors.cardBg(isDark), shape = KShapes.Rounded16, elevation = 1) {
+    KCard(modifier = modifier, containerColor = KColors.Surface, shape = KShapes.Rounded16, elevation = 1) {
         KColumn(modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(all = 16)), verticalArrangement = KArrangements.spacedBy(10)) {
             KRow(modifier = kModifier(fillMaxWidth = 1f), horizontalArrangement = KArrangements.SpaceBetween, verticalAlignment = KAlignments.CenterVertically) {
                 KBox(modifier = kModifier(size = 40, background = iconBg, shape = KShapes.Rounded12), contentAlignment = KAlignments.Center) {
@@ -110,8 +110,8 @@ fun com.developerstring.ketoy.dsl.KUniversalScope.statCard(
                 }
                 KText(trend, fontSize = 12, fontWeight = KFontWeights.Bold, color = trendColor)
             }
-            KText(label, fontSize = 12, color = AppColors.onSurfaceVariant(isDark))
-            KText(value, fontSize = 20, fontWeight = KFontWeights.Bold, color = AppColors.onSurface(isDark))
+            KText(label, fontSize = 12, color = KColors.OnSurfaceVariant)
+            KText(value, fontSize = 20, fontWeight = KFontWeights.Bold, color = KColors.OnSurface)
         }
     }
 }
@@ -120,7 +120,6 @@ fun com.developerstring.ketoy.dsl.KUniversalScope.walletCard(
     cardName: String, lastFour: String,
     balance: String, expiry: String,
     gradientColors: List<String>,
-    isDark: Boolean = false
 ) {
     KCard(modifier = kModifier(fillMaxWidth = 1f), shape = KShapes.Rounded24, elevation = 6) {
         KColumn(modifier = kModifier(fillMaxWidth = 1f, gradient = KGradients.linear(gradientColors, KGradients.Directions.Diagonal))) {
@@ -149,24 +148,24 @@ fun com.developerstring.ketoy.dsl.KUniversalScope.walletCard(
 
 fun com.developerstring.ketoy.dsl.KUniversalScope.profileItem(
     icon: String, label: String, bgColor: String, iconColor: String,
-    isDark: Boolean = false,
     actionId: String? = null,
-    onClick: () -> Unit
+    onClickAction: JsonElement? = null,
+    onClick: (() -> Unit)? = null
 ) {
     KCard(modifier = kModifier(fillMaxWidth = 1f), containerColor = bgColor, shape = KShapes.Rounded16, elevation = 0,
-        onClick = onClick, actionId = actionId) {
+        onClick = onClick, onClickAction = onClickAction, actionId = actionId) {
         KRow(
             modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 16, vertical = 14)),
             horizontalArrangement = KArrangements.SpaceBetween,
             verticalAlignment = KAlignments.CenterVertically
         ) {
             KRow(horizontalArrangement = KArrangements.spacedBy(14), verticalAlignment = KAlignments.CenterVertically) {
-                KBox(modifier = kModifier(size = 42, background = AppColors.primaryContainer(isDark), shape = KShapes.Rounded12), contentAlignment = KAlignments.Center) {
+                KBox(modifier = kModifier(size = 42, background = KColors.PrimaryContainer, shape = KShapes.Rounded12), contentAlignment = KAlignments.Center) {
                     KIcon(icon = icon, size = 22, color = iconColor)
                 }
-                KText(label, fontSize = 15, fontWeight = KFontWeights.Medium, color = AppColors.onSurface(isDark))
+                KText(label, fontSize = 15, fontWeight = KFontWeights.Medium, color = KColors.OnSurface)
             }
-            KIcon(icon = KIcons.ChevronRight, size = 20, color = AppColors.outline(isDark))
+            KIcon(icon = KIcons.ChevronRight, size = 20, color = KColors.Outline)
         }
     }
 }
@@ -174,9 +173,8 @@ fun com.developerstring.ketoy.dsl.KUniversalScope.profileItem(
 fun com.developerstring.ketoy.dsl.KUniversalScope.categoryRow(
     icon: String, category: String, amount: String,
     iconBg: String, iconColor: String,
-    isDark: Boolean = false
 ) {
-    KCard(modifier = kModifier(fillMaxWidth = 1f), containerColor = AppColors.cardBg(isDark), shape = KShapes.Rounded16, elevation = 0) {
+    KCard(modifier = kModifier(fillMaxWidth = 1f), containerColor = KColors.Surface, shape = KShapes.Rounded16, elevation = 0) {
         KRow(
             modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 16, vertical = 14)),
             horizontalArrangement = KArrangements.SpaceBetween, verticalAlignment = KAlignments.CenterVertically
@@ -185,9 +183,9 @@ fun com.developerstring.ketoy.dsl.KUniversalScope.categoryRow(
                 KBox(modifier = kModifier(size = 42, background = iconBg, shape = KShapes.Rounded12), contentAlignment = KAlignments.Center) {
                     KIcon(icon = icon, size = 22, color = iconColor)
                 }
-                KText(category, fontSize = 15, fontWeight = KFontWeights.Medium, color = AppColors.onSurface(isDark))
+                KText(category, fontSize = 15, fontWeight = KFontWeights.Medium, color = KColors.OnSurface)
             }
-            KText(amount, fontSize = 15, fontWeight = KFontWeights.Bold, color = AppColors.onSurfaceVariant(isDark))
+            KText(amount, fontSize = 15, fontWeight = KFontWeights.Bold, color = KColors.OnSurfaceVariant)
         }
     }
 }

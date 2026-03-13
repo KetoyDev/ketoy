@@ -115,7 +115,7 @@ class KetoyJsonUtilsTest {
     @Test
     fun `modifier with scroll fields serialises correctly`() {
         val node = KColumnNode(
-            KColumnProps(modifier = KModifier(verticalScroll = true, horizontalScroll = true))
+            KColumnProps(modifier = KModifier(verticalScroll = KScrollConfig.Default, horizontalScroll = KScrollConfig.Default))
         )
         val json = node.toJson()
         assertTrue(json.contains("\"verticalScroll\""))

@@ -618,3 +618,34 @@ data class KDataClassNode(val props: KDataClassProps = KDataClassProps()) : KNod
  */
 @Serializable @SerialName("Enum")
 data class KEnumNode(val props: KEnumProps = KEnumProps()) : KNode()
+
+/**
+ * A data-bound list node that repeats its [children] template for each item
+ * in the data source at render time.
+ *
+ * At export time the children contain `{{data:itemAlias:field}}` template
+ * placeholders. At render time the SDK reads the list from
+ * [KetoyVariableRegistry][com.developerstring.ketoy.core.KetoyVariableRegistry]
+ * using [props.dataSource] and repeats the child template for each item,
+ * substituting `itemAlias.field` variables.
+ *
+ * ## JSON Wire Format
+ * ```json
+ * {
+ *   "type": "DataList",
+ *   "props": { "dataSource": "user.transactions", "itemAlias": "item" },
+ *   "children": [
+ *     { "type": "Component", "props": { "componentName": "TransactionRow", "properties": { "title": "{{data:item:title}}" } } }
+ *   ]
+ * }
+ * ```
+ *
+ * @property props     Data-list configuration: source key and item alias.
+ * @property children  The template nodes repeated for each data item.
+ * @see com.developerstring.ketoy.core.KetoyVariableRegistry
+ */
+@Serializable @SerialName("DataList")
+data class KDataListNode(
+    val props: KDataListProps = KDataListProps(),
+    val children: List<KNode> = emptyList()
+) : KNode()

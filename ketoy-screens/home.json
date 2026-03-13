@@ -1,6 +1,7 @@
 {
   "screenName": "home",
   "displayName": "Home",
+  "description": "Main dashboard with balance and transactions",
   "version": "1.0.0",
   "contents": {
     "cards": {
@@ -33,7 +34,7 @@
                     "props": {
                         "fontSize": 24,
                         "fontWeight": "bold",
-                        "color": "#E6E0E9",
+                        "color": "@theme/onSurface",
                         "textAlign": "center",
                         "maxLines": 1
                     }
@@ -51,13 +52,13 @@
                                 "name": "AvatarBadge",
                                 "componentName": "AvatarBadge",
                                 "properties": {
-                                    "initials": "Te",
-                                    "badgeCount": 3,
+                                    "initials": "{{data:user:name}}",
+                                    "badgeCount": "{{data:user:notificationCount}}",
                                     "size": 48
                                 },
                                 "props": {
-                                    "initials": "Te",
-                                    "badgeCount": 3,
+                                    "initials": "{{data:user:name}}",
+                                    "badgeCount": "{{data:user:notificationCount}}",
                                     "size": 48
                                 }
                             }
@@ -71,18 +72,10 @@
                                 {
                                     "type": "Text",
                                     "props": {
-                                        "text": "Good morning, hello",
-                                        "fontSize": 13,
-                                        "color": "#CAC4D0"
-                                    }
-                                },
-                                {
-                                    "type": "Text",
-                                    "props": {
-                                        "text": "Test User",
+                                        "text": "{{data:user:name}}",
                                         "fontSize": 20,
                                         "fontWeight": "bold",
-                                        "color": "#E6E0E9"
+                                        "color": "@theme/onSurface"
                                     }
                                 }
                             ]
@@ -93,9 +86,12 @@
                     "type": "IconButton",
                     "props": {
                         "icon": "notifications_none",
-                        "onClick": "home_clear_notifs",
+                        "onClick": {
+                            "actionType": "callFunction",
+                            "functionName": "clearNotifications"
+                        },
                         "iconSize": 26,
-                        "iconColor": "#E6E0E9"
+                        "iconColor": "@theme/onSurface"
                     }
                 }
             ]
@@ -124,13 +120,13 @@
                         "componentName": "BalanceDisplay",
                         "properties": {
                             "label": "Total Balance",
-                            "amount": "$12,450.00",
+                            "amount": "{{data:user:totalBalance}}",
                             "trend": "+12.5% this month",
                             "trendPositive": true
                         },
                         "props": {
                             "label": "Total Balance",
-                            "amount": "$12,450.00",
+                            "amount": "{{data:user:totalBalance}}",
                             "trend": "+12.5% this month",
                             "trendPositive": true
                         }
@@ -170,7 +166,7 @@
                                     "size": 64
                                 },
                                 "shape": "rounded_20",
-                                "containerColor": "#4F378B",
+                                "containerColor": "@theme/primaryContainer",
                                 "elevation": 0
                             },
                             "children": [
@@ -187,9 +183,16 @@
                                             "type": "IconButton",
                                             "props": {
                                                 "icon": "send",
-                                                "onClick": "home_send",
+                                                "onClick": {
+                                                    "actionType": "callFunction",
+                                                    "functionName": "sendMoney",
+                                                    "arguments": {
+                                                        "amount": 50.0,
+                                                        "recipient": "Alex"
+                                                    }
+                                                },
                                                 "iconSize": 28,
-                                                "iconColor": "#D0BCFF"
+                                                "iconColor": "@theme/primary"
                                             }
                                         }
                                     ]
@@ -202,7 +205,7 @@
                                 "text": "Send",
                                 "fontSize": 12,
                                 "fontWeight": "medium",
-                                "color": "#CAC4D0"
+                                "color": "@theme/onSurfaceVariant"
                             }
                         }
                     ]
@@ -221,7 +224,7 @@
                                     "size": 64
                                 },
                                 "shape": "rounded_20",
-                                "containerColor": "#4A4458",
+                                "containerColor": "@theme/secondaryContainer",
                                 "elevation": 0
                             },
                             "children": [
@@ -238,9 +241,15 @@
                                             "type": "IconButton",
                                             "props": {
                                                 "icon": "download",
-                                                "onClick": "home_receive",
+                                                "onClick": {
+                                                    "actionType": "callFunction",
+                                                    "functionName": "showToast",
+                                                    "arguments": {
+                                                        "message": "Receive link copied"
+                                                    }
+                                                },
                                                 "iconSize": 28,
-                                                "iconColor": "#CCC5DC"
+                                                "iconColor": "@theme/onSecondaryContainer"
                                             }
                                         }
                                     ]
@@ -253,7 +262,7 @@
                                 "text": "Receive",
                                 "fontSize": 12,
                                 "fontWeight": "medium",
-                                "color": "#CAC4D0"
+                                "color": "@theme/onSurfaceVariant"
                             }
                         }
                     ]
@@ -272,7 +281,7 @@
                                     "size": 64
                                 },
                                 "shape": "rounded_20",
-                                "containerColor": "#633B48",
+                                "containerColor": "@theme/tertiaryContainer",
                                 "elevation": 0
                             },
                             "children": [
@@ -289,9 +298,15 @@
                                             "type": "IconButton",
                                             "props": {
                                                 "icon": "swap_horiz",
-                                                "onClick": "home_swap",
+                                                "onClick": {
+                                                    "actionType": "callFunction",
+                                                    "functionName": "showToast",
+                                                    "arguments": {
+                                                        "message": "Swap feature coming soon"
+                                                    }
+                                                },
                                                 "iconSize": 28,
-                                                "iconColor": "#EFB8C8"
+                                                "iconColor": "@theme/onTertiaryContainer"
                                             }
                                         }
                                     ]
@@ -304,7 +319,7 @@
                                 "text": "Swap",
                                 "fontSize": 12,
                                 "fontWeight": "medium",
-                                "color": "#CAC4D0"
+                                "color": "@theme/onSurfaceVariant"
                             }
                         }
                     ]
@@ -323,7 +338,7 @@
                                     "size": 64
                                 },
                                 "shape": "rounded_20",
-                                "containerColor": "#1D1B20",
+                                "containerColor": "@theme/surfaceContainerLow",
                                 "elevation": 0
                             },
                             "children": [
@@ -340,9 +355,15 @@
                                             "type": "IconButton",
                                             "props": {
                                                 "icon": "more_horiz",
-                                                "onClick": "home_more",
+                                                "onClick": {
+                                                    "actionType": "callFunction",
+                                                    "functionName": "showToast",
+                                                    "arguments": {
+                                                        "message": "More options"
+                                                    }
+                                                },
                                                 "iconSize": 28,
-                                                "iconColor": "#CAC4D0"
+                                                "iconColor": "@theme/onSurfaceVariant"
                                             }
                                         }
                                     ]
@@ -355,7 +376,7 @@
                                 "text": "More",
                                 "fontSize": 12,
                                 "fontWeight": "medium",
-                                "color": "#CAC4D0"
+                                "color": "@theme/onSurfaceVariant"
                             }
                         }
                     ]
@@ -387,7 +408,7 @@
                             "weight": 1.0
                         },
                         "shape": "rounded_16",
-                        "containerColor": "#2B2930",
+                        "containerColor": "@theme/surface",
                         "elevation": 1
                     },
                     "children": [
@@ -418,7 +439,7 @@
                                             "props": {
                                                 "modifier": {
                                                     "size": 40,
-                                                    "background": "#0A5C30",
+                                                    "background": "@theme/successContainer",
                                                     "shape": "rounded_12"
                                                 },
                                                 "contentAlignment": "center"
@@ -429,7 +450,7 @@
                                                     "props": {
                                                         "icon": "trending_up",
                                                         "size": 22,
-                                                        "color": "#6DD58C"
+                                                        "color": "@theme/success"
                                                     }
                                                 }
                                             ]
@@ -440,7 +461,7 @@
                                                 "text": "+8.2%",
                                                 "fontSize": 12,
                                                 "fontWeight": "bold",
-                                                "color": "#6DD58C"
+                                                "color": "@theme/success"
                                             }
                                         }
                                     ]
@@ -450,16 +471,16 @@
                                     "props": {
                                         "text": "Income",
                                         "fontSize": 12,
-                                        "color": "#CAC4D0"
+                                        "color": "@theme/onSurfaceVariant"
                                     }
                                 },
                                 {
                                     "type": "Text",
                                     "props": {
-                                        "text": "$4,200.00",
+                                        "text": "{{data:user:income}}",
                                         "fontSize": 20,
                                         "fontWeight": "bold",
-                                        "color": "#E6E0E9"
+                                        "color": "@theme/onSurface"
                                     }
                                 }
                             ]
@@ -498,13 +519,19 @@
                         "text": "Recent Transactions",
                         "fontSize": 17,
                         "fontWeight": "semiBold",
-                        "color": "#E6E0E9"
+                        "color": "@theme/onSurface"
                     }
                 },
                 {
                     "type": "Button",
                     "props": {
-                        "onClick": "home_see_all",
+                        "onClick": {
+                            "actionType": "callFunction",
+                            "functionName": "showToast",
+                            "arguments": {
+                                "message": "View all transactions"
+                            }
+                        },
                         "containerColor": "#00000000",
                         "elevation": 0
                     },
@@ -515,7 +542,7 @@
                                 "text": "See All",
                                 "fontSize": 13,
                                 "fontWeight": "medium",
-                                "color": "#D0BCFF"
+                                "color": "@theme/primary"
                             }
                         }
                     ]
@@ -542,61 +569,32 @@
             },
             "children": [
                 {
-                    "type": "Component",
+                    "type": "DataList",
                     "props": {
-                        "name": "TransactionRow",
-                        "componentName": "TransactionRow",
-                        "properties": {
-                            "title": "Salary",
-                            "subtitle": "Today",
-                            "amount": "+$4,200.00",
-                            "isIncome": true
-                        },
-                        "props": {
-                            "title": "Salary",
-                            "subtitle": "Today",
-                            "amount": "+$4,200.00",
-                            "isIncome": true
+                        "dataSource": "user.transactions",
+                        "itemAlias": "txn"
+                    },
+                    "children": [
+                        {
+                            "type": "Component",
+                            "props": {
+                                "name": "TransactionRow",
+                                "componentName": "TransactionRow",
+                                "properties": {
+                                    "title": "{{data:txn:title}}",
+                                    "subtitle": "{{data:txn:subtitle}}",
+                                    "amount": "{{data:txn:amount}}",
+                                    "isIncome": "{{data:txn:isIncome}}"
+                                },
+                                "props": {
+                                    "title": "{{data:txn:title}}",
+                                    "subtitle": "{{data:txn:subtitle}}",
+                                    "amount": "{{data:txn:amount}}",
+                                    "isIncome": "{{data:txn:isIncome}}"
+                                }
+                            }
                         }
-                    }
-                },
-                {
-                    "type": "Component",
-                    "props": {
-                        "name": "TransactionRow",
-                        "componentName": "TransactionRow",
-                        "properties": {
-                            "title": "Groceries",
-                            "subtitle": "Yesterday",
-                            "amount": "-$85.50",
-                            "isIncome": false
-                        },
-                        "props": {
-                            "title": "Groceries",
-                            "subtitle": "Yesterday",
-                            "amount": "-$85.50",
-                            "isIncome": false
-                        }
-                    }
-                },
-                {
-                    "type": "Component",
-                    "props": {
-                        "name": "TransactionRow",
-                        "componentName": "TransactionRow",
-                        "properties": {
-                            "title": "Netflix",
-                            "subtitle": "Feb 1",
-                            "amount": "-$15.99",
-                            "isIncome": false
-                        },
-                        "props": {
-                            "title": "Netflix",
-                            "subtitle": "Feb 1",
-                            "amount": "-$15.99",
-                            "isIncome": false
-                        }
-                    }
+                    ]
                 }
             ]
         }

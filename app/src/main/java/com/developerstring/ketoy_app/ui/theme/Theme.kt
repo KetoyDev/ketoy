@@ -10,6 +10,7 @@ import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.graphics.Color
 import com.developerstring.ketoy.theme.KetoyThemeProvider
 
 private val DarkColorScheme = darkColorScheme(
@@ -55,8 +56,19 @@ fun KetoyTheme(
         colorScheme = colorScheme,
         typography = Typography,
     ) {
+        val customColors = if (darkTheme) mapOf(
+            "success" to Color(0xFF6DD58C),
+            "successContainer" to Color(0xFF0A5C30),
+            "onSuccess" to Color(0xFF003919),
+            "onSuccessContainer" to Color(0xFF6DD58C),
+        ) else mapOf(
+            "success" to Color(0xFF1B7D46),
+            "successContainer" to Color(0xFFA8F5C4),
+            "onSuccess" to Color(0xFFFFFFFF),
+            "onSuccessContainer" to Color(0xFF002110),
+        )
         // Provide Ketoy SDK's dark-theme flag & colour scheme
-        KetoyThemeProvider {
+        KetoyThemeProvider(customColors = customColors) {
             content()
         }
     }

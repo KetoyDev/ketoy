@@ -79,6 +79,21 @@ object KColors {
     /** Theme-aware reference for `MaterialTheme.colorScheme.surfaceTint`. */
     const val SurfaceTint = "@theme/surfaceTint"
 
+    // ── Surface container variants ──────────────────────
+    const val SurfaceContainer = "@theme/surfaceContainer"
+    const val SurfaceContainerLow = "@theme/surfaceContainerLow"
+    const val SurfaceContainerHigh = "@theme/surfaceContainerHigh"
+    const val SurfaceContainerHighest = "@theme/surfaceContainerHighest"
+    const val SurfaceContainerLowest = "@theme/surfaceContainerLowest"
+    const val SurfaceBright = "@theme/surfaceBright"
+    const val SurfaceDim = "@theme/surfaceDim"
+
+    // ── Semantic success tokens (custom — not in Material 3) ──
+    const val Success = "@theme/success"
+    const val OnSuccess = "@theme/onSuccess"
+    const val SuccessContainer = "@theme/successContainer"
+    const val OnSuccessContainer = "@theme/onSuccessContainer"
+
     /**
      * Normalises a raw hex colour string into the `#AARRGGBB` format.
      *

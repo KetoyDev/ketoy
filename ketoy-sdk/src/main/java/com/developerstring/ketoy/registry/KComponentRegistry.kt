@@ -1,6 +1,5 @@
 package com.developerstring.ketoy.registry
 
-import android.util.Log
 import com.developerstring.ketoy.model.KComponentInfo
 import com.developerstring.ketoy.model.KComponentMetadata
 
@@ -76,7 +75,7 @@ object KComponentRegistry {
             className = info.className,
             version = info.version
         )
-        Log.d(TAG, "Registered component '${info.name}'")
+        println("$TAG: Registered component '${info.name}'")
     }
 
     /**
@@ -185,19 +184,19 @@ object KComponentRegistry {
                 val registerMethod = clazz.getDeclaredMethod("register")
                 registerMethod.invoke(null)
                 if (isAvailable(metadata.name)) {
-                    Log.d(TAG, "Loaded component '${metadata.name}' via reflection from $fqn")
+                    println("$TAG: Loaded component '${metadata.name}' via reflection from $fqn")
                     return true
                 }
             } catch (e: ClassNotFoundException) {
-                Log.w(TAG, "Component class not found: $fqn")
+                println("$TAG: Component class not found: $fqn")
             } catch (e: NoSuchMethodException) {
-                Log.w(TAG, "No register() method in: $fqn")
+                println("$TAG: No register() method in: $fqn")
             } catch (e: Exception) {
-                Log.w(TAG, "Failed to load component '${metadata.name}' from $fqn: ${e.message}")
+                println("$TAG: Failed to load component '${metadata.name}' from $fqn: ${e.message}")
             }
         }
 
-        Log.w(TAG, "Could not load component '${metadata.name}' from metadata")
+        println("$TAG: Could not load component '${metadata.name}' from metadata")
         return false
     }
 

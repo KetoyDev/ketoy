@@ -30,6 +30,16 @@
             },
             "children": [
                 {
+                    "type": "Text",
+                    "props": {
+                        "fontSize": 24,
+                        "fontWeight": "bold",
+                        "color": "@theme/onSurface",
+                        "textAlign": "center",
+                        "maxLines": 1
+                    }
+                },
+                {
                     "type": "Row",
                     "props": {
                         "horizontalArrangement": "spacedBy_14",
@@ -42,13 +52,13 @@
                                 "name": "AvatarBadge",
                                 "componentName": "AvatarBadge",
                                 "properties": {
-                                    "initials": "{{",
-                                    "badgeCount": 0,
+                                    "initials": "{{data:user:name}}",
+                                    "badgeCount": "{{data:user:notificationCount}}",
                                     "size": 48
                                 },
                                 "props": {
-                                    "initials": "{{",
-                                    "badgeCount": 0,
+                                    "initials": "{{data:user:name}}",
+                                    "badgeCount": "{{data:user:notificationCount}}",
                                     "size": 48
                                 }
                             }
@@ -62,18 +72,10 @@
                                 {
                                     "type": "Text",
                                     "props": {
-                                        "text": "Good morning, hello",
-                                        "fontSize": 13,
-                                        "color": "#49454F"
-                                    }
-                                },
-                                {
-                                    "type": "Text",
-                                    "props": {
                                         "text": "{{data:user:name}}",
                                         "fontSize": 20,
                                         "fontWeight": "bold",
-                                        "color": "#1D1B20"
+                                        "color": "@theme/onSurface"
                                     }
                                 }
                             ]
@@ -84,9 +86,12 @@
                     "type": "IconButton",
                     "props": {
                         "icon": "notifications_none",
-                        "onClick": "home_clear_notifs",
+                        "onClick": {
+                            "actionType": "callFunction",
+                            "functionName": "clearNotifications"
+                        },
                         "iconSize": 26,
-                        "iconColor": "#1D1B20"
+                        "iconColor": "@theme/onSurface"
                     }
                 }
             ]
@@ -161,7 +166,7 @@
                                     "size": 64
                                 },
                                 "shape": "rounded_20",
-                                "containerColor": "#EADDFF",
+                                "containerColor": "@theme/primaryContainer",
                                 "elevation": 0
                             },
                             "children": [
@@ -178,9 +183,16 @@
                                             "type": "IconButton",
                                             "props": {
                                                 "icon": "send",
-                                                "onClick": "home_send",
+                                                "onClick": {
+                                                    "actionType": "callFunction",
+                                                    "functionName": "sendMoney",
+                                                    "arguments": {
+                                                        "amount": 50.0,
+                                                        "recipient": "Alex"
+                                                    }
+                                                },
                                                 "iconSize": 28,
-                                                "iconColor": "#6750A4"
+                                                "iconColor": "@theme/primary"
                                             }
                                         }
                                     ]
@@ -193,7 +205,7 @@
                                 "text": "Send",
                                 "fontSize": 12,
                                 "fontWeight": "medium",
-                                "color": "#49454F"
+                                "color": "@theme/onSurfaceVariant"
                             }
                         }
                     ]
@@ -212,7 +224,7 @@
                                     "size": 64
                                 },
                                 "shape": "rounded_20",
-                                "containerColor": "#E8DEF8",
+                                "containerColor": "@theme/secondaryContainer",
                                 "elevation": 0
                             },
                             "children": [
@@ -229,9 +241,15 @@
                                             "type": "IconButton",
                                             "props": {
                                                 "icon": "download",
-                                                "onClick": "home_receive",
+                                                "onClick": {
+                                                    "actionType": "callFunction",
+                                                    "functionName": "showToast",
+                                                    "arguments": {
+                                                        "message": "Receive link copied"
+                                                    }
+                                                },
                                                 "iconSize": 28,
-                                                "iconColor": "#4A4458"
+                                                "iconColor": "@theme/onSecondaryContainer"
                                             }
                                         }
                                     ]
@@ -244,7 +262,7 @@
                                 "text": "Receive",
                                 "fontSize": 12,
                                 "fontWeight": "medium",
-                                "color": "#49454F"
+                                "color": "@theme/onSurfaceVariant"
                             }
                         }
                     ]
@@ -263,7 +281,7 @@
                                     "size": 64
                                 },
                                 "shape": "rounded_20",
-                                "containerColor": "#FFD8E4",
+                                "containerColor": "@theme/tertiaryContainer",
                                 "elevation": 0
                             },
                             "children": [
@@ -280,9 +298,15 @@
                                             "type": "IconButton",
                                             "props": {
                                                 "icon": "swap_horiz",
-                                                "onClick": "home_swap",
+                                                "onClick": {
+                                                    "actionType": "callFunction",
+                                                    "functionName": "showToast",
+                                                    "arguments": {
+                                                        "message": "Swap feature coming soon"
+                                                    }
+                                                },
                                                 "iconSize": 28,
-                                                "iconColor": "#7D5260"
+                                                "iconColor": "@theme/onTertiaryContainer"
                                             }
                                         }
                                     ]
@@ -295,7 +319,7 @@
                                 "text": "Swap",
                                 "fontSize": 12,
                                 "fontWeight": "medium",
-                                "color": "#49454F"
+                                "color": "@theme/onSurfaceVariant"
                             }
                         }
                     ]
@@ -314,7 +338,7 @@
                                     "size": 64
                                 },
                                 "shape": "rounded_20",
-                                "containerColor": "#F7F2FA",
+                                "containerColor": "@theme/surfaceContainerLow",
                                 "elevation": 0
                             },
                             "children": [
@@ -331,9 +355,15 @@
                                             "type": "IconButton",
                                             "props": {
                                                 "icon": "more_horiz",
-                                                "onClick": "home_more",
+                                                "onClick": {
+                                                    "actionType": "callFunction",
+                                                    "functionName": "showToast",
+                                                    "arguments": {
+                                                        "message": "More options"
+                                                    }
+                                                },
                                                 "iconSize": 28,
-                                                "iconColor": "#49454F"
+                                                "iconColor": "@theme/onSurfaceVariant"
                                             }
                                         }
                                     ]
@@ -346,7 +376,7 @@
                                 "text": "More",
                                 "fontSize": 12,
                                 "fontWeight": "medium",
-                                "color": "#49454F"
+                                "color": "@theme/onSurfaceVariant"
                             }
                         }
                     ]
@@ -378,7 +408,7 @@
                             "weight": 1.0
                         },
                         "shape": "rounded_16",
-                        "containerColor": "#FFFFFF",
+                        "containerColor": "@theme/surface",
                         "elevation": 1
                     },
                     "children": [
@@ -409,7 +439,7 @@
                                             "props": {
                                                 "modifier": {
                                                     "size": 40,
-                                                    "background": "#A8F5C4",
+                                                    "background": "@theme/successContainer",
                                                     "shape": "rounded_12"
                                                 },
                                                 "contentAlignment": "center"
@@ -420,7 +450,7 @@
                                                     "props": {
                                                         "icon": "trending_up",
                                                         "size": 22,
-                                                        "color": "#1B7D46"
+                                                        "color": "@theme/success"
                                                     }
                                                 }
                                             ]
@@ -431,7 +461,7 @@
                                                 "text": "+8.2%",
                                                 "fontSize": 12,
                                                 "fontWeight": "bold",
-                                                "color": "#1B7D46"
+                                                "color": "@theme/success"
                                             }
                                         }
                                     ]
@@ -441,7 +471,7 @@
                                     "props": {
                                         "text": "Income",
                                         "fontSize": 12,
-                                        "color": "#49454F"
+                                        "color": "@theme/onSurfaceVariant"
                                     }
                                 },
                                 {
@@ -450,7 +480,7 @@
                                         "text": "{{data:user:income}}",
                                         "fontSize": 20,
                                         "fontWeight": "bold",
-                                        "color": "#1D1B20"
+                                        "color": "@theme/onSurface"
                                     }
                                 }
                             ]
@@ -489,13 +519,19 @@
                         "text": "Recent Transactions",
                         "fontSize": 17,
                         "fontWeight": "semiBold",
-                        "color": "#1D1B20"
+                        "color": "@theme/onSurface"
                     }
                 },
                 {
                     "type": "Button",
                     "props": {
-                        "onClick": "home_see_all",
+                        "onClick": {
+                            "actionType": "callFunction",
+                            "functionName": "showToast",
+                            "arguments": {
+                                "message": "View all transactions"
+                            }
+                        },
                         "containerColor": "#00000000",
                         "elevation": 0
                     },
@@ -506,7 +542,7 @@
                                 "text": "See All",
                                 "fontSize": 13,
                                 "fontWeight": "medium",
-                                "color": "#6750A4"
+                                "color": "@theme/primary"
                             }
                         }
                     ]
@@ -530,7 +566,37 @@
                     }
                 },
                 "verticalArrangement": "spacedBy_8"
-            }
+            },
+            "children": [
+                {
+                    "type": "DataList",
+                    "props": {
+                        "dataSource": "user.transactions",
+                        "itemAlias": "txn"
+                    },
+                    "children": [
+                        {
+                            "type": "Component",
+                            "props": {
+                                "name": "TransactionRow",
+                                "componentName": "TransactionRow",
+                                "properties": {
+                                    "title": "{{data:txn:title}}",
+                                    "subtitle": "{{data:txn:subtitle}}",
+                                    "amount": "{{data:txn:amount}}",
+                                    "isIncome": "{{data:txn:isIncome}}"
+                                },
+                                "props": {
+                                    "title": "{{data:txn:title}}",
+                                    "subtitle": "{{data:txn:subtitle}}",
+                                    "amount": "{{data:txn:amount}}",
+                                    "isIncome": "{{data:txn:isIncome}}"
+                                }
+                            }
+                        }
+                    ]
+                }
+            ]
         }
     ]
 }

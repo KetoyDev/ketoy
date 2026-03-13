@@ -60,14 +60,17 @@ import kotlinx.serialization.*
  * @property scale Uniform scale factor applied via `Modifier.graphicsLayer { scaleX; scaleY }`.
  * @property rotation Rotation angle in degrees applied via `Modifier.graphicsLayer { rotationZ }`.
  * @property alpha Opacity value (0.0–1.0) applied via `Modifier.alpha()`.
- * @property verticalScroll When `true`, wraps the content in a vertical `Modifier.verticalScroll()`.
- * @property horizontalScroll When `true`, wraps the content in a horizontal
- *   `Modifier.horizontalScroll()`.
+ * @property verticalScroll Vertical scroll configuration. Accepts either a boolean shorthand
+ *   (`true`/`false`) or a full [KScrollConfig] object with `enabled`, `reverseScrolling`,
+ *   and `flingBehavior` options.
+ * @property horizontalScroll Horizontal scroll configuration. Accepts either a boolean shorthand
+ *   or a full [KScrollConfig] object.
  * @see KPadding
  * @see KMargin
  * @see KBorder
  * @see KShadow
  * @see KGradient
+ * @see KScrollConfig
  */
 @Serializable
 data class KModifier(
@@ -90,8 +93,8 @@ data class KModifier(
     val scale: Float? = null,
     val rotation: Float? = null,
     val alpha: Float? = null,
-    val verticalScroll: Boolean? = null,
-    val horizontalScroll: Boolean? = null
+    val verticalScroll: KScrollConfig? = null,
+    val horizontalScroll: KScrollConfig? = null
 )
 
 /**

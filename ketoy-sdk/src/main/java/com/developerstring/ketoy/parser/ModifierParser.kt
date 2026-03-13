@@ -16,11 +16,14 @@ package com.developerstring.ketoy.parser
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.ScrollState
+import androidx.compose.foundation.gestures.FlingBehavior
+import androidx.compose.foundation.gestures.ScrollableDefaults
 import androidx.compose.foundation.horizontalScroll
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -31,6 +34,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.unit.dp
+import com.developerstring.ketoy.model.KScrollConfig
 import kotlinx.serialization.json.*
 
 /**
@@ -59,11 +63,30 @@ import kotlinx.serialization.json.*
  * @see parseColor
  * @see parseGradient
  */
+@Composable
 fun parseModifier(props: JsonObject): Modifier {
+    // Always remember scroll states at stable composition positions to avoid
+    // recreating ScrollState(0) on every recomposition (which resets scroll
+    // position and causes lag).
+    val verticalScrollState = rememberScrollState()
+    val horizontalScrollState = rememberScrollState()
+
+    // Pre-resolve default fling behavior outside try-catch (composable calls
+    // are not allowed inside try-catch blocks).
+    val defaultFlingBehavior = ScrollableDefaults.flingBehavior()
+
     var modifier: Modifier = Modifier
 
     val modifierProps = props["modifier"]?.jsonObject
     if (modifierProps == null || modifierProps.isEmpty()) return modifier
+
+    // Pre-resolve @theme/ colours outside the try-catch (composable calls
+    // are not allowed inside try-catch blocks).
+    val bgColor: Color? = modifierProps["background"]?.jsonPrimitive?.content
+        ?.let { resolveKetoyColor(it) }
+    val borderColor: Color? = modifierProps["border"]?.jsonObject
+        ?.get("color")?.jsonPrimitive?.content
+        ?.let { resolveKetoyColor(it) }
 
     try {
         // Pre-compute shape for reuse across background / clip / border
@@ -146,10 +169,9 @@ fun parseModifier(props: JsonObject): Modifier {
 
                 // ── BACKGROUND ──────────────────────────────────────────
                 "background" -> {
-                    if (value is JsonPrimitive) {
-                        val color = parseColor(value.content)
-                        if (componentShape != RectangleShape) modifier.background(color, componentShape)
-                        else modifier.background(color)
+                    if (value is JsonPrimitive && bgColor != null) {
+                        if (componentShape != RectangleShape) modifier.background(bgColor, componentShape)
+                        else modifier.background(bgColor)
                     } else modifier
                 }
 
@@ -173,7 +195,7 @@ fun parseModifier(props: JsonObject): Modifier {
                 "border" -> {
                     if (value is JsonObject) {
                         val w = value["width"]?.jsonPrimitive?.intOrNull?.dp ?: 1.dp
-                        val c = parseColor(value["color"]?.jsonPrimitive?.content)
+                        val c = borderColor ?: Color.Black
                         val borderShape = when {
                             value["shape"]?.let { it is JsonPrimitive } == true ->
                                 parseShape(value["shape"]!!.jsonPrimitive.content)
@@ -219,10 +241,59 @@ fun parseModifier(props: JsonObject): Modifier {
                     if (value.jsonPrimitive.booleanOrNull == true) modifier.clickable { } else modifier
 
                 // ── SCROLL ──────────────────────────────────────────────
-                "verticalScroll" ->
-                    if (value.jsonPrimitive.booleanOrNull == true) modifier.verticalScroll(ScrollState(0)) else modifier
-                "horizontalScroll" ->
-                    if (value.jsonPrimitive.booleanOrNull == true) modifier.horizontalScroll(ScrollState(0)) else modifier
+                // Supports both boolean and object form:
+                //   "verticalScroll": true
+                //   "verticalScroll": { "enabled": true, "reverseScrolling": true }
+                "verticalScroll" -> {
+                    val config = parseScrollConfig(value)
+                    if (config.enabled) modifier.verticalScroll(
+                        state = verticalScrollState,
+                        reverseScrolling = config.reverseScrolling,
+                        flingBehavior = resolveFlingBehavior(config.flingBehavior, defaultFlingBehavior)
+                    ) else modifier
+                }
+                "horizontalScroll" -> {
+                    val config = parseScrollConfig(value)
+                    if (config.enabled) modifier.horizontalScroll(
+                        state = horizontalScrollState,
+                        reverseScrolling = config.reverseScrolling,
+                        flingBehavior = resolveFlingBehavior(config.flingBehavior, defaultFlingBehavior)
+                    ) else modifier
+                }
+                // Unified scroll shorthand — applies both directions
+                "scroll" -> {
+                    val config = parseScrollConfig(value)
+                    if (config.enabled) {
+                        val direction = when (value) {
+                            is JsonObject -> value["direction"]?.jsonPrimitive?.content ?: "vertical"
+                            else -> "vertical"
+                        }
+                        val fling = resolveFlingBehavior(config.flingBehavior, defaultFlingBehavior)
+                        when (direction) {
+                            "horizontal" -> modifier.horizontalScroll(
+                                state = horizontalScrollState,
+                                reverseScrolling = config.reverseScrolling,
+                                flingBehavior = fling
+                            )
+                            "both" -> modifier
+                                .verticalScroll(
+                                    state = verticalScrollState,
+                                    reverseScrolling = config.reverseScrolling,
+                                    flingBehavior = fling
+                                )
+                                .horizontalScroll(
+                                    state = horizontalScrollState,
+                                    reverseScrolling = config.reverseScrolling,
+                                    flingBehavior = fling
+                                )
+                            else -> modifier.verticalScroll(
+                                state = verticalScrollState,
+                                reverseScrolling = config.reverseScrolling,
+                                flingBehavior = fling
+                            )
+                        }
+                    } else modifier
+                }
 
                 // ── UNKNOWN → skip ──────────────────────────────────────
                 else -> modifier
@@ -233,6 +304,59 @@ fun parseModifier(props: JsonObject): Modifier {
     }
 
     return modifier
+}
+
+// ─── scroll config helpers ───────────────────────────────────────────
+
+/**
+ * Parses a scroll JSON value into a [KScrollConfig].
+ *
+ * Accepts either a boolean primitive (`true`/`false`) or an object with
+ * `enabled`, `reverseScrolling`, and `flingBehavior` keys.
+ */
+private fun parseScrollConfig(value: JsonElement): KScrollConfig {
+    return when (value) {
+        is JsonPrimitive -> KScrollConfig(
+            enabled = value.booleanOrNull == true,
+            reverseScrolling = false,
+            flingBehavior = null
+        )
+        is JsonObject -> KScrollConfig(
+            enabled = value["enabled"]?.jsonPrimitive?.booleanOrNull != false,
+            reverseScrolling = value["reverseScrolling"]?.jsonPrimitive?.booleanOrNull == true,
+            flingBehavior = value["flingBehavior"]?.jsonPrimitive?.contentOrNull
+        )
+        else -> KScrollConfig(enabled = false, reverseScrolling = false, flingBehavior = null)
+    }
+}
+
+/**
+ * Resolves a fling behavior token to a [FlingBehavior] instance.
+ *
+ * Supported tokens:
+ * - `null` or `"default"` → Standard Android fling deceleration
+ * - `"none"` → No fling; scrolling stops immediately
+ *
+ * @param token the fling behavior preset name, or `null` for default.
+ * @param defaultBehavior the pre-resolved default fling behavior (must be resolved outside try-catch).
+ * @return the resolved [FlingBehavior].
+ */
+private fun resolveFlingBehavior(token: String?, defaultBehavior: FlingBehavior): FlingBehavior {
+    return when (token) {
+        null, KScrollConfig.FLING_DEFAULT -> defaultBehavior
+        KScrollConfig.FLING_NONE -> NoFlingBehavior
+        else -> defaultBehavior // Fallback to default for unknown tokens
+    }
+}
+
+/**
+ * A [FlingBehavior] that performs no fling animation — scrolling stops
+ * immediately when the user lifts their finger.
+ */
+private object NoFlingBehavior : FlingBehavior {
+    override suspend fun androidx.compose.foundation.gestures.ScrollScope.performFling(
+        initialVelocity: Float
+    ): Float = 0f // Consume all velocity, no fling
 }
 
 // ─── private helper ─────────────────────────────────────────────────

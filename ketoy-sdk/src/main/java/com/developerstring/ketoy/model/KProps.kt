@@ -1,6 +1,8 @@
 package com.developerstring.ketoy.model
 
 import kotlinx.serialization.*
+import kotlinx.serialization.json.JsonElement
+import kotlinx.serialization.json.JsonPrimitive
 
 // ─────────────────────────────────────────────────────────────
 //  Layout component properties
@@ -252,7 +254,7 @@ data class KTextProps(
 @Serializable
 data class KButtonProps(
     val modifier: KModifier? = null,
-    val onClick: String = "function",
+    val onClick: JsonElement = JsonPrimitive("function"),
     val enabled: Boolean? = null,
     val containerColor: String? = null,
     val contentColor: String? = null,
@@ -321,7 +323,7 @@ data class KCardProps(
     val contentColor: String? = null,
     val elevation: Int? = null,
     val border: KBorder? = null,
-    val onClick: String? = null,
+    val onClick: JsonElement? = null,
     val enabled: Boolean? = null
 )
 
@@ -437,7 +439,7 @@ data class KIconProps(
 data class KIconButtonProps(
     val icon: String = "",
     val modifier: KModifier? = null,
-    val onClick: String = "function",
+    val onClick: JsonElement = JsonPrimitive("function"),
     val enabled: Boolean? = null,
     val iconSize: Int? = null,
     val iconColor: String? = null,
@@ -554,5 +556,28 @@ data class KEnumProps(
     val enumName: String = "",
     val values: List<String> = emptyList(),
     val selectedValue: String = "",
-    val onSelectionChange: String? = null
+    val onSelectionChange: JsonElement? = null
+)
+
+/**
+ * Property bag for a data-bound list node.
+ *
+ * Tells the renderer which data source to iterate and what alias to use
+ * for item-level template variables.
+ *
+ * ## JSON Wire Format
+ * ```json
+ * { "dataSource": "user.transactions", "itemAlias": "item" }
+ * ```
+ *
+ * @property dataSource  Registry key prefix for the list (e.g., `"user.transactions"`).
+ *                       Items are expected at `"$dataSource.0"`, `"$dataSource.1"`, etc.
+ *                       Count is at `"$dataSource.count"`.
+ * @property itemAlias   Template alias for the current item (e.g., `"item"` → `{{data:item:title}}`).
+ * @see KDataListNode
+ */
+@Serializable
+data class KDataListProps(
+    val dataSource: String = "",
+    val itemAlias: String = "item"
 )

@@ -5,7 +5,14 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import com.developerstring.ketoy.core.KetoyDataProvider
+import com.developerstring.ketoy.core.KetoyVariableRegistry
+import com.developerstring.ketoy.core.syncListToKetoy
+import com.developerstring.ketoy.core.syncToKetoy
+import com.developerstring.ketoy.model.KetoyVariable
 import com.developerstring.ketoy.registry.KetoyFunctionRegistry
+import com.developerstring.ketoy.util.KColors
+import com.developerstring.ketoy.util.KIcons
 
 /**
  * Main ViewModel for the Ketoy demo app.
@@ -13,23 +20,25 @@ import com.developerstring.ketoy.registry.KetoyFunctionRegistry
  * Demonstrates how SDUI functions bridge to app business logic —
  * function calls from JSON resolve here via [KetoyFunctionRegistry].
  */
-class MainViewModel : ViewModel() {
+class MainViewModel : ViewModel(), KetoyDataProvider {
+
+    override val ketoyPrefix = "user"
 
     // ── State ───────────────────────────────────────────────────
 
     var userName by mutableStateOf("Aditya")
         private set
 
-    var totalBalance by mutableStateOf(24_562.80)
+    var totalBalance by mutableStateOf(24567.80)
         private set
 
-    var income by mutableStateOf(8_240.00)
+    var income by mutableStateOf(8240.00)
         private set
 
-    var expenses by mutableStateOf(3_820.00)
+    var expenses by mutableStateOf(3820.00)
         private set
 
-    var savings by mutableStateOf(18_240.00)
+    var savings by mutableStateOf(18240.00)
         private set
 
     var notificationCount by mutableIntStateOf(3)
@@ -50,7 +59,15 @@ class MainViewModel : ViewModel() {
         val subtitle: String,
         val amount: String,
         val isIncome: Boolean
-    )
+    ) : KetoyDataProvider {
+        override val ketoyPrefix = ""
+        override fun provideData() = mapOf(
+            "title" to title,
+            "subtitle" to subtitle,
+            "amount" to amount,
+            "isIncome" to isIncome,
+        )
+    }
 
     var transactions by mutableStateOf(
         listOf(
@@ -65,6 +82,36 @@ class MainViewModel : ViewModel() {
         private set
 
     // ── Actions (registered as SDUI functions) ──────────────────
+
+    /**
+     * Provides ViewModel state as a field map for [KetoyDataProvider].
+     * Each entry becomes `{{data:user:field}}` when registered.
+     */
+    override fun provideData(): Map<String, Any?> = mapOf(
+        "name" to userName,
+        "initials" to userName.take(2).uppercase(),
+        "totalBalance" to "\$${"%.2f".format(totalBalance)}",
+        "income" to "\$${"%.2f".format(income)}",
+        "expenses" to "\$${"%.2f".format(expenses)}",
+        "savings" to "\$${"%.2f".format(savings)}",
+        "notificationCount" to notificationCount.toString(),
+        "isDarkMode" to isDarkMode,
+        "selectedCardIndex" to selectedCardIndex,
+        // Derived dark-mode variables for ProfileScreen templates
+        "darkModeIcon" to if (isDarkMode) KIcons.DarkMode else KIcons.LightMode,
+        "darkModeLabel" to if (isDarkMode) "ON" else "OFF",
+        "darkModeToggleBg" to if (isDarkMode) KColors.Primary else KColors.Outline,
+        "darkModeToggleTextColor" to if (isDarkMode) KColors.OnPrimary else "#FFFFFF",
+    )
+
+    /**
+     * Sync ViewModel state into [KetoyVariableRegistry] via [KetoyDataProvider].
+     * Call whenever state changes that should be reflected in SDUI templates.
+     */
+    fun syncVariables() {
+        syncToKetoy()
+        syncListToKetoy("user.transactions", transactions)
+    }
 
     /**
      * Register all ViewModel actions with [KetoyFunctionRegistry].

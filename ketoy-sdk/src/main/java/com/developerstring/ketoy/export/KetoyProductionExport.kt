@@ -5,6 +5,40 @@ import com.developerstring.ketoy.model.KNode
 import com.developerstring.ketoy.navigation.KetoyNavGraph
 
 /**
+ * @deprecated Use [ketoyExport] + [KetoyAutoExportRunner] instead.
+ *
+ * This manual registration pattern has been replaced by the automatic
+ * export system. Screen files now declare their exports inline via
+ * [ketoyExport], and a single [KetoyAutoExportRunner] handles all export
+ * logic.
+ *
+ * ## Migration
+ *
+ * **Before (manual):**
+ * ```kotlin
+ * class AppProductionExport : KetoyProductionExport() {
+ *     override fun registerScreens() {
+ *         screen("profile") { content { buildProfileScreen(...) } }
+ *     }
+ * }
+ * ```
+ *
+ * **After (automatic):**
+ * ```kotlin
+ * // In ProfileScreen.kt — single source of truth
+ * val profileExport = ketoyExport("profile") {
+ *     content { buildProfileScreen(userName = KData.user("name")) }
+ * }
+ * ```
+ *
+ * @see ketoyExport
+ * @see KetoyAutoExportRunner
+ * @see KetoyExportRegistry
+ *
+ * ---
+ *
+ * *Original docs:*
+ *
  * Base class for declaring production screen and navigation exports.
  *
  * Client apps extend this class to register their **production** screens
@@ -50,6 +84,10 @@ import com.developerstring.ketoy.navigation.KetoyNavGraph
  * @see KetoyProductionExport.ScreenBuilder
  * @see KetoyProductionExport.ExportResult
  */
+@Deprecated(
+    message = "Use ketoyExport() + KetoyAutoExportRunner instead",
+    replaceWith = ReplaceWith("KetoyAutoExportRunner", "com.developerstring.ketoy.export.KetoyAutoExportRunner")
+)
 abstract class KetoyProductionExport {
 
     // ── Internal registries ─────────────────────────────────────
@@ -120,8 +158,8 @@ abstract class KetoyProductionExport {
      *
      * The graph is serialized as-is to `nav_{navHostName}.json`.
      * At runtime, the client app loads this JSON and passes it to
-     * [KetoyNavRegistry] or reads it from assets for
-     * [KetoyNavHost] to consume.
+     * [com.developerstring.ketoy.navigation.KetoyNavRegistry] or reads it from assets for
+     * [com.developerstring.ketoy.navigation.KetoyNavHost] to consume.
      */
     fun navGraph(graph: KetoyNavGraph) {
         _navGraphs.add(graph)
@@ -148,13 +186,11 @@ abstract class KetoyProductionExport {
 
         // Build screen JSONs
         val screenExports = _screens.map { definition ->
-            val contentsJson = definition.contents
-                .mapNotNull { contentDef ->
-                    val node = contentDef.nodeBuilder()
-                    val json = node.toJson()
-                    contentDef.name to json
-                }
-                .toMap()
+            val contentsJson = definition.contents.associate { contentDef ->
+                val node = contentDef.nodeBuilder()
+                val json = node.toJson()
+                contentDef.name to json
+            }
 
             if (contentsJson.isEmpty()) return@map null
 

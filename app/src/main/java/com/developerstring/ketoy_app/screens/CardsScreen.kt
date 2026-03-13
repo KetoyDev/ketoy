@@ -1,9 +1,20 @@
 package com.developerstring.ketoy_app.screens
 
 import androidx.compose.runtime.Composable
+import com.developerstring.ketoy.export.ketoyExport
+import com.developerstring.ketoy.model.KScrollConfig
 import com.developerstring.ketoy.screen.KetoyContent
 import com.developerstring.ketoy.screen.ProvideKetoyScreen
 import com.developerstring.ketoy.util.*
+
+/**
+ * Export definition for the Cards screen.
+ */
+val cardsExport = ketoyExport("cards", displayName = "Cards", description = "Wallet cards and card management") {
+    content {
+        buildCardsScreen(selectedCardIndex = 0)
+    }
+}
 
 /**
  * Cards screen composable — wraps the DSL builder as a `@KScreen`
@@ -12,14 +23,12 @@ import com.developerstring.ketoy.util.*
 @Composable
 fun CardsScreen(
     selectedCardIndex: Int,
-    isDark: Boolean
 ) {
     ProvideKetoyScreen(screenName = "cards") {
         KetoyContent(
             nodeBuilder = {
                 buildCardsScreen(
                     selectedCardIndex = selectedCardIndex,
-                    isDark = isDark
                 )
             }
         )
@@ -32,10 +41,7 @@ fun CardsScreen(
  */
 fun buildCardsScreen(
     selectedCardIndex: Int,
-    isDark: Boolean
 ): com.developerstring.ketoy.model.KNode = ketoyRoot {
-
-    val c = AppColors
 
     data class CardData(
         val name: String, val lastFour: String, val balance: String,
@@ -55,8 +61,8 @@ fun buildCardsScreen(
         modifier = kModifier(
             fillMaxSize = 1f,
             padding = kPadding(top = 16),
-            background = if (isDark) "#1C1B1F" else "#FFFBFE",
-            verticalScroll = true
+            background = KColors.Background,
+            verticalScroll = KScrollConfig.Default
         ),
         verticalArrangement = KArrangements.spacedBy(0)
     ) {
@@ -67,12 +73,12 @@ fun buildCardsScreen(
             horizontalArrangement = KArrangements.SpaceBetween,
             verticalAlignment = KAlignments.CenterVertically
         ) {
-            KText("My Cards", fontSize = 24, fontWeight = KFontWeights.Bold, color = c.onSurface(isDark))
+            KText("My Cards", fontSize = 24, fontWeight = KFontWeights.Bold, color = KColors.OnSurface)
             KIconButton(
                 icon = KIcons.Add,
-                iconColor = c.primary(isDark),
+                iconColor = KColors.Primary,
                 iconSize = 26,
-                onClick = { KFunctionCall("showToast", "message" to "Add card flow") },
+                onClickAction = KFunctionAction("showToast", "message" to "Add card flow"),
                 actionId = "cards_add"
             ) {}
         }
@@ -93,7 +99,6 @@ fun buildCardsScreen(
                     balance = card.balance,
                     expiry = card.expiry,
                     gradientColors = if (isSelected) card.gradients else listOf("#787880", "#A0A0A8"),
-                    isDark = isDark
                 )
 
                 // Card action buttons (only for selected)
@@ -103,19 +108,22 @@ fun buildCardsScreen(
                         horizontalArrangement = KArrangements.SpaceEvenly
                     ) {
                         quickAction(
-                            KIcons.Lock, "Freeze", c.errorContainer(isDark), c.red(isDark),
-                            isDark = isDark, actionId = "cards_freeze_$index"
-                        ) { KFunctionCall("freezeCard", "cardName" to card.name) }
+                            KIcons.Lock, "Freeze", KColors.ErrorContainer, KColors.Error,
+                            actionId = "cards_freeze_$index",
+                            onClickAction = KFunctionAction("freezeCard", "cardName" to card.name)
+                        )
 
                         quickAction(
-                            KIcons.Settings, "Settings", c.secondaryContainer(isDark), c.onSecondaryContainer(isDark),
-                            isDark = isDark, actionId = "cards_settings_$index"
-                        ) { KFunctionCall("showToast", "message" to "${card.name} settings") }
+                            KIcons.Settings, "Settings", KColors.SecondaryContainer, KColors.OnSecondaryContainer,
+                            actionId = "cards_settings_$index",
+                            onClickAction = KFunctionAction("showToast", "message" to "${card.name} settings")
+                        )
 
                         quickAction(
-                            KIcons.Visibility, "Details", c.primaryContainer(isDark), c.primary(isDark),
-                            isDark = isDark, actionId = "cards_details_$index"
-                        ) { KFunctionCall("showToast", "message" to "Card details for ${card.name}") }
+                            KIcons.Visibility, "Details", KColors.PrimaryContainer, KColors.Primary,
+                            actionId = "cards_details_$index",
+                            onClickAction = KFunctionAction("showToast", "message" to "Card details for ${card.name}")
+                        )
                     }
                 }
             }
@@ -130,15 +138,15 @@ fun buildCardsScreen(
         ) {
             KRow(horizontalArrangement = KArrangements.spacedBy(8)) {
                 cards.forEachIndexed { index, card ->
-                    val chipBg = if (index == selectedCardIndex) c.primary(isDark) else c.surfaceContainerLow(isDark)
-                    val chipColor = if (index == selectedCardIndex) c.onPrimary(isDark) else c.onSurfaceVariant(isDark)
+                    val chipBg = if (index == selectedCardIndex) KColors.Primary else KColors.SurfaceContainerLow
+                    val chipColor = if (index == selectedCardIndex) KColors.OnPrimary else KColors.OnSurfaceVariant
 
                     KCard(
                         modifier = kModifier(height = 36),
                         containerColor = chipBg,
                         shape = KShapes.rounded(50),
                         elevation = 0,
-                        onClick = { KFunctionCall("selectCard", "index" to index) },
+                        onClickAction = KFunctionAction("selectCard", "index" to index),
                         actionId = "cards_select_$index"
                     ) {
                         KBox(
@@ -160,13 +168,13 @@ fun buildCardsScreen(
             horizontalArrangement = KArrangements.SpaceBetween,
             verticalAlignment = KAlignments.CenterVertically
         ) {
-            KText("Card Activity", fontSize = 17, fontWeight = KFontWeights.SemiBold, color = c.onSurface(isDark))
+            KText("Card Activity", fontSize = 17, fontWeight = KFontWeights.SemiBold, color = KColors.OnSurface)
             KButton(
                 containerColor = "#00000000", elevation = 0,
-                onClick = { KFunctionCall("showToast", "message" to "View all card activity") },
+                onClickAction = KFunctionAction("showToast", "message" to "View all card activity"),
                 actionId = "cards_view_all"
             ) {
-                KText("View All", fontSize = 13, fontWeight = KFontWeights.Medium, color = c.primary(isDark))
+                KText("View All", fontSize = 13, fontWeight = KFontWeights.Medium, color = KColors.Primary)
             }
         }
 

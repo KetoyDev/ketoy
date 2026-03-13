@@ -132,8 +132,9 @@ class DslBuildersTest {
         assertEquals("#2196F3", button.props.containerColor)
         assertEquals(1, button.children.size)
         // Verify action registered
-        assertNotNull(ActionRegistry.get(button.props.onClick))
-        ActionRegistry.execute(button.props.onClick)
+        val clickId = (button.props.onClick as kotlinx.serialization.json.JsonPrimitive).content
+        assertNotNull(ActionRegistry.get(clickId))
+        ActionRegistry.execute(clickId)
         assertTrue(clicked)
     }
 
@@ -144,7 +145,8 @@ class DslBuildersTest {
         }
         val button = node.children[0] as KButtonNode
         // Should not throw
-        ActionRegistry.execute(button.props.onClick)
+        val clickId = (button.props.onClick as kotlinx.serialization.json.JsonPrimitive).content
+        ActionRegistry.execute(clickId)
     }
 
     // ─── Nested scope KSpacer ───────────────────────────────────

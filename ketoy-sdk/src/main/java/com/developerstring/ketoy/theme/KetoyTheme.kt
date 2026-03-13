@@ -145,6 +145,18 @@ data class KetoyColorScheme(
     val inverseSurface: Color,
     val inverseOnSurface: Color,
     val surfaceTint: Color,
+    val surfaceContainer: Color = Color.Unspecified,
+    val surfaceContainerLow: Color = Color.Unspecified,
+    val surfaceContainerHigh: Color = Color.Unspecified,
+    val surfaceContainerHighest: Color = Color.Unspecified,
+    val surfaceContainerLowest: Color = Color.Unspecified,
+    val surfaceBright: Color = Color.Unspecified,
+    val surfaceDim: Color = Color.Unspecified,
+    val success: Color = Color(0xFF1B7D46),
+    val onSuccess: Color = Color(0xFFFFFFFF),
+    val successContainer: Color = Color(0xFFA8F5C4),
+    val onSuccessContainer: Color = Color(0xFF002110),
+    val customColors: Map<String, Color> = emptyMap(),
 ) {
     /**
      * Resolve a theme token name (e.g. `"primary"`, `"onSurface"`) to
@@ -186,8 +198,19 @@ data class KetoyColorScheme(
         "inversePrimary"       -> inversePrimary
         "inverseSurface"       -> inverseSurface
         "inverseOnSurface"     -> inverseOnSurface
-        "surfaceTint"          -> surfaceTint
-        else                   -> null
+        "surfaceTint"              -> surfaceTint
+        "surfaceContainer"         -> surfaceContainer
+        "surfaceContainerLow"      -> surfaceContainerLow
+        "surfaceContainerHigh"     -> surfaceContainerHigh
+        "surfaceContainerHighest"  -> surfaceContainerHighest
+        "surfaceContainerLowest"   -> surfaceContainerLowest
+        "surfaceBright"            -> surfaceBright
+        "surfaceDim"               -> surfaceDim
+        "success"                  -> success
+        "onSuccess"                -> onSuccess
+        "successContainer"         -> successContainer
+        "onSuccessContainer"       -> onSuccessContainer
+        else                       -> customColors[token]
     }
 
     companion object {
@@ -229,7 +252,14 @@ data class KetoyColorScheme(
             inversePrimary       = cs.inversePrimary,
             inverseSurface       = cs.inverseSurface,
             inverseOnSurface     = cs.inverseOnSurface,
-            surfaceTint          = cs.surfaceTint,
+            surfaceTint              = cs.surfaceTint,
+            surfaceContainer         = cs.surfaceContainer,
+            surfaceContainerLow      = cs.surfaceContainerLow,
+            surfaceContainerHigh     = cs.surfaceContainerHigh,
+            surfaceContainerHighest  = cs.surfaceContainerHighest,
+            surfaceContainerLowest   = cs.surfaceContainerLowest,
+            surfaceBright            = cs.surfaceBright,
+            surfaceDim               = cs.surfaceDim,
         )
     }
 }
@@ -266,6 +296,13 @@ val LocalKetoyColors = staticCompositionLocalOf {
         outline = Color.Unspecified, outlineVariant = Color.Unspecified,
         inversePrimary = Color.Unspecified, inverseSurface = Color.Unspecified,
         inverseOnSurface = Color.Unspecified, surfaceTint = Color.Unspecified,
+        surfaceContainer = Color.Unspecified,
+        surfaceContainerLow = Color.Unspecified,
+        surfaceContainerHigh = Color.Unspecified,
+        surfaceContainerHighest = Color.Unspecified,
+        surfaceContainerLowest = Color.Unspecified,
+        surfaceBright = Color.Unspecified,
+        surfaceDim = Color.Unspecified,
     )
 }
 
@@ -313,16 +350,19 @@ val LocalKetoyColors = staticCompositionLocalOf {
 fun KetoyThemeProvider(
     colorScheme: KetoyColorScheme? = null,
     themeMode: KetoyThemeMode = KetoyThemeMode.System,
+    customColors: Map<String, Color> = emptyMap(),
     content: @Composable () -> Unit,
 ) {
     val isDark = isSystemInDarkTheme()
 
-    val resolved = colorScheme ?: when (themeMode) {
+    val base = colorScheme ?: when (themeMode) {
         is KetoyThemeMode.System -> KetoyColorScheme.fromMaterial(MaterialTheme.colorScheme)
         is KetoyThemeMode.Light  -> KetoyColorScheme.fromMaterial(MaterialTheme.colorScheme)
         is KetoyThemeMode.Dark   -> KetoyColorScheme.fromMaterial(MaterialTheme.colorScheme)
         is KetoyThemeMode.Custom -> if (isDark) themeMode.darkScheme else themeMode.lightScheme
     }
+
+    val resolved = if (customColors.isNotEmpty()) base.copy(customColors = base.customColors + customColors) else base
 
     val darkFlag = when {
         colorScheme != null     -> isDark

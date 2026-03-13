@@ -78,10 +78,10 @@ class KNodeTest {
     @Test
     fun `KButtonNode stores onClick and style`() {
         val node = KButtonNode(
-            KButtonProps(onClick = "action_0", containerColor = "#2196F3", shape = "rounded_12"),
+            KButtonProps(onClick = kotlinx.serialization.json.JsonPrimitive("action_0"), containerColor = "#2196F3", shape = "rounded_12"),
             listOf(KTextNode(KTextProps("Click")))
         )
-        assertEquals("action_0", node.props.onClick)
+        assertEquals(kotlinx.serialization.json.JsonPrimitive("action_0"), node.props.onClick)
         assertEquals("#2196F3", node.props.containerColor)
         assertEquals("rounded_12", node.props.shape)
         assertEquals(1, node.children.size)
@@ -90,7 +90,7 @@ class KNodeTest {
     @Test
     fun `KButtonNode default onClick is function`() {
         val node = KButtonNode()
-        assertEquals("function", node.props.onClick)
+        assertEquals(kotlinx.serialization.json.JsonPrimitive("function"), node.props.onClick)
     }
 
     // ─── KCardNode ──────────────────────────────────────────────
