@@ -2,7 +2,7 @@
   "screenName": "home",
   "displayName": "Home",
   "description": "Main dashboard with balance and transactions",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "contents": {
     "cards": {
     "type": "Column",

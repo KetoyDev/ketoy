@@ -5,20 +5,6 @@ import com.developerstring.ketoy.util.*
 import kotlinx.serialization.json.JsonElement
 
 /**
- * Build a KNode tree from a KUniversalScope DSL block.
- * Use this as the entry point for screen builder functions.
- */
-fun ketoyRoot(content: KUniversalScope.() -> Unit): com.developerstring.ketoy.model.KNode {
-    val scope = KUniversalScope()
-    scope.content()
-    // If no children built, create an empty Box as fallback
-    if (scope.children.isEmpty()) {
-        scope.KBox {}
-    }
-    return scope.children.first()
-}
-
-/**
  * Shared colour tokens used across all screen builders.
  * Supports both light and dark theme variants.
  */
@@ -89,7 +75,7 @@ fun com.developerstring.ketoy.dsl.KUniversalScope.quickAction(
     onClick: (() -> Unit)? = null
 ) {
     KColumn(verticalArrangement = KArrangements.spacedBy(8), horizontalAlignment = KAlignments.CenterHorizontally) {
-        KCard(modifier = kModifier(size = 64), containerColor = bgColor, shape = KShapes.Rounded20, elevation = 0) {
+        KCard(modifier = kModifier(width = 80, height = 80), containerColor = bgColor, shape = KShapes.Rounded20, elevation = 0) {
             KBox(modifier = kModifier(fillMaxSize = 1f), contentAlignment = KAlignments.Center) {
                 KIconButton(icon = icon, iconColor = iconColor, iconSize = 28, onClick = onClick, onClickAction = onClickAction, actionId = actionId) {}
             }

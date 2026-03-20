@@ -42,17 +42,22 @@ class KetoyDevServer(
     private var pollIdCounter = 0L
 
     fun start() {
+        // Kill any stale process holding the port (e.g. a previous Gradle daemon)
+        killProcessOnPort(port)
+        killProcessOnPort(port + 1)
+
         httpServer = HttpServer.create(InetSocketAddress(port), 0)
         httpServer.executor = executor
 
-        httpServer.createContext("/") { exchange -> handleRoot(exchange) }
-        httpServer.createContext("/status") { exchange -> handleStatus(exchange) }
-        httpServer.createContext("/screens") { exchange -> handleScreens(exchange) }
-        httpServer.createContext("/screen") { exchange -> handleScreen(exchange) }
-        httpServer.createContext("/poll") { exchange -> handlePoll(exchange) }
-        httpServer.createContext("/bundle") { exchange -> handleBundle(exchange) }
-        httpServer.createContext("/nav") { exchange -> handleNav(exchange) }
-        httpServer.createContext("/navs") { exchange -> handleNavs(exchange) }
+        // Wrap every handler with request logging so connection issues are visible
+        httpServer.createContext("/")       { exchange -> logRequest(exchange) { handleRoot(it) } }
+        httpServer.createContext("/status") { exchange -> logRequest(exchange) { handleStatus(it) } }
+        httpServer.createContext("/screens") { exchange -> logRequest(exchange) { handleScreens(it) } }
+        httpServer.createContext("/screen") { exchange -> logRequest(exchange) { handleScreen(it) } }
+        httpServer.createContext("/poll")   { exchange -> logRequest(exchange) { handlePoll(it) } }
+        httpServer.createContext("/bundle") { exchange -> logRequest(exchange) { handleBundle(it) } }
+        httpServer.createContext("/nav")    { exchange -> logRequest(exchange) { handleNav(it) } }
+        httpServer.createContext("/navs")   { exchange -> logRequest(exchange) { handleNavs(it) } }
 
         httpServer.start()
 
@@ -60,8 +65,79 @@ class KetoyDevServer(
         wsServer.isReuseAddr = true
         wsServer.start()
 
-        println("🌐 HTTP server started on port $port")
-        println("🔌 WebSocket server started on port ${port + 1}")
+        println("🌐 HTTP server started on port $port  (bound to 0.0.0.0 — all interfaces)")
+        println("🔌 WebSocket server started on port ${port + 1}  (bound to 0.0.0.0 — all interfaces)")
+    }
+
+    /**
+     * Logs every incoming HTTP request with its origin address so that
+     * developers can confirm their Android app is actually reaching the server.
+     */
+    private fun logRequest(exchange: HttpExchange, handler: (HttpExchange) -> Unit) {
+        val remote = exchange.remoteAddress?.toString() ?: "unknown"
+        val path   = exchange.requestURI.toString()
+        val method = exchange.requestMethod
+        println("📩 $method $path  ← $remote")
+        try {
+            handler(exchange)
+        } catch (e: Exception) {
+            System.err.println("⚠️  Handler error for $path: ${e.javaClass.simpleName}: ${e.message}")
+            try {
+                val msg = """{"error":"Internal server error: ${e.message}"}""".toByteArray()
+                exchange.responseHeaders.add("Content-Type", "application/json")
+                exchange.sendResponseHeaders(500, msg.size.toLong())
+                exchange.responseBody.use { it.write(msg) }
+            } catch (_: Exception) { }
+        }
+    }
+
+    /**
+     * Attempts to kill any process currently occupying the given [port].
+     * This handles stale Gradle daemon processes from previous runs.
+     */
+    private fun killProcessOnPort(port: Int) {
+        try {
+            val os = System.getProperty("os.name")?.lowercase() ?: return
+            if (os.contains("mac") || os.contains("linux")) {
+                // Find the PID using lsof
+                val lsof = ProcessBuilder("lsof", "-ti", "tcp:$port")
+                    .redirectErrorStream(true)
+                    .start()
+                val pids = lsof.inputStream.bufferedReader().readText().trim()
+                lsof.waitFor()
+
+                if (pids.isNotEmpty()) {
+                    println("⚠️  Port $port is in use — killing stale process (PID: ${pids.replace("\n", ", ")})")
+                    for (pid in pids.lines().filter { it.isNotBlank() }) {
+                        ProcessBuilder("kill", "-9", pid.trim())
+                            .redirectErrorStream(true)
+                            .start()
+                            .waitFor()
+                    }
+                    // Brief pause for OS to release the port
+                    Thread.sleep(500)
+                }
+            } else if (os.contains("win")) {
+                val netstat = ProcessBuilder("cmd", "/c", "netstat -ano | findstr :$port")
+                    .redirectErrorStream(true)
+                    .start()
+                val output = netstat.inputStream.bufferedReader().readText().trim()
+                netstat.waitFor()
+
+                val pidPattern = Regex("\\s(\\d+)\\s*$", RegexOption.MULTILINE)
+                val pids = pidPattern.findAll(output).map { it.groupValues[1] }.toSet()
+                for (pid in pids) {
+                    println("⚠️  Port $port is in use — killing stale process (PID: $pid)")
+                    ProcessBuilder("cmd", "/c", "taskkill /F /PID $pid")
+                        .redirectErrorStream(true)
+                        .start()
+                        .waitFor()
+                }
+                if (pids.isNotEmpty()) Thread.sleep(500)
+            }
+        } catch (_: Exception) {
+            // Best-effort — if it fails, the BindException will still surface
+        }
     }
 
     fun stop() {
@@ -294,14 +370,17 @@ WS  :${port + 1}    → WebSocket live updates
     private inner class KetoyWebSocketServer(port: Int) : WebSocketServer(InetSocketAddress(port)) {
 
         override fun onOpen(conn: WebSocket, handshake: ClientHandshake) {
-            println("🔌 Client connected: ${conn.remoteSocketAddress}")
+            val addr = conn.remoteSocketAddress
+            println("🔌 WebSocket client connected: $addr  (total: ${connections.size})")
             conn.send("""{"type":"connected","version":${screenManager.getVersion()}}""")
             val bundle = buildBundleJson()
             conn.send("""{"type":"bundle","version":${screenManager.getVersion()},"data":$bundle}""")
+            println("   ↳ Sent initial bundle to $addr")
         }
 
         override fun onClose(conn: WebSocket, code: Int, reason: String?, remote: Boolean) {
-            println("🔌 Client disconnected: ${conn.remoteSocketAddress}")
+            val cause = if (remote) "remote closed" else "server closed"
+            println("🔌 WebSocket client disconnected: ${conn.remoteSocketAddress}  code=$code reason=${reason?.ifBlank { "none" }} ($cause)  remaining: ${connections.size}")
         }
 
         override fun onMessage(conn: WebSocket, message: String) {
@@ -325,8 +404,11 @@ WS  :${port + 1}    → WebSocket live updates
         }
 
         override fun onError(conn: WebSocket?, ex: Exception) {
-            if (ex !is java.net.BindException) {
-                System.err.println("WebSocket error: ${ex.message}")
+            if (ex is java.net.BindException) {
+                System.err.println("⚠️  WebSocket BIND error on port ${port + 1}: ${ex.message}")
+                System.err.println("   → Another process may be using port ${port + 1}. Try a different port.")
+            } else {
+                System.err.println("⚠️  WebSocket error (${conn?.remoteSocketAddress ?: "no connection"}): ${ex.javaClass.simpleName}: ${ex.message}")
             }
         }
 

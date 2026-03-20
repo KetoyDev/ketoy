@@ -83,12 +83,20 @@ class KetoyDevClient {
                     serverInfo.value = status
                     connectWebSocket(host, port)
                 } else {
-                    connectionState.value = ConnectionState.Error("Server not reachable at $host:$port")
-                    lastError.value = "Could not reach the Ketoy Dev Server. Make sure it's running."
+                    val hint = when {
+                        host == "localhost" || host == "127.0.0.1" ->
+                            "Tip: make sure ADB reverse is active, or try 10.0.2.2:$port instead"
+                        host == "10.0.2.2" ->
+                            "Tip: confirm ketoyDev is running and the port is correct"
+                        else ->
+                            "Tip: for emulators use 10.0.2.2:$port or localhost:$port"
+                    }
+                    connectionState.value = ConnectionState.Error("No response from $host:$port")
+                    lastError.value = "Server not reachable at $host:$port\n$hint"
                 }
             } catch (e: Exception) {
                 connectionState.value = ConnectionState.Error(e.message ?: "Connection failed")
-                lastError.value = e.message
+                lastError.value = "${e.javaClass.simpleName}: ${e.message}"
             }
         }
     }
@@ -112,6 +120,23 @@ class KetoyDevClient {
     }
 
     /**
+     * Connects to the Ketoy Dev Server, automatically selecting the correct host
+     * for the current device type.
+     *
+     * - On an **Android Emulator**: connects to `10.0.2.2` (the emulator's alias
+     *   for the host machine's loopback interface).
+     * - On a **physical device**: connects to [lanIp] (your machine's LAN IP,
+     *   e.g. `"192.168.1.5"` as printed by the dev server on startup).
+     *
+     * @param lanIp The LAN IP of the host machine running the dev server.
+     * @param port  The HTTP port of the dev server. Defaults to `8484`.
+     */
+    fun connectAuto(lanIp: String, port: Int = 8484) {
+        val host = if (EmulatorUtils.isEmulator()) EmulatorUtils.HOST_LOOPBACK else lanIp
+        connect(host, port)
+    }
+
+    /**
      * Gracefully disconnect from the dev server.
      */
     fun disconnect() {
@@ -129,6 +154,7 @@ class KetoyDevClient {
 
     private fun connectWebSocket(host: String, port: Int) {
         val wsPort = port + 1
+        println("🔌 Ketoy Dev: Opening WebSocket at ws://$host:$wsPort ...")
         val request = Request.Builder()
             .url("ws://$host:$wsPort")
             .build()
@@ -136,9 +162,11 @@ class KetoyDevClient {
         webSocket = client.newWebSocket(request, object : WebSocketListener() {
 
             override fun onOpen(webSocket: WebSocket, response: Response) {
-                connectionState.value = ConnectionState.Connected
-                lastError.value = null
-                reconnectJob?.cancel()
+                scope.launch(Dispatchers.Main.immediate) {
+                    connectionState.value = ConnectionState.Connected
+                    lastError.value = null
+                    reconnectJob?.cancel()
+                }
                 println("🔌 Ketoy Dev: WebSocket connected to $host:$wsPort")
             }
 
@@ -152,15 +180,20 @@ class KetoyDevClient {
 
             override fun onClosed(webSocket: WebSocket, code: Int, reason: String) {
                 println("🔌 Ketoy Dev: WebSocket closed ($code: $reason)")
-                connectionState.value = ConnectionState.Disconnected
+                scope.launch(Dispatchers.Main.immediate) {
+                    connectionState.value = ConnectionState.Disconnected
+                }
                 startReconnectLoop()
             }
 
             override fun onFailure(webSocket: WebSocket, t: Throwable, response: Response?) {
-                println("🔌 Ketoy Dev: WebSocket failed: ${t.message}")
-                connectionState.value = ConnectionState.Error(t.message ?: "WebSocket error")
-                lastError.value = t.message
-
+                val detail = "${t.javaClass.simpleName}: ${t.message}"
+                println("🔌 Ketoy Dev: WebSocket failed at ws://$host:$wsPort — $detail")
+                println("   → Falling back to HTTP long-polling on http://$host:$port")
+                scope.launch(Dispatchers.Main.immediate) {
+                    connectionState.value = ConnectionState.Error(detail)
+                    lastError.value = "WebSocket failed ($detail) — using HTTP poll fallback"
+                }
                 startHttpPolling(host, port)
             }
         })
@@ -223,30 +256,38 @@ class KetoyDevClient {
     // ── Message Handling ─────────────────────────────────────────
 
     private fun handleServerMessage(text: String) {
+        // Parse on the calling thread (OkHttp/IO), then dispatch
+        // all Compose state mutations to the Main thread so that
+        // snapshot apply notifications are processed synchronously.
         try {
             val json = org.json.JSONObject(text)
             when (json.optString("type")) {
                 "connected" -> {
                     val version = json.optLong("version", 0)
-                    dataVersion.value = version
+                    scope.launch(Dispatchers.Main.immediate) {
+                        dataVersion.value = version
+                    }
                 }
                 "bundle" -> {
                     val data = json.optJSONObject("data") ?: return
                     val version = data.optLong("version", dataVersion.value)
                     val screensObj = data.optJSONObject("screens") ?: return
-
-                    dataVersion.value = version
-                    screensObj.keys().forEach { name ->
-                        val screenJson = screensObj.get(name).toString()
-                        screens[name] = screenJson
-                    }
-
-                    val navsObj = data.optJSONObject("navGraphs")
-                    if (navsObj != null) {
-                        navsObj.keys().forEach { name ->
-                            val navJson = navsObj.get(name).toString()
-                            navGraphs[name] = navJson
+                    val screenUpdates = buildMap {
+                        screensObj.keys().forEach { name ->
+                            put(name, screensObj.get(name).toString())
                         }
+                    }
+                    val navsObj = data.optJSONObject("navGraphs")
+                    val navUpdates = if (navsObj != null) buildMap {
+                        navsObj.keys().forEach { name ->
+                            put(name, navsObj.get(name).toString())
+                        }
+                    } else emptyMap()
+
+                    scope.launch(Dispatchers.Main.immediate) {
+                        dataVersion.value = version
+                        screenUpdates.forEach { (name, screenJson) -> screens[name] = screenJson }
+                        navUpdates.forEach { (name, navJson) -> navGraphs[name] = navJson }
                     }
                 }
                 "update" -> {
@@ -254,18 +295,22 @@ class KetoyDevClient {
                     val version = json.optLong("version", dataVersion.value)
                     val data = json.opt("data")?.toString() ?: return
 
-                    dataVersion.value = version
-                    screens[screenName] = data
-                    println("📱 Ketoy Dev: Updated screen '$screenName' (v$version)")
+                    scope.launch(Dispatchers.Main.immediate) {
+                        dataVersion.value = version
+                        screens[screenName] = data
+                        println("📱 Ketoy Dev: Updated screen '$screenName' (v$version)")
+                    }
                 }
                 "nav_update" -> {
                     val navHost = json.optString("navHost")
                     val version = json.optLong("version", dataVersion.value)
                     val data = json.opt("data")?.toString() ?: return
 
-                    dataVersion.value = version
-                    navGraphs[navHost] = data
-                    println("📱 Ketoy Dev: Updated nav '$navHost' (v$version)")
+                    scope.launch(Dispatchers.Main.immediate) {
+                        dataVersion.value = version
+                        navGraphs[navHost] = data
+                        println("📱 Ketoy Dev: Updated nav '$navHost' (v$version)")
+                    }
                 }
                 "pong" -> { /* heartbeat ack */ }
             }
@@ -274,16 +319,23 @@ class KetoyDevClient {
                 val json = org.json.JSONObject(text)
                 val version = json.optLong("version", 0)
                 if (version > dataVersion.value) {
-                    dataVersion.value = version
                     val screensObj = json.optJSONObject("screens")
-                    screensObj?.keys()?.forEach { name ->
-                        val screenJson = screensObj.get(name).toString()
-                        screens[name] = screenJson
-                    }
+                    val screenUpdates = if (screensObj != null) buildMap {
+                        screensObj.keys().forEach { name ->
+                            put(name, screensObj.get(name).toString())
+                        }
+                    } else emptyMap()
                     val navsObj = json.optJSONObject("navGraphs")
-                    navsObj?.keys()?.forEach { name ->
-                        val navJson = navsObj.get(name).toString()
-                        navGraphs[name] = navJson
+                    val navUpdates = if (navsObj != null) buildMap {
+                        navsObj.keys().forEach { name ->
+                            put(name, navsObj.get(name).toString())
+                        }
+                    } else emptyMap()
+
+                    scope.launch(Dispatchers.Main.immediate) {
+                        dataVersion.value = version
+                        screenUpdates.forEach { (name, screenJson) -> screens[name] = screenJson }
+                        navUpdates.forEach { (name, navJson) -> navGraphs[name] = navJson }
                     }
                 }
             } catch (_: Exception) {
@@ -295,11 +347,12 @@ class KetoyDevClient {
     // ── HTTP Helpers ─────────────────────────────────────────────
 
     private fun fetchStatus(host: String, port: Int): ServerInfo? {
+        val url = "http://$host:$port/status"
         return try {
-            val request = Request.Builder()
-                .url("http://$host:$port/status")
-                .build()
+            println("🔍 Ketoy Dev: Checking server at $url ...")
+            val request = Request.Builder().url(url).build()
             val response = client.newCall(request).execute()
+            println("🔍 Ketoy Dev: Server responded HTTP ${response.code}")
             if (response.isSuccessful) {
                 val body = response.body?.string() ?: return null
                 val json = org.json.JSONObject(body)
@@ -309,8 +362,18 @@ class KetoyDevClient {
                     screenCount = json.optInt("screenCount", 0),
                     connectedClients = json.optInt("connectedClients", 0)
                 )
-            } else null
+            } else {
+                println("🔍 Ketoy Dev: Server returned error HTTP ${response.code}")
+                null
+            }
+        } catch (e: java.net.ConnectException) {
+            println("🔍 Ketoy Dev: Connection refused at $url — is ketoyDev running?")
+            null
+        } catch (e: java.net.SocketTimeoutException) {
+            println("🔍 Ketoy Dev: Timeout reaching $url — check the address and port")
+            null
         } catch (e: Exception) {
+            println("🔍 Ketoy Dev: Failed to reach $url — ${e.javaClass.simpleName}: ${e.message}")
             null
         }
     }
@@ -350,3 +413,51 @@ data class ServerInfo(
     val screenCount: Int,
     val connectedClients: Int
 )
+
+// ── Emulator Detection ──────────────────────────────────────────
+
+/**
+ * Utilities for detecting whether the app is running on an Android Emulator
+ * and for resolving the correct dev server host address.
+ *
+ * The Android Emulator runs in a virtual network where the host machine's
+ * loopback (`127.0.0.1`) is reachable via the special alias `10.0.2.2`.
+ * Physical devices must use the host machine's LAN IP instead.
+ *
+ * @see KetoyDevClient.connectAuto
+ */
+object EmulatorUtils {
+
+    /** The special IP alias used by Android Emulators to reach the host machine's loopback. */
+    const val HOST_LOOPBACK: String = "10.0.2.2"
+
+    /**
+     * Returns `true` when the current process is running inside an Android Emulator
+     * (AVD, Genymotion, or similar virtual device).
+     *
+     * Uses multiple [android.os.Build] signals (requires ≥ 2 hits) to avoid
+     * false positives on real devices. Covers goldfish/ranchu AVDs and Genymotion.
+     * Works from API 1 — does NOT require [android.os.Build.IS_EMULATOR] (API 35+).
+     */
+    fun isEmulator(): Boolean {
+        val signals = listOf(
+            android.os.Build.FINGERPRINT.startsWith("generic"),
+            android.os.Build.FINGERPRINT.contains("generic"),
+            android.os.Build.FINGERPRINT == "unknown",
+            android.os.Build.MODEL.contains("google_sdk"),
+            android.os.Build.MODEL.contains("Emulator"),
+            android.os.Build.MODEL.contains("Android SDK built for"),
+            android.os.Build.MANUFACTURER.contains("Genymotion"),
+            android.os.Build.PRODUCT.contains("sdk_gphone"),
+            android.os.Build.PRODUCT.contains("vbox86p"),
+            android.os.Build.PRODUCT.contains("emulator"),
+            android.os.Build.PRODUCT.contains("simulator"),
+            android.os.Build.BRAND.startsWith("generic"),
+            android.os.Build.BRAND == "google",
+            android.os.Build.DEVICE.contains("generic"),
+            android.os.Build.HARDWARE == "goldfish",
+            android.os.Build.HARDWARE == "ranchu",
+        )
+        return signals.count { it } >= 2
+    }
+}

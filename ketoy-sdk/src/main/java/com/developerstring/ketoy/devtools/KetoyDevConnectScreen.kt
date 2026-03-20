@@ -50,7 +50,11 @@ fun KetoyDevConnectScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
     val isDark = isSystemInDarkTheme()
 
-    var serverUrl by remember { mutableStateOf("") }
+    // Auto-detect emulator so we can pre-fill the correct address
+    val isEmulator = remember { EmulatorUtils.isEmulator() }
+    // 10.0.2.2 always works on emulator without needing ADB reverse.
+    // localhost works too but requires `adb reverse` to be active.
+    var serverUrl by remember { mutableStateOf(if (isEmulator) "10.0.2.2" else "") }
     var showAdvanced by remember { mutableStateOf(false) }
     var customPort by remember { mutableStateOf("8484") }
 
@@ -155,6 +159,29 @@ fun KetoyDevConnectScreen(
                                 )
                             }
                         )
+
+                        // Emulator quick-connect hint
+                        if (isEmulator) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    Icons.Outlined.PhoneAndroid,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.tertiary,
+                                    modifier = Modifier.size(14.dp)
+                                )
+                                Spacer(modifier = Modifier.width(4.dp))
+                                Text(
+                                    text = "Emulator detected — pre-filled 10.0.2.2 (host machine). " +
+                                           "localhost also works if ADB reverse is active.",
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.tertiary
+                                )
+                            }
+                        }
 
                         // Advanced options
                         AnimatedVisibility(visible = showAdvanced) {
@@ -358,12 +385,12 @@ private fun M3InstructionsCard() {
             )
             M3InstructionStep(
                 number = 2,
-                title = "Note the IP address from terminal output",
-                code = null
+                title = "Use the correct address for your device:",
+                code = "Emulator → 10.0.2.2:8484\nPhysical → <LAN IP>:8484"
             )
             M3InstructionStep(
                 number = 3,
-                title = "Enter the IP above and tap Connect",
+                title = "Enter the address above and tap Connect",
                 code = null
             )
             M3InstructionStep(

@@ -1,11 +1,24 @@
 <?xml version="1.0" encoding="utf-8"?>
-<manifest xmlns:android="http://schemas.android.com/apk/res/android">
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE" />
     <uses-permission android:name="android.permission.ACCESS_WIFI_STATE" />
 
-    <application>
+    <!--
+      Allow cleartext HTTP to the Ketoy Dev Server (10.0.2.2, localhost, 127.0.0.1).
+      Android 9+ blocks cleartext by default. This config allows it only for the
+      local dev server addresses — all other traffic follows system defaults.
+
+      If your app already defines android:networkSecurityConfig, the manifest merger
+      will conflict. In that case, remove this attribute here and add the Ketoy
+      domain-config block directly into your own network_security_config.xml.
+      See ketoy_dev_network_security_config.xml for the exact block to copy.
+    -->
+    <application
+        android:networkSecurityConfig="@xml/ketoy_dev_network_security_config"
+        tools:replace="android:networkSecurityConfig">
         <activity
             android:name="com.developerstring.ketoy.devtools.KetoyDevActivity"
             android:exported="true"

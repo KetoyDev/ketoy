@@ -19,4 +19,4 @@ gradle.properties
 *.jar
 *.aar
 
-gradle.properties
+/gradle.properties

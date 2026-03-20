@@ -68,32 +68,22 @@ fun KetoyDevWrapper(
     }
 
     // ── Core: inject dev-server JSON into registered KetoyScreens ──
+    // Uses a combined snapshotFlow that re-emits when EITHER:
+    //   (a) client.screens receives a new/updated JSON from the server, OR
+    //   (b) a new KetoyScreen is registered in KetoyScreenRegistry
+    //       (e.g. ProvideKetoyScreen first composes, user navigates to a new screen).
+    // This covers the race condition where the initial bundle arrives before
+    // isSetupComplete=true and screens are registered.
     LaunchedEffect(Unit) {
-        snapshotFlow { screens.keys.toSet() }
-            .collectLatest { screenNames ->
-                screenNames.forEach { serverScreenName ->
-                    val json = screens[serverScreenName] ?: return@forEach
-                    val registeredScreens = KetoyScreenRegistry.getAll()
-                    val match = registeredScreens[serverScreenName]
-                        ?: registeredScreens.values.firstOrNull {
-                            it.screenName.equals(serverScreenName, ignoreCase = true)
-                        }
-                    match?.setScreenDevOverride(json)
-                }
-            }
-    }
-
-    // Per-screen observer: reacts only when a specific screen's JSON changes
-    val screenKeys = screens.keys.toSet()
-    for (name in screenKeys) {
-        key(name) {
-            val json = screens[name]
-            LaunchedEffect(json) {
-                if (json == null) return@LaunchedEffect
-                val registeredScreens = KetoyScreenRegistry.getAll()
-                val match = registeredScreens[name]
+        snapshotFlow {
+            screens.toMap() to KetoyScreenRegistry.getAll()
+        }
+        .distinctUntilChanged()
+        .collectLatest { (clientScreens, registeredScreens) ->
+            clientScreens.forEach { (serverScreenName, json) ->
+                val match = registeredScreens[serverScreenName]
                     ?: registeredScreens.values.firstOrNull {
-                        it.screenName.equals(name, ignoreCase = true)
+                        it.screenName.equals(serverScreenName, ignoreCase = true)
                     }
                 match?.setScreenDevOverride(json)
             }

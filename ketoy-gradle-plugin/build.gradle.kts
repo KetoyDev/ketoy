@@ -1,11 +1,14 @@
+import org.gradle.plugin.compatibility.compatibility
+
 plugins {
     kotlin("jvm") version "2.0.21"
-    id("com.gradle.plugin-publish") version "1.3.1"
+    id("com.gradle.plugin-publish") version "2.1.1"
+    id("io.github.goooler.shadow") version "8.1.8"
     signing
 }
 
 group = "dev.ketoy"
-version = "0.1.1-beta"
+version = "0.1.5-beta.10"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11
@@ -16,12 +19,26 @@ kotlin {
     jvmToolchain(11)
 }
 
+// ── Bundle configuration ─────────────────────────────────────────
+// Shadow processes this configuration instead of runtimeClasspath.
+// This prevents gradleApi() file-dependencies (the entire Gradle API,
+// ~88 MB) from being bundled into the plugin JAR.
+// Only add dependencies here that must be physically embedded.
+val bundleInJar: Configuration by configurations.creating {
+    isCanBeConsumed = false
+    isCanBeResolved = true
+}
+
 dependencies {
     implementation(gradleApi())
-    implementation("org.jetbrains.kotlinx:kotlinx-serialization-json:1.6.0")
 
-    // Embedded dev server (HTTP + WebSocket)
+    // WebSocket library for the embedded dev server.
+    // `implementation` keeps it on the compile classpath.
+    // `bundleInJar` tells Shadow to embed it into the fat JAR so it is
+    // always available when external developers apply the plugin,
+    // regardless of Gradle's plugin classloader isolation.
     implementation("org.java-websocket:Java-WebSocket:1.5.7")
+    bundleInJar("org.java-websocket:Java-WebSocket:1.5.7")
 
     // Test
     testImplementation(gradleTestKit())
@@ -32,6 +49,40 @@ dependencies {
 tasks.withType<Test> {
     useJUnitPlatform()
 }
+
+// com.gradle.plugin-publish 2.x requires a javadoc JAR for publication.
+// Kotlin uses KDoc rather than Javadoc, so the standard javadoc task
+// produces warnings/errors on Kotlin source files. Suppress all doclint
+// checks so the task succeeds and produces a valid (non-empty) JAR.
+tasks.withType<Javadoc> {
+    (options as StandardJavadocDocletOptions).addBooleanOption("Xdoclint:none", true)
+}
+
+// ── Shadow JAR: embed only Java-WebSocket ────────────────────────
+// Uses the `bundleInJar` configuration (not runtimeClasspath) so that
+// gradleApi() file-dependencies are never picked up by Shadow.
+// The Gradle API, Kotlin stdlib, and SLF4J are provided by Gradle at
+// runtime and must not be bundled.
+tasks.shadowJar {
+    archiveClassifier.set("") // replaces the regular JAR as the primary artifact
+
+    // Process only the bundleInJar configuration — not runtimeClasspath.
+    configurations = listOf(bundleInJar)
+
+    // SLF4J is a transitive dep of Java-WebSocket but Gradle provides it.
+    dependencies {
+        exclude(dependency("org.slf4j:.*"))
+    }
+
+    // Relocate to avoid version conflicts if another plugin in the same
+    // build also bundles java-websocket.
+    relocate("org.java_websocket", "dev.ketoy.embedded.java_websocket")
+
+    mergeServiceFiles()
+}
+
+// com.gradle.plugin-publish 2.x auto-detects the shadow plugin and uses
+// the shadowJar output as the primary artifact automatically.
 
 // ── Gradle Plugin Portal ─────────────────────────────────────────
 // com.gradle.plugin-publish automatically applies:
@@ -58,6 +109,13 @@ gradlePlugin {
                 "android", "sdui", "server-driven-ui", "jetpack-compose", "compose",
                 "ketoy", "ui", "cloud", "hot-reload", "devtools", "export", "k-dsl"
             ))
+            // Plugin uses afterEvaluate and cross-project references (rootProject.findProject),
+            // which are not configuration-cache compatible.
+            compatibility {
+                features {
+                    configurationCache = false
+                }
+            }
         }
     }
 }

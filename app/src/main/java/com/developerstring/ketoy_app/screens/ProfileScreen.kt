@@ -6,7 +6,6 @@ import com.developerstring.ketoy.model.KScrollConfig
 import com.developerstring.ketoy.screen.KetoyContent
 import com.developerstring.ketoy.screen.ProvideKetoyScreen
 import com.developerstring.ketoy.util.*
-import com.developerstring.ketoy_app.viewmodel.MainViewModel
 
 /**
  * Export definition for the Profile screen.
@@ -65,7 +64,7 @@ fun buildProfileScreen(
     KColumn(
         modifier = kModifier(
             fillMaxSize = 1f,
-            padding = kPadding(top = 16),
+            padding = kPadding(top = 100),
             background = KColors.Background,
             verticalScroll = KScrollConfig.Default
         ),

@@ -369,7 +369,7 @@ class KetoyScreen(
      */
     fun setScreenDevOverride(json: String?) {
         if (json == null) {
-            _devOverrides.remove("__screen__")
+            _devOverrides.clear()
             return
         }
         try {

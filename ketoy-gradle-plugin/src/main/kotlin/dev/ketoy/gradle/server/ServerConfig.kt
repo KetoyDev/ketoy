@@ -18,5 +18,6 @@ data class ServerConfig(
     val autoExport: Boolean = false,
     val projectRoot: String = ".",
     val sourceDirs: List<String> = listOf("app/src/main/java", "app/src/main/kotlin"),
-    val debounceMs: Long = 1500
+    val debounceMs: Long = 1500,
+    val androidSdkDir: String? = null
 )

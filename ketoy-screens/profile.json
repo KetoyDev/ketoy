@@ -10,7 +10,7 @@
         "modifier": {
             "fillMaxSize": 1.0,
             "padding": {
-                "top": 16
+                "top": 100
             },
             "background": "@theme/background",
             "verticalScroll": {

@@ -40,6 +40,9 @@ abstract class KetoyDevTask : DefaultTask() {
         val watchDir = File(project.rootProject.projectDir, screensDir).absolutePath
         val projectRoot = project.rootProject.projectDir.absolutePath
 
+        // Resolve Android SDK dir from local.properties
+        val sdkDir = resolveAndroidSdkDir()
+
         logger.lifecycle("🚀 Starting Ketoy Dev Server with auto-export (port $port)...")
 
         DevServerLauncher.launch(
@@ -49,8 +52,21 @@ abstract class KetoyDevTask : DefaultTask() {
                 autoExport = true,
                 projectRoot = projectRoot,
                 sourceDirs = listOf("app/src/main/java", "app/src/main/kotlin"),
-                debounceMs = 1500
+                debounceMs = 1500,
+                androidSdkDir = sdkDir
             )
         )
+    }
+
+    private fun resolveAndroidSdkDir(): String? {
+        // 1. Check local.properties for sdk.dir
+        val localProps = project.rootProject.file("local.properties")
+        if (localProps.exists()) {
+            val props = java.util.Properties()
+            localProps.inputStream().use { props.load(it) }
+            props.getProperty("sdk.dir")?.let { return it }
+        }
+        // 2. Fall back to env vars
+        return System.getenv("ANDROID_HOME") ?: System.getenv("ANDROID_SDK_ROOT")
     }
 }

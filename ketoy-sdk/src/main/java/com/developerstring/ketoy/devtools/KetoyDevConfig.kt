@@ -13,7 +13,7 @@ package com.developerstring.ketoy.devtools
  *     MyApp()
  * }
  *
- * // Auto-connect to a known server:
+ * // Auto-connect to a known server (physical device):
  * KetoyDevWrapper(
  *     config = KetoyDevConfig(
  *         host = "192.168.1.5",
@@ -23,6 +23,21 @@ package com.developerstring.ketoy.devtools
  * ) {
  *     MyApp()
  * }
+ *
+ * // Auto-connect on both physical devices and emulators:
+ * KetoyDevWrapper(
+ *     config = KetoyDevConfig(
+ *         host = if (EmulatorUtils.isEmulator()) EmulatorUtils.HOST_LOOPBACK
+ *                else "192.168.1.5",
+ *         port = 8484,
+ *         autoConnect = true
+ *     )
+ * ) {
+ *     MyApp()
+ * }
+ *
+ * // Or more concisely via KetoyDevClient:
+ * client.connectAuto(lanIp = "192.168.1.5")
  * ```
  *
  * ## Port convention
@@ -31,6 +46,9 @@ package com.developerstring.ketoy.devtools
  *
  * @property host              Hostname or IP address of the dev server.
  *                              Leave empty to show the manual connection screen.
+ *                              For emulators use [EmulatorUtils.HOST_LOOPBACK] (`"10.0.2.2"`);
+ *                              for physical devices use the host machine's LAN IP.
+ *                              See [EmulatorUtils] and [KetoyDevClient.connectAuto].
  * @property port              HTTP port of the dev server. The WebSocket port
  *                              is always `port + 1`.
  * @property autoConnect       When `true` **and** [host] is non-blank, the

@@ -249,7 +249,8 @@
                                     "type": "Card",
                                     "props": {
                                         "modifier": {
-                                            "size": 64
+                                            "width": 80,
+                                            "height": 80
                                         },
                                         "shape": "rounded_20",
                                         "containerColor": "@theme/errorContainer",
@@ -306,7 +307,8 @@
                                     "type": "Card",
                                     "props": {
                                         "modifier": {
-                                            "size": 64
+                                            "width": 80,
+                                            "height": 80
                                         },
                                         "shape": "rounded_20",
                                         "containerColor": "@theme/secondaryContainer",
@@ -363,7 +365,8 @@
                                     "type": "Card",
                                     "props": {
                                         "modifier": {
-                                            "size": 64
+                                            "width": 80,
+                                            "height": 80
                                         },
                                         "shape": "rounded_20",
                                         "containerColor": "@theme/primaryContainer",

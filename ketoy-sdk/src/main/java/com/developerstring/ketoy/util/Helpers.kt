@@ -23,6 +23,7 @@
  */
 package com.developerstring.ketoy.util
 
+import com.developerstring.ketoy.dsl.KUniversalScope
 import com.developerstring.ketoy.model.*
 
 // ─────────────────────────────────────────────────────────────
@@ -334,3 +335,17 @@ fun kIconButton(
     icon = icon, iconSize = iconSize, iconColor = iconColor, iconStyle = iconStyle,
     containerColor = containerColor, contentColor = contentColor, contentDescription = contentDescription
 )
+
+/**
+ * Build a KNode tree from a KUniversalScope DSL block.
+ * Use this as the entry point for screen builder functions.
+ */
+fun ketoyRoot(content: KUniversalScope.() -> Unit): KNode {
+    val scope = KUniversalScope()
+    scope.content()
+    // If no children built, create an empty Box as fallback
+    if (scope.children.isEmpty()) {
+        scope.KBox {}
+    }
+    return scope.children.first()
+}

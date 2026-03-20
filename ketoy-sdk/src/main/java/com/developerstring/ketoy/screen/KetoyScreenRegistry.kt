@@ -1,5 +1,7 @@
 package com.developerstring.ketoy.screen
 
+import androidx.compose.runtime.mutableStateMapOf
+
 /**
  * Global, singleton registry for [KetoyScreen] instances.
  *
@@ -49,7 +51,7 @@ package com.developerstring.ketoy.screen
  */
 object KetoyScreenRegistry {
 
-    private val screens = mutableMapOf<String, KetoyScreen>()
+    private val screens = mutableStateMapOf<String, KetoyScreen>()
 
     // ── Registration ────────────────────────────────────────────
 

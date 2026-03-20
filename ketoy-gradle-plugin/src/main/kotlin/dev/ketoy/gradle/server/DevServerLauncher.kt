@@ -20,7 +20,7 @@ object DevServerLauncher {
     fun launch(config: ServerConfig) {
         println("""
     ┌─────────────────────────────────────────────────┐
-    │           Ketoy Dev Server v0.1-beta            │
+    │           Ketoy Dev Server v0.1.2-beta            │
     │       Hot-reload for Ketoy UI Framework         │
     └─────────────────────────────────────────────────┘
         """.trimIndent())
@@ -41,11 +41,11 @@ object DevServerLauncher {
         println("📡 Server running at:")
         println("   Local:     http://localhost:${config.port}")
         println("   Network:   http://$localIp:${config.port}")
-        println("   Emulator:  http://10.0.2.2:${config.port}  (use this if running in Android Emulator)")
         println()
         println("📱 Enter this URL in your app's Ketoy Dev connection screen:")
-        println("   Physical device → $localIp")
-        println("   Android Emulator → 10.0.2.2")
+        println("   Physical device  → $localIp:${config.port}")
+        println("   Android Emulator → localhost:${config.port}       ← requires ADB reverse (auto-configured below)")
+        println("   Android Emulator → 10.0.2.2:${config.port}       ← always works, no ADB needed")
         println()
         println("👀 Watching: ${watchDir.absolutePath}")
         println("   Supported files: *.json")
@@ -102,12 +102,46 @@ object DevServerLauncher {
 
         server.start()
 
+        // ── Emulator: set up adb reverse port forwarding ────────
+        val reversePorts = listOf(config.port, config.port + 1)
+        val adbResults = NetworkUtils.setupAdbReverse(reversePorts, config.androidSdkDir)
+        if (adbResults.isNotEmpty()) {
+            println("🔌 Emulator port forwarding:")
+            adbResults.forEach { println("   $it") }
+            println()
+        }
+
+        // Retry ADB reverse every 30 s to pick up emulators that start after the server.
+        // Without this, `localhost:port` silently fails on late-starting emulators.
+        val adbRetryThread = Thread({
+            // Track which (serial, port) combos already have reverse configured so
+            // we only print a log line when something genuinely new is set up.
+            val alreadyForwarded = mutableSetOf<String>()
+            // Seed with what was set up at startup
+            adbResults.filter { it.startsWith("✅") }.forEach { alreadyForwarded.add(it) }
+
+            while (!Thread.currentThread().isInterrupted) {
+                try { Thread.sleep(30_000) } catch (_: InterruptedException) { break }
+                val retryResults = NetworkUtils.setupAdbReverse(reversePorts, config.androidSdkDir)
+                retryResults
+                    .filter { it.startsWith("✅") && !alreadyForwarded.contains(it) }
+                    .forEach { msg ->
+                        println("🔄 ADB: new emulator detected — $msg")
+                        alreadyForwarded.add(msg)
+                    }
+            }
+        }, "ketoy-adb-retry")
+        adbRetryThread.isDaemon = true
+        adbRetryThread.start()
+
         val watcherThread = Thread(fileWatcher, "ketoy-file-watcher")
         watcherThread.isDaemon = true
         watcherThread.start()
 
         Runtime.getRuntime().addShutdownHook(Thread {
             println("\n🛑 Shutting down Ketoy Dev Server...")
+            adbRetryThread.interrupt()
+            NetworkUtils.removeAdbReverse(reversePorts, config.androidSdkDir)
             server.stop()
             fileWatcher.stop()
             sourceWatcher?.stop()
