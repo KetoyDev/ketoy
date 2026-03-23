@@ -1,6 +1,6 @@
 <div align="center">
 
-<img src="https://ketoy.dev/logo.png" alt="Ketoy" width="80" />
+<img src="https://docs.ketoy.dev/ketoy-logo.svg" alt="Ketoy" width="80" />
 
 # Ketoy
 
