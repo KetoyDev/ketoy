@@ -93,20 +93,50 @@ object KetoyCacheStore {
     // ── Write ───────────────────────────────────────────────────
 
     /**
-     * Save a screen’s JSON content and metadata to the local cache.
+     * Save a screen’s content as raw bytes and metadata to the local cache.
      *
      * - Metadata (version, timestamp) is stored in `SharedPreferences`.
-     * - The raw JSON string is written to an internal file named
-     *   `{screenName}.json` inside the `ketoy_cache` directory.
+     * - The bytes are written to an internal file named
+     *   `{screenName}.ktw` inside the `ketoy_cache` directory.
+     *
+     * Accepts any byte payload — wire bytes (compressed), plain JSON
+     * bytes, or any other format. The caller is responsible for
+     * encoding/decoding.
      *
      * ```kotlin
-     * KetoyCacheStore.put("home_screen", "1.0.0", homeUiJson)
+     * KetoyCacheStore.putBytes("home_screen", "1.0.0", wireBytes)
      * ```
      *
-     * @param screenName  The screen identifier (e.g. `"home_screen"`).
-     * @param version     The version string from the server (e.g. `"1.0.0"`).
-     * @param jsonContent The full JSON UI tree as a raw string.
+     * @param screenName The screen identifier (e.g. `"home_screen"`).
+     * @param version    The version string from the server (e.g. `"1.0.0"`).
+     * @param data       The raw bytes to cache.
      */
+    fun putBytes(screenName: String, version: String, data: ByteArray) {
+        val entry = KetoyCacheEntry(
+            screenName = screenName,
+            version = version,
+            jsonContent = "", // metadata only in prefs
+            cachedAt = System.currentTimeMillis()
+        )
+
+        prefs?.edit()
+            ?.putString("${META_PREFIX}$screenName", json.encodeToString(entry))
+            ?.apply()
+
+        getScreenBinaryFile(screenName)?.writeBytes(data)
+        // Clean up old .json file if it exists
+        getScreenFile(screenName)?.takeIf { it.exists() }?.delete()
+    }
+
+    /**
+     * Save a screen’s JSON content and metadata to the local cache.
+     *
+     * @deprecated Use [putBytes] with wire-format compressed bytes.
+     */
+    @Deprecated(
+        message = "Use putBytes() with wire-format compressed bytes. Plain JSON caching is deprecated.",
+        replaceWith = ReplaceWith("putBytes(screenName, version, jsonContent.toByteArray(Charsets.UTF_8))")
+    )
     fun put(screenName: String, version: String, jsonContent: String) {
         val entry = KetoyCacheEntry(
             screenName = screenName,
@@ -127,19 +157,45 @@ object KetoyCacheStore {
     // ── Read ────────────────────────────────────────────────────
 
     /**
-     * Get a cached screen entry, or `null` if not cached.
+     * Get cached screen bytes, or `null` if not cached.
      *
-     * Loads metadata from SharedPreferences and the JSON content from
-     * the internal file. Returns `null` if either is missing or corrupted.
+     * Looks for the `.ktw` binary file first, then falls back to the
+     * legacy `.json` file (auto-detecting format for backward compat).
      *
      * ```kotlin
-     * val entry: KetoyCacheEntry? = KetoyCacheStore.get("home_screen")
-     * entry?.let { Log.d("Cache", "version=${it.version}") }
+     * val bytes: ByteArray? = KetoyCacheStore.getBytes("home_screen")
+     * bytes?.let { JSONBytesToUI(it) }
      * ```
      *
      * @param screenName The screen identifier (e.g. `"home_screen"`).
-     * @return A fully populated [KetoyCacheEntry], or `null`.
+     * @return Cached bytes (wire format or plain JSON UTF-8), or `null`.
      */
+    fun getBytes(screenName: String): ByteArray? {
+        // Check metadata exists
+        prefs?.getString("${META_PREFIX}$screenName", null) ?: return null
+
+        // Prefer .ktw binary file
+        val binaryFile = getScreenBinaryFile(screenName)
+        if (binaryFile != null && binaryFile.exists()) {
+            return binaryFile.readBytes()
+        }
+        // Fallback to legacy .json file
+        val jsonFile = getScreenFile(screenName)
+        if (jsonFile != null && jsonFile.exists()) {
+            return jsonFile.readBytes()
+        }
+        return null
+    }
+
+    /**
+     * Get a cached screen entry, or `null` if not cached.
+     *
+     * @deprecated Use [getBytes] for wire-format byte retrieval.
+     */
+    @Deprecated(
+        message = "Use getBytes() for wire-format byte retrieval. String-based cache access is deprecated.",
+        replaceWith = ReplaceWith("getBytes(screenName)")
+    )
     fun get(screenName: String): KetoyCacheEntry? {
         val metaJson = prefs?.getString("${META_PREFIX}$screenName", null) ?: return null
         val meta = try {
@@ -204,7 +260,8 @@ object KetoyCacheStore {
      */
     fun isCached(screenName: String): Boolean {
         return prefs?.contains("${META_PREFIX}$screenName") == true
-                && getScreenFile(screenName)?.exists() == true
+                && (getScreenBinaryFile(screenName)?.exists() == true
+                    || getScreenFile(screenName)?.exists() == true)
     }
 
     // ── Delete ──────────────────────────────────────────────────
@@ -223,6 +280,7 @@ object KetoyCacheStore {
         val existed = prefs?.contains("${META_PREFIX}$screenName") == true
         prefs?.edit()?.remove("${META_PREFIX}$screenName")?.apply()
         getScreenFile(screenName)?.delete()
+        getScreenBinaryFile(screenName)?.delete()
         return existed
     }
 
@@ -262,5 +320,9 @@ object KetoyCacheStore {
 
     private fun getScreenFile(screenName: String): File? {
         return cacheDir?.let { File(it, "${screenName}.json") }
+    }
+
+    private fun getScreenBinaryFile(screenName: String): File? {
+        return cacheDir?.let { File(it, "${screenName}.ktw") }
     }
 }

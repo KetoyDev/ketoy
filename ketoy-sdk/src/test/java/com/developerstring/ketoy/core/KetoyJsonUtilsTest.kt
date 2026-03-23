@@ -1,6 +1,7 @@
 package com.developerstring.ketoy.core
 
 import com.developerstring.ketoy.model.*
+import com.developerstring.ketoy.wire.WireFormatConfig
 import org.junit.Assert.*
 import org.junit.Test
 
@@ -202,5 +203,91 @@ class KetoyJsonUtilsTest {
         val box = row.children[0] as KBoxNode
         val text = box.children[0] as KTextNode
         assertEquals("Deep", text.props.text)
+    }
+
+    // ─── toMinifiedJson ─────────────────────────────────────────
+
+    @Test
+    fun `toMinifiedJson produces compact output without whitespace`() {
+        val node = KColumnNode(
+            KColumnProps(verticalArrangement = "top"),
+            listOf(KTextNode(KTextProps("Hello")))
+        )
+        val minified = node.toMinifiedJson()
+        assertFalse("Should not contain newlines", minified.contains("\n"))
+        assertTrue(minified.contains("\"Hello\""))
+        assertTrue(minified.length < node.toJson().length)
+    }
+
+    // ─── toWireBytes / parseKetoyWireBytes ───────────────────────
+
+    @Test
+    fun `toWireBytes and parseKetoyWireBytes round-trip text node`() {
+        val original = KTextNode(KTextProps(text = "Wire test", fontSize = 20))
+        val wireBytes = original.toWireBytes()
+        val parsed = parseKetoyWireBytes(wireBytes)
+        assertTrue(parsed is KTextNode)
+        assertEquals("Wire test", (parsed as KTextNode).props.text)
+        assertEquals(20, parsed.props.fontSize)
+    }
+
+    @Test
+    fun `toWireBytes and parseKetoyWireBytes round-trip complex tree`() {
+        val original = KColumnNode(
+            KColumnProps(verticalArrangement = "spaceBetween"),
+            listOf(
+                KTextNode(KTextProps("Child 1", fontSize = 18)),
+                KSpacerNode(KSpacerProps(height = 8)),
+                KButtonNode(
+                    KButtonProps(containerColor = "#2196F3"),
+                    listOf(KTextNode(KTextProps("Click")))
+                )
+            )
+        )
+        val wireBytes = original.toWireBytes()
+        val parsed = parseKetoyWireBytes(wireBytes) as KColumnNode
+        assertEquals(3, parsed.children.size)
+        assertTrue(parsed.children[0] is KTextNode)
+        assertTrue(parsed.children[1] is KSpacerNode)
+        assertTrue(parsed.children[2] is KButtonNode)
+    }
+
+    @Test
+    fun `toWireBytes produces smaller output than toJson`() {
+        val node = KColumnNode(
+            KColumnProps(
+                verticalArrangement = "spaceBetween",
+                modifier = KModifier(fillMaxSize = 1f, padding = KPadding(all = 16))
+            ),
+            listOf(
+                KTextNode(KTextProps("Hello", fontSize = 24, fontWeight = "bold")),
+                KTextNode(KTextProps("World", fontSize = 18)),
+                KSpacerNode(KSpacerProps(height = 16)),
+                KButtonNode(children = listOf(KTextNode(KTextProps("Go"))))
+            )
+        )
+        val jsonSize = node.toJson().toByteArray(Charsets.UTF_8).size
+        val wireSize = node.toWireBytes().size
+        assertTrue(
+            "Wire bytes ($wireSize) should be smaller than JSON ($jsonSize)",
+            wireSize < jsonSize
+        )
+    }
+
+    @Test
+    fun `toWireBytes with GZIP_ONLY config round-trips`() {
+        val original = KTextNode(KTextProps(text = "Gzip test"))
+        val wireBytes = original.toWireBytes(WireFormatConfig.GZIP_ONLY)
+        val parsed = parseKetoyWireBytes(wireBytes)
+        assertTrue(parsed is KTextNode)
+        assertEquals("Gzip test", (parsed as KTextNode).props.text)
+    }
+
+    @Test
+    fun `parseKetoyWireBytes returns error node for invalid data`() {
+        val garbage = byteArrayOf(0x00, 0x01, 0x02, 0x03)
+        val result = parseKetoyWireBytes(garbage)
+        assertTrue(result is KTextNode)
+        assertTrue((result as KTextNode).props.text.contains("Failed to decode"))
     }
 }

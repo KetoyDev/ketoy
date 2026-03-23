@@ -1,6 +1,7 @@
 package dev.ketoy.gradle.server
 
 import java.io.File
+import java.util.Base64
 import java.util.concurrent.ConcurrentHashMap
 import java.util.concurrent.atomic.AtomicLong
 
@@ -10,19 +11,30 @@ import java.util.concurrent.atomic.AtomicLong
  *
  * ## File conventions
  *
- * | Pattern | Stored in | Key |
- * |---------|-----------|-----|
- * | `home.json` | screens | `"home"` |
- * | `nav_main.json` | navGraphs | `"main"` |
+ * | Pattern | Stored in | Key | Format |
+ * |---------|-----------|-----|--------|
+ * | `home.json` | screens | `"home"` | Raw JSON |
+ * | `home.ktw`  | screens | `"home"` | Base64-encoded wire bytes |
+ * | `nav_main.json` | navGraphs | `"main"` | Raw JSON |
+ *
+ * `.ktw` files (Ketoy Wire Format) are read as raw bytes, Base64-encoded,
+ * and stored with the format tracked in [wireScreens]. The server wraps
+ * wire format data as a JSON string value (`"data":"<base64>"`) instead of
+ * inline JSON (`"data":{...}`), and adds a `"format":"ktw"` field so the
+ * client can detect and decode it.
  *
  * All maps are [ConcurrentHashMap] and the version counter is an [AtomicLong], so
  * concurrent reads and writes are safe without external synchronisation.
  *
- * @param watchDir The directory that contains the `.json` screen and `nav_*.json` files.
+ * @param watchDir The directory that contains the screen files (`.json` / `.ktw`) and `nav_*.json` files.
  */
 class ScreenManager(private val watchDir: File) {
     private val screens = ConcurrentHashMap<String, String>()
     private val navGraphs = ConcurrentHashMap<String, String>()
+
+    /** Tracks which screen names are wire format (`.ktw`). */
+    private val wireScreens = ConcurrentHashMap.newKeySet<String>()
+
     private val version = AtomicLong(0)
 
     init {
@@ -30,13 +42,16 @@ class ScreenManager(private val watchDir: File) {
     }
 
     /**
-     * Loads (or reloads) **all** `.json` files from the [watchDir].
+     * Loads (or reloads) **all** `.json` and `.ktw` files from the [watchDir].
      *
      * Files whose name starts with `nav_` are treated as navigation graphs;
-     * all others are treated as screen definitions.
+     * all others are treated as screen definitions. `.ktw` files take
+     * precedence over `.json` files with the same base name.
      */
     fun loadAllScreens() {
-        watchDir.listFiles { file -> file.extension == "json" }?.forEach { file ->
+        watchDir.listFiles { file ->
+            file.extension == "json" || file.extension == "ktw"
+        }?.forEach { file ->
             if (file.name.startsWith("nav_")) {
                 loadNavGraph(file)
             } else {
@@ -46,20 +61,34 @@ class ScreenManager(private val watchDir: File) {
     }
 
     /**
-     * Loads or reloads a single screen JSON file into the cache.
+     * Loads or reloads a single screen file into the cache.
      *
-     * @return The JSON string if the content is new or changed, or `null` if unchanged.
+     * For `.json` files, the content is stored as-is (raw JSON text).
+     * For `.ktw` files, the content is read as raw bytes, Base64-encoded,
+     * and the screen name is tracked in [wireScreens].
+     *
+     * @return The stored string (JSON or Base64) if the content is new or changed, or `null` if unchanged.
      */
     fun loadScreen(file: File): String? {
         return try {
-            val json = file.readText().trim()
             val name = file.nameWithoutExtension
-            val previous = screens.put(name, json)
-            if (previous == json) {
+            val isWire = file.extension == "ktw"
+
+            val content = if (isWire) {
+                val bytes = file.readBytes()
+                Base64.getEncoder().encodeToString(bytes)
+            } else {
+                file.readText().trim()
+            }
+
+            val previous = screens.put(name, content)
+            if (isWire) wireScreens.add(name) else wireScreens.remove(name)
+
+            if (previous == content) {
                 null
             } else {
                 version.incrementAndGet()
-                json
+                content
             }
         } catch (e: Exception) {
             System.err.println("⚠️  Failed to load ${file.name}: ${e.message}")
@@ -91,6 +120,7 @@ class ScreenManager(private val watchDir: File) {
 
     fun removeScreen(name: String) {
         screens.remove(name)
+        wireScreens.remove(name)
         version.incrementAndGet()
     }
 
@@ -112,4 +142,10 @@ class ScreenManager(private val watchDir: File) {
     fun listNavGraphs(): List<String> = navGraphs.keys().toList().sorted()
 
     fun getVersion(): Long = version.get()
+
+    /** Returns `true` if the screen with the given [name] was loaded from a `.ktw` wire format file. */
+    fun isWireFormat(name: String): Boolean = wireScreens.contains(name)
+
+    /** Returns the set of screen names that are in wire format. */
+    fun getWireScreenNames(): Set<String> = wireScreens.toSet()
 }

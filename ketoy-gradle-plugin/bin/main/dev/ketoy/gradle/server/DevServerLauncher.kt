@@ -48,14 +48,18 @@ object DevServerLauncher {
         println("   Android Emulator → 10.0.2.2:${config.port}       ← always works, no ADB needed")
         println()
         println("👀 Watching: ${watchDir.absolutePath}")
-        println("   Supported files: *.json")
+        println("   Supported files: *.json, *.ktw (wire format)")
         println()
         println("   Available screens:")
         val screens = screenManager.listScreens()
         if (screens.isEmpty()) {
-            println("   (none yet — add .json files to ${watchDir.absolutePath})")
+            println("   (none yet — add .json or .ktw files to ${watchDir.absolutePath})")
         } else {
-            screens.forEach { println("   • $it") }
+            val wireNames = screenManager.getWireScreenNames()
+            screens.forEach { name ->
+                val label = if (wireNames.contains(name)) "[ktw]" else "[json]"
+                println("   • $name $label")
+            }
         }
 
         val navGraphs = screenManager.listNavGraphs()

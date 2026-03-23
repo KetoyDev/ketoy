@@ -10,17 +10,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
-import com.developerstring.ketoy.renderer.JSONStringToUI
+import com.developerstring.ketoy.renderer.JSONBytesToUI
 import com.developerstring.ketoy.navigation.KetoyNavDevOverrides
 import com.developerstring.ketoy.navigation.KetoyNavGraph
 import com.developerstring.ketoy.screen.KetoyScreenRegistry
-import kotlinx.coroutines.flow.collectLatest
 
 /**
  * Top-level composable that wraps your **entire app** to enable
@@ -67,25 +65,66 @@ fun KetoyDevWrapper(
         }
     }
 
-    // ── Core: inject dev-server JSON into registered KetoyScreens ──
-    // Uses a combined snapshotFlow that re-emits when EITHER:
-    //   (a) client.screens receives a new/updated JSON from the server, OR
-    //   (b) a new KetoyScreen is registered in KetoyScreenRegistry
-    //       (e.g. ProvideKetoyScreen first composes, user navigates to a new screen).
-    // This covers the race condition where the initial bundle arrives before
-    // isSetupComplete=true and screens are registered.
-    LaunchedEffect(Unit) {
-        snapshotFlow {
-            screens.toMap() to KetoyScreenRegistry.getAll()
-        }
-        .distinctUntilChanged()
-        .collectLatest { (clientScreens, registeredScreens) ->
-            clientScreens.forEach { (serverScreenName, json) ->
-                val match = registeredScreens[serverScreenName]
-                    ?: registeredScreens.values.firstOrNull {
-                        it.screenName.equals(serverScreenName, ignoreCase = true)
+    // ── Core: inject dev-server data into registered KetoyScreens ──
+    // dataVersion is a MutableState<Long> that increments on every server push.
+    // Reading it with `by` here causes recomposition on each push, which
+    // restarts the LaunchedEffect below (keyed on dv + registeredRoutes).
+    val dv by client.dataVersion
+    val registeredRoutes = KetoyScreenRegistry.getAllRoutes()
+
+    LaunchedEffect(dv, screens.keys.toSet(), registeredRoutes) {
+        val registeredScreens = KetoyScreenRegistry.getAll()
+        println("📱 Ketoy Dev [inject] dv=$dv | server screens=${screens.keys} | registered=${registeredScreens.keys} | wireBytes keys=${client.screenBytes.keys}")
+
+        screens.forEach { (serverScreenName, serverValue) ->
+            // ── Step 1: Try direct match (exact → case-insensitive) ──
+            var match = registeredScreens[serverScreenName]
+                ?: registeredScreens.values.firstOrNull {
+                    it.screenName.equals(serverScreenName, ignoreCase = true)
+                }
+            var contentName = "main" // default content slot
+
+            // ── Step 2: If no direct match, try splitting "screenName_contentName" ──
+            // Export creates files like "profile_main.ktw" → server key "profile_main"
+            // App registers screen as "profile". Split and try matching the prefix.
+            // For screen names with underscores (e.g. "history_screen_main"), try
+            // splitting at each underscore from right to left until a match is found.
+            if (match == null && serverScreenName.contains("_")) {
+                var idx = serverScreenName.length
+                while (idx > 0) {
+                    idx = serverScreenName.lastIndexOf('_', idx - 1)
+                    if (idx <= 0) break
+                    val candidateScreen = serverScreenName.substring(0, idx)
+                    val candidateContent = serverScreenName.substring(idx + 1)
+
+                    val found = registeredScreens[candidateScreen]
+                        ?: registeredScreens.values.firstOrNull {
+                            it.screenName.equals(candidateScreen, ignoreCase = true)
+                        }
+                    if (found != null) {
+                        match = found
+                        contentName = candidateContent
+                        println("📱 Ketoy Dev [inject] Split '$serverScreenName' → screen='${found.screenName}' content='$contentName'")
+                        break
                     }
-                match?.setScreenDevOverride(json)
+                }
+            }
+
+            if (match == null) {
+                println("📱 Ketoy Dev [inject] ⚠️ NO MATCH for server screen '$serverScreenName'. Registered: ${registeredScreens.keys}")
+                return@forEach
+            }
+
+            // ── Step 3: Inject wire bytes or JSON override ──
+            val bytes = client.screenBytes[serverScreenName]
+            if (bytes != null) {
+                println("📱 Ketoy Dev [inject] ✅ Injecting ${bytes.size} wire bytes → ${match.screenName}/$contentName")
+                match.setDevOverrideBytes(contentName, bytes)
+            } else if (serverValue != "__wire__") {
+                println("📱 Ketoy Dev [inject] ✅ Injecting JSON override → ${match.screenName}/$contentName (${serverValue.length} chars)")
+                match.setDevOverride(contentName, serverValue)
+            } else {
+                println("📱 Ketoy Dev [inject] ⚠️ Wire sentinel '__wire__' but no bytes for '$serverScreenName'")
             }
         }
     }
@@ -252,7 +291,7 @@ internal fun KetoyDevPreview(
                     )
                     Spacer(modifier = Modifier.height(8.dp))
                     Text(
-                        text = "Add .json files to your ketoy-screens/ directory",
+                        text = "Add .json or .ktw files to your ketoy-screens/ directory",
                         color = Color(0xFF484F58),
                         style = MaterialTheme.typography.bodySmall
                     )
@@ -261,16 +300,27 @@ internal fun KetoyDevPreview(
         }
 
         targetScreen != null && screens.containsKey(targetScreen) -> {
-            val json = screens[targetScreen] ?: return
-            key(dataVersion) {
-                JSONStringToUI(value = json)
+            val wireBytes = client.screenBytes[targetScreen]
+            val renderBytes = remember(wireBytes, screens[targetScreen], dataVersion) {
+                wireBytes ?: screens[targetScreen]?.toByteArray(Charsets.UTF_8)
+            }
+            if (renderBytes != null) {
+                key(dataVersion) {
+                    JSONBytesToUI(data = renderBytes)
+                }
             }
         }
 
         screens.size == 1 -> {
-            val json = screens.values.first()
-            key(dataVersion) {
-                JSONStringToUI(value = json)
+            val name = screens.keys.first()
+            val wireBytes = client.screenBytes[name]
+            val renderBytes = remember(wireBytes, screens[name], dataVersion) {
+                wireBytes ?: screens[name]?.toByteArray(Charsets.UTF_8)
+            }
+            if (renderBytes != null) {
+                key(dataVersion) {
+                    JSONBytesToUI(data = renderBytes)
+                }
             }
         }
 

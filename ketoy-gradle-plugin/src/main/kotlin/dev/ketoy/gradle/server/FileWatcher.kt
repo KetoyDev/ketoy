@@ -5,13 +5,13 @@ import java.nio.file.*
 import java.util.concurrent.TimeUnit
 
 /**
- * Watches a directory for JSON file changes and pushes live updates to connected Ketoy apps.
+ * Watches a directory for screen file changes and pushes live updates to connected Ketoy apps.
  *
  * Uses the Java NIO [WatchService] for efficient, OS-level file-system monitoring. When a
- * `.json` file is created, modified, or deleted inside the watched directory, the watcher
- * delegates to [ScreenManager] and broadcasts via [KetoyDevServer].
+ * `.json` or `.ktw` (wire format) file is created, modified, or deleted inside the watched
+ * directory, the watcher delegates to [ScreenManager] and broadcasts via [KetoyDevServer].
  *
- * @param watchDir The root directory to monitor for JSON file changes.
+ * @param watchDir The root directory to monitor for screen file changes.
  * @param screenManager The [ScreenManager] that owns the in-memory screen and nav-graph caches.
  * @param server The [KetoyDevServer] used to broadcast updates to connected clients.
  */
@@ -66,7 +66,7 @@ class FileWatcher(
                     val ev = event as WatchEvent<Path>
                     val filename = ev.context().toString()
 
-                    if (!filename.endsWith(".json")) continue
+                    if (!filename.endsWith(".json") && !filename.endsWith(".ktw")) continue
 
                     val file = watchDir.resolve(filename)
                     val isNavFile = filename.startsWith("nav_")
@@ -84,12 +84,14 @@ class FileWatcher(
                                         server.broadcastNavUpdate(navName, json)
                                     }
                                 } else {
-                                    val json = screenManager.loadScreen(file)
-                                    if (json != null) {
+                                    val content = screenManager.loadScreen(file)
+                                    if (content != null) {
                                         val screenName = file.nameWithoutExtension
+                                        val isWire = file.extension == "ktw"
                                         val timestamp = java.time.LocalTime.now().toString().substring(0, 8)
-                                        println("[$timestamp] 📝 Changed: $filename")
-                                        server.broadcastUpdate(screenName, json)
+                                        val label = if (isWire) "📦" else "📝"
+                                        println("[$timestamp] $label Changed: $filename")
+                                        server.broadcastUpdate(screenName, content, isWire)
                                     }
                                 }
                             }

@@ -19,6 +19,7 @@ import com.developerstring.ketoy.widget.KetoyWidgetParser
 import com.developerstring.ketoy.widget.KetoyWidgetRegistry
 import com.developerstring.ketoy.widget.builtin.CallFunctionActionParser
 import com.developerstring.ketoy.widget.builtin.NavigateActionParser
+import com.developerstring.ketoy.wire.WireFormatConfig
 
 /**
  * Main entry point for the Ketoy SDK.
@@ -90,6 +91,12 @@ object Ketoy {
      * @param cacheConfig   Caching strategy for server-driven screens.
      *                      Defaults to [KetoyCacheConfig.DEFAULT] (network-first,
      *                      30-day max age). Only used when [cloudConfig] is set.
+     * @param wireFormatConfig Wire format configuration for optimised network
+     *                      payloads. Controls key aliasing, type compression,
+     *                      binary encoding (MessagePack), and gzip compression.
+     *                      Defaults to [WireFormatConfig.OPTIMIZED] for
+     *                      maximum compression (10-15x reduction). Only
+     *                      used when [cloudConfig] is set.
      * @param force         If true, reinitialises even if already initialised.
      */
     fun initialize(
@@ -99,6 +106,7 @@ object Ketoy {
         screens: List<KetoyScreen> = emptyList(),
         cloudConfig: KetoyCloudConfig? = null,
         cacheConfig: KetoyCacheConfig = KetoyCacheConfig.DEFAULT,
+        wireFormatConfig: WireFormatConfig = WireFormatConfig.OPTIMIZED,
         force: Boolean = false
     ) {
         if (isInitialized && !force) return
@@ -127,6 +135,7 @@ object Ketoy {
             if (cloudConfig != null) {
                 _cloudConfig = cloudConfig
                 KetoyApiClient.initialize(cloudConfig)
+                KetoyApiClient.wireFormatConfig = wireFormatConfig
                 KetoyCloudService.cacheConfig = cacheConfig
 
                 // Initialize cache store (requires context)
@@ -161,6 +170,7 @@ object Ketoy {
         KetoyActionRegistry.clear()
         KetoyScreenRegistry.clear()
         KetoyCloudNavOverrides.clearAll()
+        KetoyApiClient.wireFormatConfig = WireFormatConfig.OPTIMIZED
         _cloudConfig = null
         isInitialized = false
     }

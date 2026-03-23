@@ -64,7 +64,7 @@ fun buildProfileScreen(
     KColumn(
         modifier = kModifier(
             fillMaxSize = 1f,
-            padding = kPadding(top = 100),
+            padding = kPadding(top = 10),
             background = KColors.Background,
             verticalScroll = KScrollConfig.Default
         ),

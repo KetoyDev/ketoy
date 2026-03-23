@@ -39,6 +39,7 @@ import com.developerstring.ketoy.registry.KComponentRegistry
 import com.developerstring.ketoy.theme.KetoyColorScheme
 import com.developerstring.ketoy.theme.KetoyThemeProvider
 import com.developerstring.ketoy.widget.KetoyWidgetRegistry
+import com.developerstring.ketoy.wire.KetoyWireFormat
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.*
 
@@ -89,6 +90,10 @@ private val ketoyJson = Json {
     encodeDefaults = false
 }
 
+@Deprecated(
+    message = "Use JSONBytesToUI() with compressed wire bytes. Plain JSON rendering is deprecated.",
+    replaceWith = ReplaceWith("JSONBytesToUI(data, colorScheme)", "com.developerstring.ketoy.renderer.JSONBytesToUI")
+)
 @Composable
 fun JSONStringToUI(
     value: String,
@@ -106,6 +111,57 @@ fun JSONStringToUI(
         KetoyThemeProvider {
             RenderComponent(component)
         }
+    }
+}
+
+/**
+ * Entry-point for rendering compressed wire-format bytes directly.
+ *
+ * Accepts bytes produced by [KetoyWireFormat.encode] — any combination of
+ * gzip, MessagePack, key aliasing, and type compression is auto-detected
+ * and decoded before rendering.
+ *
+ * ```kotlin
+ * val wireBytes: ByteArray = fetchFromServer()
+ * JSONBytesToUI(data = wireBytes)
+ * ```
+ *
+ * @param data  Compressed wire bytes.
+ * @param colorScheme Optional [KetoyColorScheme].
+ * @see JSONStringToUI
+ * @see KetoyWireFormat.autoDecode
+ */
+@Composable
+fun JSONBytesToUI(
+    data: ByteArray,
+    colorScheme: KetoyColorScheme? = null,
+) {
+    val result = remember(data) {
+        try {
+            val element = KetoyWireFormat.autoDecode(data)
+            Result.success(ketoyJson.decodeFromJsonElement<UIComponent>(element))
+        } catch (e: Exception) {
+            System.err.println("Ketoy: Failed to decode wire bytes (${data.size} bytes): ${e.javaClass.simpleName}: ${e.message}")
+            Result.failure(e)
+        }
+    }
+
+    val component = result.getOrNull()
+    if (component != null) {
+        if (colorScheme != null) {
+            KetoyThemeProvider(colorScheme = colorScheme) {
+                RenderComponent(component)
+            }
+        } else {
+            KetoyThemeProvider {
+                RenderComponent(component)
+            }
+        }
+    } else {
+        Text(
+            "Ketoy: decode error — ${result.exceptionOrNull()?.message ?: "unknown"}",
+            color = androidx.compose.ui.graphics.Color.Red
+        )
     }
 }
 

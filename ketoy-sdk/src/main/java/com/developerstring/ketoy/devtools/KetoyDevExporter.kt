@@ -1,8 +1,10 @@
 package com.developerstring.ketoy.devtools
 
 import com.developerstring.ketoy.core.toJson
+import com.developerstring.ketoy.core.toWireBytes
 import com.developerstring.ketoy.dsl.KUniversalScope
 import com.developerstring.ketoy.model.KNode
+import com.developerstring.ketoy.wire.WireFormatConfig
 import java.io.File
 
 /**
@@ -63,10 +65,64 @@ abstract class KetoyDevExporter {
 
     /**
      * Execute all registered screen builders and serialise their
+     * widget trees to compressed wire bytes.
+     *
+     * @param config Wire format configuration. Defaults to [WireFormatConfig.OPTIMIZED].
+     * @return A map of `screenName → wireBytes`.
+     */
+    fun buildAllBytes(config: WireFormatConfig = WireFormatConfig.OPTIMIZED): Map<String, ByteArray> {
+        registerScreens()
+        return registeredScreens.mapValues { (_, builder) ->
+            val scope = KUniversalScope()
+            scope.builder()
+            val node = if (scope.children.size == 1) {
+                scope.children.first()
+            } else {
+                scope.children.first()
+            }
+            node.toWireBytes(config)
+        }
+    }
+
+    /**
+     * Export all registered screens as individual `.ktw` wire-format
+     * files inside [directory]. The directory is created if it does not exist.
+     *
+     * @param directory Target directory for the wire-format files.
+     * @param config    Wire format configuration.
+     */
+    fun exportBytesTo(directory: File, config: WireFormatConfig = WireFormatConfig.OPTIMIZED) {
+        directory.mkdirs()
+        val screens = buildAllBytes(config)
+        screens.forEach { (name, bytes) ->
+            val file = File(directory, "$name.ktw")
+            file.writeBytes(bytes)
+            println("Exported: $name -> ${file.absolutePath} (${bytes.size} bytes)")
+        }
+        println("Exported ${screens.size} screen(s) to ${directory.absolutePath}")
+    }
+
+    /**
+     * Convenience wrapper that builds all screens and returns the
+     * resulting wire bytes map without writing to disk.
+     *
+     * @param config Wire format configuration.
+     * @return A map of `screenName → wireBytes`.
+     */
+    fun exportBytes(config: WireFormatConfig = WireFormatConfig.OPTIMIZED): Map<String, ByteArray> =
+        buildAllBytes(config)
+
+    /**
+     * Execute all registered screen builders and serialise their
      * widget trees to JSON.
      *
-     * @return A map of `screenName → jsonString`.
+     * @deprecated Use [buildAllBytes] for compressed wire format export.
      */
+    @Deprecated(
+        message = "Use buildAllBytes() for compressed wire format. Plain JSON export is deprecated.",
+        replaceWith = ReplaceWith("buildAllBytes()")
+    )
+    @Suppress("DEPRECATION")
     fun buildAll(): Map<String, String> {
         registerScreens()
         return registeredScreens.mapValues { (_, builder) ->
@@ -82,27 +138,33 @@ abstract class KetoyDevExporter {
     }
 
     /**
-     * Export all registered screens as individual JSON files inside
-     * [directory]. The directory is created if it does not exist.
+     * Export all registered screens as individual JSON files.
      *
-     * @param directory Target directory for the JSON files.
+     * @deprecated Use [exportBytesTo] for compressed wire format export.
      */
+    @Deprecated(
+        message = "Use exportBytesTo() for compressed wire format. Plain JSON export is deprecated.",
+        replaceWith = ReplaceWith("exportBytesTo(directory)")
+    )
+    @Suppress("DEPRECATION")
     fun exportTo(directory: File) {
         directory.mkdirs()
         val screens = buildAll()
         screens.forEach { (name, json) ->
             val file = File(directory, "$name.json")
             file.writeText(json)
-            println("📄 Exported: $name → ${file.absolutePath}")
+            println("Exported: $name -> ${file.absolutePath}")
         }
-        println("✅ Exported ${screens.size} screen(s) to ${directory.absolutePath}")
+        println("Exported ${screens.size} screen(s) to ${directory.absolutePath}")
     }
 
     /**
-     * Convenience wrapper that builds all screens and returns the
-     * resulting JSON map without writing to disk.
-     *
-     * @return A map of `screenName → jsonString`.
+     * @deprecated Use [exportBytes] for compressed wire format export.
      */
+    @Deprecated(
+        message = "Use exportBytes() for compressed wire format. Plain JSON export is deprecated.",
+        replaceWith = ReplaceWith("exportBytes()")
+    )
+    @Suppress("DEPRECATION")
     fun export(): Map<String, String> = buildAll()
 }

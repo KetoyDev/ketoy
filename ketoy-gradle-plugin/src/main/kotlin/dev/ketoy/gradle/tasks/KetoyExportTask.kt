@@ -43,10 +43,13 @@ abstract class KetoyExportTask : DefaultTask() {
             extension.screensDir.getOrElse("ketoy-screens")
         )
         if (screensDir.exists()) {
-            val jsonFiles = screensDir.listFiles()?.filter { it.extension == "json" } ?: emptyList()
-            logger.lifecycle("✅ Ketoy export complete: ${jsonFiles.size} screen(s) in ${screensDir.absolutePath}")
-            jsonFiles.forEach { file ->
-                logger.lifecycle("   📄 ${file.name} (${file.length()} bytes)")
+            val screenFiles = screensDir.listFiles()?.filter {
+                it.extension == "json" || it.extension == "ktw"
+            } ?: emptyList()
+            logger.lifecycle("✅ Ketoy export complete: ${screenFiles.size} screen(s) in ${screensDir.absolutePath}")
+            screenFiles.forEach { file ->
+                val label = if (file.extension == "ktw") "📦" else "📄"
+                logger.lifecycle("   $label ${file.name} (${file.length()} bytes)")
             }
         } else {
             logger.warn("⚠️  Screens directory not found: ${screensDir.absolutePath}")

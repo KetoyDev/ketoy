@@ -146,9 +146,14 @@ class KetoyDevServer(
         executor.shutdown()
     }
 
-    fun broadcastUpdate(screenName: String, json: String) {
+    fun broadcastUpdate(screenName: String, data: String, isWire: Boolean = false) {
         val version = screenManager.getVersion()
-        val message = """{"type":"update","screen":"$screenName","version":$version,"data":${json}}"""
+        val dataField = if (isWire) {
+            """"data":"$data","format":"ktw""""
+        } else {
+            """"data":$data"""
+        }
+        val message = """{"type":"update","screen":"$screenName","version":$version,$dataField}"""
 
         wsServer.broadcast(message)
 
@@ -161,7 +166,8 @@ class KetoyDevServer(
             pollWaiters.clear()
         }
 
-        println("📤 Pushed update: $screenName (v$version) → ${wsServer.connections.size} client(s)")
+        val label = if (isWire) "wire" else "json"
+        println("📤 Pushed update: $screenName [$label] (v$version) → ${wsServer.connections.size} client(s)")
     }
 
     fun broadcastNavUpdate(navName: String, json: String) {
@@ -217,7 +223,7 @@ class KetoyDevServer(
                 <h3>📱 Available Screens</h3>
                 ${screenManager.listScreens().joinToString("") { 
                     "<div class='screen'>• $it <span class='badge'>v${screenManager.getVersion()}</span></div>" 
-                }.ifEmpty { "<p>No screens yet. Add .json files to the watch directory.</p>" }}
+                }.ifEmpty { "<p>No screens yet. Add .json or .ktw files to the watch directory.</p>" }}
             </div>
             <div class="card">
                 <h3>🗺️ Navigation Graphs</h3>
@@ -270,12 +276,18 @@ WS  :${port + 1}    → WebSocket live updates
             sendJson(exchange, 400, """{"error":"Missing 'name' parameter"}""")
             return
         }
-        val screenJson = screenManager.getScreen(name)
-        if (screenJson == null) {
+        val screenData = screenManager.getScreen(name)
+        if (screenData == null) {
             sendJson(exchange, 404, """{"error":"Screen '$name' not found"}""")
             return
         }
-        val json = """{"version":${screenManager.getVersion()},"screen":"$name","data":$screenJson}"""
+        val isWire = screenManager.isWireFormat(name)
+        val dataField = if (isWire) {
+            """"data":"$screenData","format":"ktw""""
+        } else {
+            """"data":$screenData"""
+        }
+        val json = """{"version":${screenManager.getVersion()},"screen":"$name",$dataField}"""
         sendJson(exchange, 200, json)
     }
 
@@ -329,8 +341,12 @@ WS  :${port + 1}    → WebSocket live updates
 
     private fun buildBundleJson(): String {
         val screens = screenManager.getAllScreens()
-        val screensJson = screens.entries.joinToString(",") { (name, json) ->
-            "\"$name\":$json"
+        val screensJson = screens.entries.joinToString(",") { (name, data) ->
+            if (screenManager.isWireFormat(name)) {
+                "\"$name\":{\"format\":\"ktw\",\"data\":\"$data\"}"
+            } else {
+                "\"$name\":$data"
+            }
         }
         val navGraphs = screenManager.getAllNavGraphs()
         val navsJson = navGraphs.entries.joinToString(",") { (name, json) ->
@@ -392,9 +408,15 @@ WS  :${port + 1}    → WebSocket live updates
                             val nameMatch = Regex("\"name\":\"([^\"]+)\"").find(message)
                             val name = nameMatch?.groupValues?.get(1)
                             if (name != null) {
-                                val screenJson = screenManager.getScreen(name)
-                                if (screenJson != null) {
-                                    conn.send("""{"type":"screen","screen":"$name","data":$screenJson}""")
+                                val screenData = screenManager.getScreen(name)
+                                if (screenData != null) {
+                                    val isWire = screenManager.isWireFormat(name)
+                                    val dataField = if (isWire) {
+                                        """"data":"$screenData","format":"ktw""""
+                                    } else {
+                                        """"data":$screenData"""
+                                    }
+                                    conn.send("""{"type":"screen","screen":"$name",$dataField}""")
                                 }
                             }
                         }

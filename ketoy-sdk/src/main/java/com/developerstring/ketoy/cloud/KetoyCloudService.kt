@@ -103,15 +103,15 @@ object KetoyCloudService {
          *
          * @property screenName The resolved screen identifier.
          * @property version    Version string returned by the server or stored in cache.
-         * @property uiJson     The full JSON UI tree as a raw string, ready to be passed
-         *                      to [JSONStringToUI][com.developerstring.ketoy.renderer.JSONStringToUI].
+         * @property uiBytes    The UI tree as raw bytes (wire format or plain JSON UTF-8),
+         *                      ready to be passed to [JSONBytesToUI].
          * @property fromCache  `true` if the content came from the local cache rather
          *                      than a fresh network response.
          */
         data class Success(
             val screenName: String,
             val version: String,
-            val uiJson: String,
+            val uiBytes: ByteArray,
             val fromCache: Boolean
         ) : FetchResult()
 
@@ -156,6 +156,7 @@ object KetoyCloudService {
     suspend fun fetchScreen(screenName: String): FetchResult {
         return withContext(Dispatchers.IO) {
             try {
+                @Suppress("DEPRECATION")
                 val cached = KetoyCacheStore.get(screenName)
                 val isCacheValid = isCacheValid(cached)
 
@@ -263,7 +264,7 @@ object KetoyCloudService {
             FetchResult.Success(
                 screenName = data.screenName,
                 version = data.version,
-                uiJson = data.ui.toString(),
+                uiBytes = data.ui.toString().toByteArray(Charsets.UTF_8),
                 fromCache = false
             )
         } catch (e: Exception) {
@@ -273,7 +274,7 @@ object KetoyCloudService {
                 FetchResult.Success(
                     screenName = cached.screenName,
                     version = cached.version,
-                    uiJson = cached.jsonContent,
+                    uiBytes = cached.jsonContent.toByteArray(Charsets.UTF_8),
                     fromCache = true
                 )
             } else {
@@ -313,7 +314,7 @@ object KetoyCloudService {
             return FetchResult.Success(
                 screenName = cached.screenName,
                 version = cached.version,
-                uiJson = cached.jsonContent,
+                uiBytes = cached.jsonContent.toByteArray(Charsets.UTF_8),
                 fromCache = true
             )
         }
@@ -324,7 +325,7 @@ object KetoyCloudService {
             FetchResult.Success(
                 screenName = data.screenName,
                 version = data.version,
-                uiJson = data.ui.toString(),
+                uiBytes = data.ui.toString().toByteArray(Charsets.UTF_8),
                 fromCache = false
             )
         } catch (e: Exception) {
@@ -334,7 +335,7 @@ object KetoyCloudService {
                 FetchResult.Success(
                     screenName = cached.screenName,
                     version = cached.version,
-                    uiJson = cached.jsonContent,
+                    uiBytes = cached.jsonContent.toByteArray(Charsets.UTF_8),
                     fromCache = true
                 )
             } else {
@@ -366,7 +367,7 @@ object KetoyCloudService {
             return FetchResult.Success(
                 screenName = cached.screenName,
                 version = cached.version,
-                uiJson = cached.jsonContent,
+                uiBytes = cached.jsonContent.toByteArray(Charsets.UTF_8),
                 fromCache = true
             )
         }
@@ -377,7 +378,7 @@ object KetoyCloudService {
             FetchResult.Success(
                 screenName = data.screenName,
                 version = data.version,
-                uiJson = data.ui.toString(),
+                uiBytes = data.ui.toString().toByteArray(Charsets.UTF_8),
                 fromCache = false
             )
         } catch (e: Exception) {
@@ -403,7 +404,7 @@ object KetoyCloudService {
             FetchResult.Success(
                 screenName = cached.screenName,
                 version = cached.version,
-                uiJson = cached.jsonContent,
+                uiBytes = cached.jsonContent.toByteArray(Charsets.UTF_8),
                 fromCache = true
             )
         } else {
@@ -429,7 +430,7 @@ object KetoyCloudService {
             FetchResult.Success(
                 screenName = data.screenName,
                 version = data.version,
-                uiJson = data.ui.toString(),
+                uiBytes = data.ui.toString().toByteArray(Charsets.UTF_8),
                 fromCache = false
             )
         } catch (e: Exception) {
@@ -448,13 +449,13 @@ object KetoyCloudService {
      * @throws KetoyNetworkException on HTTP or API errors.
      */
     private fun fetchFromNetwork(screenName: String, saveToCache: Boolean): KetoyScreenData {
-        val data = KetoyApiClient.fetchScreen(screenName)
+        val data = KetoyApiClient.fetchScreenOptimized(screenName)
 
         if (saveToCache) {
-            KetoyCacheStore.put(
+            KetoyCacheStore.putBytes(
                 screenName = data.screenName,
                 version = data.version,
-                jsonContent = data.ui.toString()
+                data = data.ui.toString().toByteArray(Charsets.UTF_8)
             )
             Log.d(TAG, "Cached screen '${data.screenName}' v${data.version}")
         }
@@ -489,11 +490,11 @@ object KetoyCloudService {
                 }
 
                 // Version changed – fetch full screen
-                val data = KetoyApiClient.fetchScreen(screenName)
-                KetoyCacheStore.put(
+                val data = KetoyApiClient.fetchScreenOptimized(screenName)
+                KetoyCacheStore.putBytes(
                     screenName = data.screenName,
                     version = data.version,
-                    jsonContent = data.ui.toString()
+                    data = data.ui.toString().toByteArray(Charsets.UTF_8)
                 )
                 Log.d(TAG, "Background updated '$screenName' to v${data.version}")
             } catch (e: Exception) {

@@ -10,9 +10,12 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import com.developerstring.ketoy.renderer.JSONBytesToUI
 import com.developerstring.ketoy.renderer.JSONStringToUI
+import com.developerstring.ketoy.wire.KetoyWireFormat
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
+import java.io.ByteArrayOutputStream
 
 /**
  * Primary composable for rendering a Ketoy screen by its registered name.
@@ -72,38 +75,48 @@ fun KetoyView(
 }
 
 /**
- * Render a Ketoy screen from a raw JSON string.
+ * Render a Ketoy screen from compressed wire bytes.
  *
- * Directly invokes the
- * [JSONStringToUI][com.developerstring.ketoy.renderer.JSONStringToUI]
- * renderer — no registry lookup or caching is involved.
- *
- * ## Expected JSON format
- * ```json
- * {
- *   "type": "Column",
- *   "children": [
- *     { "type": "Text", "text": "Hello, World!" }
- *   ]
- * }
- * ```
+ * Directly invokes the [JSONBytesToUI] renderer — no registry lookup
+ * or caching is involved. Accepts any format produced by the Ketoy
+ * wire pipeline (gzip, MessagePack, aliased JSON, or plain JSON bytes).
  *
  * ```kotlin
- * val json = """{ "type": "Text", "text": "Hello" }"""
- * KetoyViewFromJson(json = json)
+ * val wireBytes: ByteArray = node.toWireBytes()
+ * KetoyViewFromWireBytes(data = wireBytes)
  * ```
  *
- * @param json     The raw JSON string describing the Ketoy UI tree.
+ * @param data     Compressed wire bytes describing the Ketoy UI tree.
  * @param modifier Optional [Modifier] applied to the root container.
  * @see KetoyView
- * @see com.developerstring.ketoy.renderer.JSONStringToUI
+ * @see com.developerstring.ketoy.renderer.JSONBytesToUI
  */
+@Composable
+fun KetoyViewFromWireBytes(
+    data: ByteArray,
+    modifier: Modifier = Modifier
+) {
+    Box(modifier = modifier) {
+        JSONBytesToUI(data)
+    }
+}
+
+/**
+ * Render a Ketoy screen from a raw JSON string.
+ *
+ * @deprecated Use [KetoyViewFromWireBytes] with compressed wire bytes.
+ */
+@Deprecated(
+    message = "Use KetoyViewFromWireBytes() with compressed wire bytes. Plain JSON rendering is deprecated.",
+    replaceWith = ReplaceWith("KetoyViewFromWireBytes(data, modifier)", "com.developerstring.ketoy.screen.KetoyViewFromWireBytes")
+)
 @Composable
 fun KetoyViewFromJson(
     json: String,
     modifier: Modifier = Modifier
 ) {
     Box(modifier = modifier) {
+        @Suppress("DEPRECATION")
         JSONStringToUI(json)
     }
 }
@@ -134,15 +147,15 @@ fun KetoyViewFromAsset(
     errorContent: @Composable (String) -> Unit = { msg -> DefaultErrorContent(msg) }
 ) {
     val context = LocalContext.current
-    var jsonContent by remember { mutableStateOf<String?>(null) }
+    var assetBytes by remember { mutableStateOf<ByteArray?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(assetPath) {
         try {
-            val content = withContext(Dispatchers.IO) {
-                context.assets.open(assetPath).bufferedReader().use { it.readText() }
+            val bytes = withContext(Dispatchers.IO) {
+                context.assets.open(assetPath).use { it.readBytes() }
             }
-            jsonContent = content
+            assetBytes = bytes
         } catch (e: Exception) {
             error = "Failed to load asset: $assetPath\n${e.message}"
         }
@@ -151,7 +164,7 @@ fun KetoyViewFromAsset(
     Box(modifier = modifier) {
         when {
             error != null -> errorContent(error!!)
-            jsonContent != null -> JSONStringToUI(jsonContent!!)
+            assetBytes != null -> JSONBytesToUI(assetBytes!!)
             else -> loadingContent()
         }
     }
@@ -188,17 +201,19 @@ fun KetoyViewFromNetwork(
     loadingContent: @Composable () -> Unit = { DefaultLoadingContent() },
     errorContent: @Composable (String) -> Unit = { msg -> DefaultErrorContent(msg) }
 ) {
-    var jsonContent by remember { mutableStateOf<String?>(null) }
+    var responseBytes by remember { mutableStateOf<ByteArray?>(null) }
     var error by remember { mutableStateOf<String?>(null) }
 
     LaunchedEffect(url) {
         try {
-            val content = withContext(Dispatchers.IO) {
+            val bytes = withContext(Dispatchers.IO) {
                 val connection = java.net.URL(url).openConnection() as java.net.HttpURLConnection
                 headers.forEach { (key, value) -> connection.setRequestProperty(key, value) }
-                connection.inputStream.bufferedReader().use { it.readText() }
+                connection.setRequestProperty("Accept", KetoyWireFormat.ACCEPT_HEADER)
+                connection.setRequestProperty("Accept-Encoding", "gzip")
+                connection.inputStream.use { it.readBytes() }
             }
-            jsonContent = content
+            responseBytes = bytes
         } catch (e: Exception) {
             error = "Failed to load from network: $url\n${e.message}"
         }
@@ -207,7 +222,7 @@ fun KetoyViewFromNetwork(
     Box(modifier = modifier) {
         when {
             error != null -> errorContent(error!!)
-            jsonContent != null -> JSONStringToUI(jsonContent!!)
+            responseBytes != null -> JSONBytesToUI(responseBytes!!)
             else -> loadingContent()
         }
     }

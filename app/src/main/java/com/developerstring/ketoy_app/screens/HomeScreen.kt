@@ -280,10 +280,6 @@ fun buildHomeCards(
             horizontalArrangement = KArrangements.SpaceBetween,
             verticalAlignment = KAlignments.CenterVertically
         ) {
-            KText(
-                fontWeight = KFontWeights.Bold, textAlign = KTextAlign.Center,
-                maxLines = 1, fontSize = 24, color = KColors.OnSurface
-            )
             KRow(
                 horizontalArrangement = KArrangements.spacedBy(14),
                 verticalAlignment = KAlignments.CenterVertically

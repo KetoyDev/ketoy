@@ -19,6 +19,7 @@ import com.developerstring.ketoy.cloud.cache.KetoyCacheStrategy
 import com.developerstring.ketoy.core.toJson
 import com.developerstring.ketoy.dsl.KUniversalScope
 import com.developerstring.ketoy.model.KNode
+import com.developerstring.ketoy.renderer.JSONBytesToUI
 import com.developerstring.ketoy.renderer.JSONStringToUI
 import com.developerstring.ketoy.theme.KetoyColorScheme
 import kotlinx.serialization.json.contentOrNull
@@ -265,6 +266,9 @@ class KetoyScreen(
     /** Dev-server override JSONs, one per content name. */
     private val _devOverrides = mutableStateMapOf<String, String>()
 
+    /** Dev-server override as raw wire bytes (takes precedence over [_devOverrides]). */
+    private val _devOverrideBytes = mutableStateMapOf<String, ByteArray>()
+
     // ── Legacy single-content compat ────────────────────────────
 
     /**
@@ -370,6 +374,7 @@ class KetoyScreen(
     fun setScreenDevOverride(json: String?) {
         if (json == null) {
             _devOverrides.clear()
+            _devOverrideBytes.clear()
             return
         }
         try {
@@ -387,6 +392,41 @@ class KetoyScreen(
         } catch (_: Exception) {
             _devOverrides["__screen__"] = json
         }
+    }
+
+    /**
+     * Set a dev-server override from raw wire format bytes.
+     *
+     * Wire bytes are stored directly and take precedence over JSON string
+     * overrides. The renderer passes them to [JSONBytesToUI] which uses
+     * [KetoyWireFormat.autoDecode] to handle any format (JSON, MessagePack,
+     * gzipped, aliased, etc.).
+     *
+     * @param bytes The wire format bytes, or `null` to clear.
+     */
+    fun setScreenDevOverrideBytes(bytes: ByteArray?) {
+        if (bytes == null) {
+            _devOverrideBytes.clear()
+            _devOverrides.clear()
+            return
+        }
+        _devOverrideBytes["main"] = bytes
+        println("📱 Ketoy Dev: setScreenDevOverrideBytes($screenName) — ${bytes.size} bytes → _devOverrideBytes[\"main\"]")
+    }
+
+    /**
+     * Set a dev-server override for a specific content block from raw wire bytes.
+     *
+     * @param contentName The content block name (e.g. "main", "header", "cards").
+     * @param bytes The wire format bytes, or `null` to clear this content's override.
+     */
+    fun setDevOverrideBytes(contentName: String, bytes: ByteArray?) {
+        if (bytes == null) {
+            _devOverrideBytes.remove(contentName)
+            return
+        }
+        _devOverrideBytes[contentName] = bytes
+        println("📱 Ketoy Dev: setDevOverrideBytes($screenName/$contentName) — ${bytes.size} bytes")
     }
 
     /**
@@ -506,11 +546,25 @@ class KetoyScreen(
         // when KetoyVariableRegistry values are updated.
         val varRevision = com.developerstring.ketoy.core.KetoyVariableRegistry.revision
 
-        // 1. Dev-server override (hot-reload)
+        // Debug: log content resolution state
+        println("📱 Ketoy Dev [render] ContentInternal($screenName/$name) | _devOverrideBytes keys=${_devOverrideBytes.keys} | _devOverrides keys=${_devOverrides.keys} | hasEntry=${entry != null}")
+
+        // 1a. Dev-server override as raw wire bytes (takes precedence)
+        val devWireBytes = _devOverrideBytes[name]
+        if (devWireBytes != null) {
+            println("📱 Ketoy Dev [render] ✅ Rendering wire bytes for $screenName/$name (${devWireBytes.size} bytes)")
+            key(devWireBytes, varRevision) {
+                JSONBytesToUI(data = devWireBytes, colorScheme = colorScheme)
+            }
+            return
+        }
+
+        // 1b. Dev-server override (hot-reload) — arrives as JSON string from WebSocket
         val devJson = _devOverrides[name]
         if (devJson != null) {
+            val devBytes = remember(devJson) { devJson.toByteArray(Charsets.UTF_8) }
             key(devJson, varRevision) {
-                JSONStringToUI(value = devJson, colorScheme = colorScheme)
+                JSONBytesToUI(data = devBytes, colorScheme = colorScheme)
             }
             return
         }
@@ -520,8 +574,9 @@ class KetoyScreen(
         if (screenDevJson != null) {
             val contentJson = extractContentFromScreenJson(screenDevJson, name)
             if (contentJson != null) {
+                val contentBytes = remember(contentJson) { contentJson.toByteArray(Charsets.UTF_8) }
                 key(contentJson, varRevision) {
-                    JSONStringToUI(value = contentJson, colorScheme = colorScheme)
+                    JSONBytesToUI(data = contentBytes, colorScheme = colorScheme)
                 }
                 return
             }
@@ -541,7 +596,8 @@ class KetoyScreen(
 
         // 3. Local JSON
         if (entry.jsonContent != null) {
-            JSONStringToUI(value = entry.jsonContent, colorScheme = colorScheme)
+            val localBytes = remember(entry.jsonContent) { entry.jsonContent.toByteArray(Charsets.UTF_8) }
+            JSONBytesToUI(data = localBytes, colorScheme = colorScheme)
             return
         }
 
@@ -559,9 +615,9 @@ class KetoyScreen(
         }
 
         // 6. DSL fallback
-        val dslJson = remember { entry.buildJson() }
-        if (dslJson != null) {
-            JSONStringToUI(value = dslJson, colorScheme = colorScheme)
+        val dslBytes = remember { entry.buildJson()?.toByteArray(Charsets.UTF_8) }
+        if (dslBytes != null) {
+            JSONBytesToUI(data = dslBytes, colorScheme = colorScheme)
             return
         }
 
@@ -814,7 +870,7 @@ private fun CloudContent(
     // will silently replace the content when the cloud response arrives.
     var fetchState by remember {
         mutableStateOf<CloudState>(
-            if (showCacheFirst && fallbackJson != null) CloudState.Loaded(fallbackJson)
+            if (showCacheFirst && fallbackJson != null) CloudState.Loaded(fallbackJson.toByteArray(Charsets.UTF_8))
             else CloudState.Loading
         )
     }
@@ -829,10 +885,10 @@ private fun CloudContent(
         val result = KetoyCloudService.fetchScreen(screenName)
         fetchState = when (result) {
             is KetoyCloudService.FetchResult.Success -> {
-                // The cloud JSON may be a screen-level wrapper with "contents".
-                // Extract the right content block by name.
-                val resolvedJson = extractContentJsonFromCloud(result.uiJson, contentName)
-                CloudState.Loaded(resolvedJson)
+                // The cloud response is bytes — convert to string for content extraction
+                val uiString = result.uiBytes.toString(Charsets.UTF_8)
+                val resolvedJson = extractContentJsonFromCloud(uiString, contentName)
+                CloudState.Loaded(resolvedJson.toByteArray(Charsets.UTF_8))
             }
             is KetoyCloudService.FetchResult.Error -> {
                 // Keep showing content if already loaded (don't regress to error)
@@ -845,10 +901,11 @@ private fun CloudContent(
 
     when (val state = fetchState) {
         is CloudState.Loading -> loadingContent()
-        is CloudState.Loaded -> JSONStringToUI(value = state.json, colorScheme = colorScheme)
+        is CloudState.Loaded -> JSONBytesToUI(data = state.data, colorScheme = colorScheme)
         is CloudState.Error -> {
             if (fallbackJson != null) {
-                JSONStringToUI(value = fallbackJson, colorScheme = colorScheme)
+                val fallbackBytes = remember(fallbackJson) { fallbackJson.toByteArray(Charsets.UTF_8) }
+                JSONBytesToUI(data = fallbackBytes, colorScheme = colorScheme)
             } else {
                 errorContent(state.message) { retryTrigger++ }
             }
@@ -886,7 +943,7 @@ private fun extractContentJsonFromCloud(json: String, contentName: String): Stri
 
 private sealed class CloudState {
     data object Loading : CloudState()
-    data class Loaded(val json: String) : CloudState()
+    data class Loaded(val data: ByteArray) : CloudState()
     data class Error(val message: String) : CloudState()
 }
 
@@ -896,16 +953,16 @@ private fun AssetScreenContent(
     colorScheme: KetoyColorScheme? = null
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
-    var json by remember { mutableStateOf<String?>(null) }
+    var assetBytes by remember { mutableStateOf<ByteArray?>(null) }
 
     LaunchedEffect(assetPath) {
-        json = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
-            context.assets.open(assetPath).bufferedReader().use { it.readText() }
+        assetBytes = kotlinx.coroutines.withContext(kotlinx.coroutines.Dispatchers.IO) {
+            context.assets.open(assetPath).use { it.readBytes() }
         }
     }
 
-    if (json != null) {
-        JSONStringToUI(value = json!!, colorScheme = colorScheme)
+    if (assetBytes != null) {
+        JSONBytesToUI(data = assetBytes!!, colorScheme = colorScheme)
     } else {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
             CircularProgressIndicator(modifier = Modifier.size(48.dp))

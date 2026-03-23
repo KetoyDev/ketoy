@@ -52,7 +52,7 @@ class KetoyAutoExportTest {
     @Test
     fun exportForDevServer() {
         val outputDir = File(System.getProperty("user.dir") ?: ".").resolve("../ketoy-screens")
-        val result = runner.exportAll(
+        val result = runner.exportAllWire(
             outputDir = outputDir,
             writeManifests = false  // dev server doesn't need manifests
         )
@@ -62,7 +62,7 @@ class KetoyAutoExportTest {
     @Test
     fun exportForProduction() {
         val outputDir = File(System.getProperty("user.dir") ?: ".").resolve("../ketoy-export")
-        val result = runner.exportAll(
+        val result = runner.exportAllWire(
             outputDir = outputDir,
             writeManifests = true
         )

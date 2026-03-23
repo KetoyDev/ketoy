@@ -1,7 +1,9 @@
 package com.developerstring.ketoy.export
 
 import com.developerstring.ketoy.core.toJson
+import com.developerstring.ketoy.core.toWireBytes
 import com.developerstring.ketoy.navigation.KetoyNavGraph
+import com.developerstring.ketoy.wire.WireFormatConfig
 import java.io.File
 
 /**
@@ -50,13 +52,135 @@ import java.io.File
 class KetoyAutoExportRunner {
 
     /**
-     * Export all registered screens and nav graphs to the given directory.
+     * Export all registered screens and nav graphs as compressed wire-format
+     * files (`.ktw`) to the given directory. Manifests remain as JSON.
      *
      * @param outputDir       Target directory (created if needed).
-     * @param clearExisting   Remove existing `.json` files before writing.
+     * @param clearExisting   Remove existing export files before writing.
      * @param writeManifests  Write navigation_manifest.json and screen_manifest.json.
+     * @param wireConfig      Wire format configuration for content nodes.
      * @return [ExportResult] summary of the export operation.
      */
+    fun exportAllWire(
+        outputDir: File,
+        clearExisting: Boolean = true,
+        writeManifests: Boolean = true,
+        wireConfig: WireFormatConfig = WireFormatConfig.OPTIMIZED
+    ): ExportResult {
+        val screens = KetoyExportRegistry.screens
+        val navGraphs = KetoyExportRegistry.navGraphs
+
+        outputDir.mkdirs()
+
+        if (clearExisting) {
+            outputDir.listFiles()
+                ?.filter { it.extension in listOf("json", "ktw") }
+                ?.forEach { it.delete() }
+        }
+
+        // ── Export screens ──────────────────────────────────
+
+        val screenExports = mutableListOf<ScreenExportResult>()
+
+        screens.forEach { definition ->
+            // Build each content as wire bytes
+            val contentsBytes = definition.contents.associate { contentDef ->
+                val node = contentDef.nodeBuilder()
+                contentDef.name to node.toWireBytes(wireConfig)
+            }
+
+            if (contentsBytes.isEmpty()) return@forEach
+
+            // Write individual content .ktw files
+            contentsBytes.forEach { (contentName, bytes) ->
+                val file = File(outputDir, "${definition.screenName}_$contentName.ktw")
+                file.writeBytes(bytes)
+            }
+
+            // Also write a JSON manifest per screen for metadata
+            @Suppress("DEPRECATION")
+            val contentsJson = definition.contents.associate { contentDef ->
+                val node = contentDef.nodeBuilder()
+                contentDef.name to node.toJson()
+            }
+            val contentsBlock = contentsJson.entries.joinToString(",\n    ") { (id, json) ->
+                "\"$id\": $json"
+            }
+            val screenJson = buildString {
+                appendLine("{")
+                appendLine("  \"screenName\": \"${definition.screenName}\",")
+                appendLine("  \"displayName\": \"${definition.displayName}\",")
+                if (definition.description.isNotBlank()) {
+                    appendLine("  \"description\": \"${definition.description}\",")
+                }
+                appendLine("  \"version\": \"${definition.version}\",")
+                appendLine("  \"contents\": {")
+                appendLine("    $contentsBlock")
+                appendLine("  }")
+                append("}")
+            }
+
+            screenExports.add(
+                ScreenExportResult(
+                    screenName = definition.screenName,
+                    fileName = "${definition.screenName}.ktw",
+                    json = screenJson,
+                    contentNames = definition.contents.map { it.name }
+                )
+            )
+        }
+
+        // ── Export nav graphs ───────────────────────────────
+
+        val navExports = mutableListOf<NavGraphExportResult>()
+
+        navGraphs.forEach { graph ->
+            val json = graph.toJson()
+            val file = File(outputDir, "nav_${graph.navHostName}.json")
+            file.writeText(json)
+
+            navExports.add(
+                NavGraphExportResult(
+                    navHostName = graph.navHostName,
+                    fileName = "nav_${graph.navHostName}.json",
+                    json = json,
+                    destinationCount = graph.destinations.size,
+                    navigationCount = graph.navigations.size
+                )
+            )
+        }
+
+        // ── Write manifests ─────────────────────────────────
+
+        if (writeManifests && (navExports.isNotEmpty() || screenExports.isNotEmpty())) {
+            if (navExports.isNotEmpty()) {
+                val navManifest = buildNavigationManifest(navExports)
+                File(outputDir, "navigation_manifest.json").writeText(navManifest)
+            }
+
+            if (screenExports.isNotEmpty()) {
+                val screenManifest = buildScreenManifest(screens, screenExports)
+                File(outputDir, "screen_manifest.json").writeText(screenManifest)
+            }
+        }
+
+        return ExportResult(
+            screens = screenExports,
+            navGraphs = navExports,
+            outputDirectory = outputDir.absolutePath
+        )
+    }
+
+    /**
+     * Export all registered screens and nav graphs as JSON files.
+     *
+     * @deprecated Use [exportAllWire] for compressed wire format export.
+     */
+    @Deprecated(
+        message = "Use exportAllWire() for compressed wire format. Plain JSON export is deprecated.",
+        replaceWith = ReplaceWith("exportAllWire(outputDir, clearExisting, writeManifests)")
+    )
+    @Suppress("DEPRECATION")
     fun exportAll(
         outputDir: File,
         clearExisting: Boolean = true,
@@ -72,8 +196,6 @@ class KetoyAutoExportRunner {
                 ?.filter { it.extension == "json" }
                 ?.forEach { it.delete() }
         }
-
-        // ── Export screens ──────────────────────────────────
 
         val screenExports = mutableListOf<ScreenExportResult>()
 
@@ -117,8 +239,6 @@ class KetoyAutoExportRunner {
             )
         }
 
-        // ── Export nav graphs ───────────────────────────────
-
         val navExports = mutableListOf<NavGraphExportResult>()
 
         navGraphs.forEach { graph ->
@@ -136,8 +256,6 @@ class KetoyAutoExportRunner {
                 )
             )
         }
-
-        // ── Write manifests ─────────────────────────────────
 
         if (writeManifests && (navExports.isNotEmpty() || screenExports.isNotEmpty())) {
             if (navExports.isNotEmpty()) {

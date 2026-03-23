@@ -14,6 +14,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
+import com.developerstring.ketoy.renderer.JSONBytesToUI
 import com.developerstring.ketoy.renderer.JSONStringToUI
 import com.developerstring.ketoy.screen.KetoyScreen
 import com.developerstring.ketoy.screen.KetoyScreenRegistry
@@ -99,37 +100,46 @@ fun KetoyCloudScreen(
 }
 
 /**
- * Renders a pre-fetched Ketoy screen from a raw JSON string.
+ * Renders a pre-fetched Ketoy screen from compressed wire bytes.
  *
  * Use this composable when you have already fetched or constructed the
- * screen JSON yourself (e.g. from a custom API, local file, or a Room
- * database) and want Ketoy to render it without any network call.
+ * screen data yourself and want Ketoy to render it without any network call.
+ * Accepts any format produced by the Ketoy wire pipeline.
  *
- * ## Example
  * ```kotlin
- * val json = myRepository.getScreenJson("dashboard")
- * KetoyCloudScreenFromJson(
- *     json        = json,
- *     colorScheme = myKetoyColors
- * )
+ * val wireBytes: ByteArray = node.toWireBytes()
+ * KetoyCloudScreenFromWireBytes(data = wireBytes, colorScheme = myKetoyColors)
  * ```
  *
- * ## Expected JSON format
- * ```json
- * {
- *   "type": "Column",
- *   "children": [
- *     { "type": "Text", "text": "Hello, World!" }
- *   ]
- * }
- * ```
- *
- * @param json        The raw JSON string describing the Ketoy UI tree.
+ * @param data        Compressed wire bytes describing the Ketoy UI tree.
  * @param modifier    Optional [Modifier] applied to the root [Box] container.
  * @param colorScheme Optional [KetoyColorScheme] for theming.
  * @see KetoyCloudScreen
- * @see com.developerstring.ketoy.renderer.JSONStringToUI
+ * @see com.developerstring.ketoy.renderer.JSONBytesToUI
  */
+@Composable
+fun KetoyCloudScreenFromWireBytes(
+    data: ByteArray,
+    modifier: Modifier = Modifier,
+    colorScheme: KetoyColorScheme? = null
+) {
+    Box(modifier = modifier) {
+        JSONBytesToUI(data = data, colorScheme = colorScheme)
+    }
+}
+
+/**
+ * Renders a pre-fetched Ketoy screen from a raw JSON string.
+ *
+ * @deprecated Use [KetoyCloudScreenFromWireBytes] with compressed wire bytes.
+ */
+@Deprecated(
+    message = "Use KetoyCloudScreenFromWireBytes() with compressed wire bytes. Plain JSON rendering is deprecated.",
+    replaceWith = ReplaceWith(
+        "KetoyCloudScreenFromWireBytes(data, modifier, colorScheme)",
+        "com.developerstring.ketoy.cloud.KetoyCloudScreenFromWireBytes"
+    )
+)
 @Composable
 fun KetoyCloudScreenFromJson(
     json: String,
@@ -137,6 +147,7 @@ fun KetoyCloudScreenFromJson(
     colorScheme: KetoyColorScheme? = null
 ) {
     Box(modifier = modifier) {
+        @Suppress("DEPRECATION")
         JSONStringToUI(value = json, colorScheme = colorScheme)
     }
 }
@@ -158,7 +169,7 @@ private fun LegacyCloudFetch(
         val result = KetoyCloudService.fetchScreen(screenName)
         fetchState = when (result) {
             is KetoyCloudService.FetchResult.Success -> CloudScreenState.Loaded(
-                uiJson = result.uiJson,
+                uiBytes = result.uiBytes,
                 version = result.version,
                 fromCache = result.fromCache
             )
@@ -169,7 +180,7 @@ private fun LegacyCloudFetch(
     when (val state = fetchState) {
         is CloudScreenState.Loading -> loadingContent()
         is CloudScreenState.Loaded -> {
-            JSONStringToUI(value = state.uiJson, colorScheme = colorScheme)
+            JSONBytesToUI(data = state.uiBytes, colorScheme = colorScheme)
         }
         is CloudScreenState.Error -> errorContent(state.message) { retryTrigger++ }
     }
@@ -180,7 +191,7 @@ private fun LegacyCloudFetch(
 private sealed class CloudScreenState {
     data object Loading : CloudScreenState()
     data class Loaded(
-        val uiJson: String,
+        val uiBytes: ByteArray,
         val version: String,
         val fromCache: Boolean
     ) : CloudScreenState()

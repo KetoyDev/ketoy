@@ -1,5 +1,6 @@
 package com.developerstring.ketoy.devtools
 
+import android.util.Base64
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateOf
 import kotlinx.coroutines.*
@@ -33,6 +34,9 @@ class KetoyDevClient {
         private set
 
     val screens = mutableStateMapOf<String, String>()
+
+    /** Wire format screen bytes (base64-decoded). Screens present here should be rendered via [JSONBytesToUI]. */
+    val screenBytes = mutableStateMapOf<String, ByteArray>()
 
     val navGraphs = mutableStateMapOf<String, String>()
 
@@ -272,9 +276,17 @@ class KetoyDevClient {
                     val data = json.optJSONObject("data") ?: return
                     val version = data.optLong("version", dataVersion.value)
                     val screensObj = data.optJSONObject("screens") ?: return
-                    val screenUpdates = buildMap {
-                        screensObj.keys().forEach { name ->
-                            put(name, screensObj.get(name).toString())
+                    val screenJsonUpdates = mutableMapOf<String, String>()
+                    val screenByteUpdates = mutableMapOf<String, ByteArray>()
+                    screensObj.keys().forEach { name ->
+                        val value = screensObj.get(name)
+                        if (value is org.json.JSONObject && value.optString("format") == "ktw") {
+                            val b64 = value.optString("data")
+                            if (b64.isNotEmpty()) {
+                                screenByteUpdates[name] = Base64.decode(b64, Base64.DEFAULT)
+                            }
+                        } else {
+                            screenJsonUpdates[name] = value.toString()
                         }
                     }
                     val navsObj = data.optJSONObject("navGraphs")
@@ -286,19 +298,37 @@ class KetoyDevClient {
 
                     scope.launch(Dispatchers.Main.immediate) {
                         dataVersion.value = version
-                        screenUpdates.forEach { (name, screenJson) -> screens[name] = screenJson }
+                        screenJsonUpdates.forEach { (name, screenJson) ->
+                            screens[name] = screenJson
+                            screenBytes.remove(name)
+                        }
+                        screenByteUpdates.forEach { (name, bytes) ->
+                            screenBytes[name] = bytes
+                            screens[name] = "__wire__" // sentinel so screen appears in screens map
+                        }
                         navUpdates.forEach { (name, navJson) -> navGraphs[name] = navJson }
                     }
                 }
                 "update" -> {
                     val screenName = json.optString("screen")
                     val version = json.optLong("version", dataVersion.value)
-                    val data = json.opt("data")?.toString() ?: return
+                    val format = json.optString("format", "")
+                    val isWire = format == "ktw"
 
                     scope.launch(Dispatchers.Main.immediate) {
                         dataVersion.value = version
-                        screens[screenName] = data
-                        println("📱 Ketoy Dev: Updated screen '$screenName' (v$version)")
+                        if (isWire) {
+                            val b64 = json.optString("data")
+                            if (b64.isNotEmpty()) {
+                                screenBytes[screenName] = Base64.decode(b64, Base64.DEFAULT)
+                                screens[screenName] = "__wire__"
+                            }
+                        } else {
+                            val data = json.opt("data")?.toString() ?: return@launch
+                            screens[screenName] = data
+                            screenBytes.remove(screenName)
+                        }
+                        println("📱 Ketoy Dev: Updated screen '$screenName' (v$version) [${if (isWire) "wire" else "json"}] | screens.keys=${screens.keys} | screenBytes.keys=${screenBytes.keys}")
                     }
                 }
                 "nav_update" -> {
@@ -320,11 +350,21 @@ class KetoyDevClient {
                 val version = json.optLong("version", 0)
                 if (version > dataVersion.value) {
                     val screensObj = json.optJSONObject("screens")
-                    val screenUpdates = if (screensObj != null) buildMap {
+                    val screenJsonUpdates = mutableMapOf<String, String>()
+                    val screenByteUpdates = mutableMapOf<String, ByteArray>()
+                    if (screensObj != null) {
                         screensObj.keys().forEach { name ->
-                            put(name, screensObj.get(name).toString())
+                            val value = screensObj.get(name)
+                            if (value is org.json.JSONObject && value.optString("format") == "ktw") {
+                                val b64 = value.optString("data")
+                                if (b64.isNotEmpty()) {
+                                    screenByteUpdates[name] = Base64.decode(b64, Base64.DEFAULT)
+                                }
+                            } else {
+                                screenJsonUpdates[name] = value.toString()
+                            }
                         }
-                    } else emptyMap()
+                    }
                     val navsObj = json.optJSONObject("navGraphs")
                     val navUpdates = if (navsObj != null) buildMap {
                         navsObj.keys().forEach { name ->
@@ -334,7 +374,14 @@ class KetoyDevClient {
 
                     scope.launch(Dispatchers.Main.immediate) {
                         dataVersion.value = version
-                        screenUpdates.forEach { (name, screenJson) -> screens[name] = screenJson }
+                        screenJsonUpdates.forEach { (name, screenJson) ->
+                            screens[name] = screenJson
+                            screenBytes.remove(name)
+                        }
+                        screenByteUpdates.forEach { (name, bytes) ->
+                            screenBytes[name] = bytes
+                            screens[name] = "__wire__"
+                        }
                         navUpdates.forEach { (name, navJson) -> navGraphs[name] = navJson }
                     }
                 }
