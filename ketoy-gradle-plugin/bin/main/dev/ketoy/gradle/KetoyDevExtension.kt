@@ -40,9 +40,23 @@ abstract class KetoyDevExtension {
     abstract val apiKey: Property<String>
 
     /**
-     * Android application package name (e.g. `"com.example.myapp"`).
+     * Ketoy Cloud application UUID returned by `POST /apps` when the app
+     * is first created. Required by every authenticated cloud task
+     * (`ketoyPush`, `ketoyListScreens`, `ketoyRollback`, ...).
      *
-     * Sent as an identifier with every API request.
+     * Can also be set via `-PketoyAppId=...` or `KETOY_APP_ID` in
+     * `local.properties`.
+     */
+    abstract val appId: Property<String>
+
+    /**
+     * Android application package name / bundleId (e.g. `"com.example.myapp"`).
+     *
+     * Used as a human-readable label and referenced by the public mobile
+     * SDK endpoint (`GET /ktw?app=...`). The authenticated cloud API
+     * now keys off [appId] (a UUID), so `packageName` is no longer sent
+     * with every request.
+     *
      * Can also be set via `-PketoyPackageName=...` or `KETOY_PACKAGE_NAME`
      * in `local.properties`.
      */

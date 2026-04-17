@@ -55,7 +55,7 @@ fun buildAnalyticsScreen(
     KColumn(
         modifier = kModifier(
             fillMaxSize = 1f,
-            padding = kPadding(top = 16),
+            padding = kPadding(top = 60),
             background = KColors.Background,
         ),
         verticalArrangement = KArrangements.spacedBy(0)

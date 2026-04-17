@@ -271,7 +271,7 @@ fun buildHomeCards(
 ): com.developerstring.ketoy.model.KNode = ketoyRoot {
 
     KColumn(
-        modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(top = 16)),
+        modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(top = 150)),
         verticalArrangement = KArrangements.spacedBy(0)
     ) {
         // Header row
@@ -298,6 +298,10 @@ fun buildHomeCards(
                 actionId = "home_clear_notifs"
             ) {}
         }
+
+        KSpacer(height = 20)
+
+        KText(text = totalBalance, fontSize = 20, color = KColors.White)
 
         KSpacer(height = 20)
 

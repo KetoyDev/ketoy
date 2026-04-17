@@ -135,12 +135,19 @@ fun KetoyDevWrapper(
     for (navName in navKeys) {
         key("nav_$navName") {
             val navJson = navGraphJsons[navName]
-            LaunchedEffect(navJson) {
-                if (navJson == null) return@LaunchedEffect
+            val navBytes = client.navGraphBytes[navName]
+            LaunchedEffect(navJson, navBytes) {
                 try {
-                    val graph = KetoyNavGraph.fromJson(navJson)
+                    val graph = if (navBytes != null) {
+                        val decoded = com.developerstring.ketoy.wire.KetoyWireFormat.decode(navBytes)
+                        KetoyNavGraph.fromJson(decoded)
+                    } else if (navJson != null && navJson != "__wire__") {
+                        KetoyNavGraph.fromJson(navJson)
+                    } else {
+                        return@LaunchedEffect
+                    }
                     KetoyNavDevOverrides.set(navName, graph)
-                    println("📱 Ketoy Dev: Nav graph '$navName' injected (${graph.destinations.size} destinations)")
+                    println("📱 Ketoy Dev: Nav graph '$navName' injected (${graph.destinations.size} destinations) [${if (navBytes != null) "wire" else "json"}]")
                 } catch (e: Exception) {
                     System.err.println("Ketoy Dev: Failed to parse nav graph '$navName': ${e.message}")
                 }

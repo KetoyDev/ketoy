@@ -3,6 +3,7 @@ package com.developerstring.ketoy.export
 import com.developerstring.ketoy.core.toJson
 import com.developerstring.ketoy.core.toWireBytes
 import com.developerstring.ketoy.navigation.KetoyNavGraph
+import com.developerstring.ketoy.wire.KetoyWireFormat
 import com.developerstring.ketoy.wire.WireFormatConfig
 import java.io.File
 
@@ -136,13 +137,16 @@ class KetoyAutoExportRunner {
 
         navGraphs.forEach { graph ->
             val json = graph.toJson()
-            val file = File(outputDir, "nav_${graph.navHostName}.json")
-            file.writeText(json)
+
+            // Write wire format .ktw file
+            val wireBytes = KetoyWireFormat.encode(json, wireConfig)
+            val wireFile = File(outputDir, "nav_${graph.navHostName}.ktw")
+            wireFile.writeBytes(wireBytes)
 
             navExports.add(
                 NavGraphExportResult(
                     navHostName = graph.navHostName,
-                    fileName = "nav_${graph.navHostName}.json",
+                    fileName = "nav_${graph.navHostName}.ktw",
                     json = json,
                     destinationCount = graph.destinations.size,
                     navigationCount = graph.navigations.size

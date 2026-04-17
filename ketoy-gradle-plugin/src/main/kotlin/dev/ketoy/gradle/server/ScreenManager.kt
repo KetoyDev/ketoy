@@ -35,6 +35,9 @@ class ScreenManager(private val watchDir: File) {
     /** Tracks which screen names are wire format (`.ktw`). */
     private val wireScreens = ConcurrentHashMap.newKeySet<String>()
 
+    /** Tracks which nav graph names are wire format (`.ktw`). */
+    private val wireNavGraphs = ConcurrentHashMap.newKeySet<String>()
+
     private val version = AtomicLong(0)
 
     init {
@@ -97,20 +100,34 @@ class ScreenManager(private val watchDir: File) {
     }
 
     /**
-     * Loads or reloads a navigation graph JSON file (`nav_*.json`) into the cache.
+     * Loads or reloads a navigation graph file (`nav_*.json` or `nav_*.ktw`) into the cache.
      *
-     * @return The JSON string if new or changed, or `null` if unchanged.
+     * For `.json` files, the content is stored as-is (raw JSON text).
+     * For `.ktw` files, the content is read as raw bytes, Base64-encoded,
+     * and the nav graph name is tracked in [wireNavGraphs].
+     *
+     * @return The stored string (JSON or Base64) if new or changed, or `null` if unchanged.
      */
     fun loadNavGraph(file: File): String? {
         return try {
-            val json = file.readText().trim()
             val name = file.nameWithoutExtension.removePrefix("nav_")
-            val previous = navGraphs.put(name, json)
-            if (previous == json) {
+            val isWire = file.extension == "ktw"
+
+            val content = if (isWire) {
+                val bytes = file.readBytes()
+                Base64.getEncoder().encodeToString(bytes)
+            } else {
+                file.readText().trim()
+            }
+
+            val previous = navGraphs.put(name, content)
+            if (isWire) wireNavGraphs.add(name) else wireNavGraphs.remove(name)
+
+            if (previous == content) {
                 null
             } else {
                 version.incrementAndGet()
-                json
+                content
             }
         } catch (e: Exception) {
             System.err.println("⚠️  Failed to load nav graph ${file.name}: ${e.message}")
@@ -126,6 +143,7 @@ class ScreenManager(private val watchDir: File) {
 
     fun removeNavGraph(name: String) {
         navGraphs.remove(name)
+        wireNavGraphs.remove(name)
         version.incrementAndGet()
     }
 
@@ -148,4 +166,10 @@ class ScreenManager(private val watchDir: File) {
 
     /** Returns the set of screen names that are in wire format. */
     fun getWireScreenNames(): Set<String> = wireScreens.toSet()
+
+    /** Returns `true` if the nav graph with the given [name] was loaded from a `.ktw` wire format file. */
+    fun isWireFormatNav(name: String): Boolean = wireNavGraphs.contains(name)
+
+    /** Returns the set of nav graph names that are in wire format. */
+    fun getWireNavGraphNames(): Set<String> = wireNavGraphs.toSet()
 }

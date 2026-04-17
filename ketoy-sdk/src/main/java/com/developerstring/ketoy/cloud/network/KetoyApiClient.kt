@@ -1,5 +1,6 @@
 package com.developerstring.ketoy.cloud.network
 
+import android.util.Log
 import com.developerstring.ketoy.cloud.KetoyCloudConfig
 import com.developerstring.ketoy.wire.KetoyCompression
 import com.developerstring.ketoy.wire.KetoyWireFormat
@@ -53,6 +54,8 @@ import java.net.URL
  * @see KetoyNetworkException
  */
 object KetoyApiClient {
+
+    private const val TAG = "KetoyCloud"
 
     /** Cloud configuration (API key, package name, base URL). Set via [initialize]. */
     private var config: KetoyCloudConfig? = null
@@ -185,36 +188,65 @@ object KetoyApiClient {
      * @see fetchScreen
      */
     fun fetchScreenOptimized(screenName: String): KetoyScreenData {
+        val (version, _, ui) = fetchScreenWireInternal(screenName, decodeUi = true)
+        return KetoyScreenData(
+            screenName = screenName,
+            version = version,
+            ui = ui ?: throw KetoyNetworkException("Failed to decode wire format for '$screenName'")
+        )
+    }
+
+    /**
+     * Fetch a screen as raw `.ktw` wire bytes from the new public endpoint.
+     *
+     * **Endpoint:** `GET {baseUrl}/ktw?app={packageName}&screen={screenName}`
+     *
+     * The server responds with the raw `.ktw` binary body (no JSON envelope).
+     * Version is read from the `X-Screen-Version` response header when present;
+     * otherwise it defaults to `"0.0.0"` and the cache will treat every fetch
+     * as a refresh.
+     *
+     * @param screenName The screen identifier (e.g. `"analytics_main"`).
+     * @return [WireScreenResponse] with version and raw wire bytes.
+     * @throws KetoyNetworkException on HTTP errors.
+     */
+    fun fetchScreenWire(screenName: String): WireScreenResponse {
+        val (version, bytes, _) = fetchScreenWireInternal(screenName, decodeUi = false)
+        return WireScreenResponse(version = version, bytes = bytes)
+    }
+
+    private fun fetchScreenWireInternal(
+        screenName: String,
+        decodeUi: Boolean
+    ): Triple<String, ByteArray, JsonElement?> {
         val cfg = config ?: throw KetoyNetworkException(
             "KetoyApiClient not initialized. Call Ketoy.initialize() with cloudConfig first."
         )
 
-        val url = "${cfg.baseUrl}/api/v1/screen?screen_name=$screenName"
-        val responseBytes = executeGetBytes(url, cfg)
+        val app = java.net.URLEncoder.encode(cfg.packageName, "UTF-8")
+        val screen = java.net.URLEncoder.encode(screenName, "UTF-8")
+        val url = "${cfg.baseUrl.trimEnd('/')}/ktw?app=$app&screen=$screen"
 
-        val responseJson = try {
-            KetoyWireFormat.autoDecode(responseBytes)
-        } catch (_: Exception) {
-            // Fallback: server returned plain JSON
-            json.parseToJsonElement(responseBytes.toString(Charsets.UTF_8))
+        Log.d(TAG, "GET $url")
+        val started = System.currentTimeMillis()
+        val (bytes, version) = try {
+            executeGetBytesWithHeader(url, cfg, "X-Screen-Version")
+        } catch (e: Exception) {
+            Log.e(TAG, "GET $url failed: ${e.message}")
+            throw e
         }
+        val elapsed = System.currentTimeMillis() - started
+        Log.d(TAG, "GET $url → 200 (${bytes.size} bytes, v${version ?: "?"}) in ${elapsed}ms")
 
-        val responseObj = responseJson.jsonObject
-        val success = responseObj["success"]?.jsonPrimitive?.content?.toBoolean() ?: false
+        val ui: JsonElement? = if (decodeUi) {
+            try {
+                KetoyWireFormat.autoDecode(bytes)
+            } catch (_: Exception) {
+                json.parseToJsonElement(bytes.toString(Charsets.UTF_8))
+            }
+        } else null
 
-        if (!success) {
-            val error = responseObj["error"]?.jsonPrimitive?.content ?: "Unknown API error"
-            throw KetoyNetworkException("API error for screen '$screenName': $error")
-        }
-
-        val data = responseObj["data"]?.jsonObject
-            ?: throw KetoyNetworkException("Missing 'data' field in API response for screen '$screenName'")
-
-        return KetoyScreenData(
-            screenName = data["screenName"]?.jsonPrimitive?.content ?: screenName,
-            version = data["version"]?.jsonPrimitive?.content ?: "0.0.0",
-            ui = data["ui"] ?: throw KetoyNetworkException("Missing 'ui' field in screen data for '$screenName'")
-        )
+        return Triple(version ?: "0.0.0", bytes, ui)
     }
 
     // ── Internal HTTP ───────────────────────────────────────────
@@ -276,6 +308,44 @@ object KetoyApiClient {
      *         or plain JSON depending on server support).
      * @throws KetoyNetworkException on non-2xx HTTP status codes.
      */
+    private fun executeGetBytesWithHeader(
+        urlString: String,
+        cfg: KetoyCloudConfig,
+        headerName: String
+    ): Pair<ByteArray, String?> {
+        val url = URL(urlString)
+        val connection = url.openConnection() as HttpURLConnection
+        try {
+            connection.requestMethod = "GET"
+            connection.setRequestProperty("x-api-key", cfg.apiKey)
+            connection.setRequestProperty("x-package-name", cfg.packageName)
+            connection.setRequestProperty("Accept", "application/octet-stream")
+            connection.setRequestProperty("Accept-Encoding", "gzip")
+            connection.connectTimeout = 15_000
+            connection.readTimeout = 30_000
+
+            val responseCode = connection.responseCode
+            if (responseCode !in 200..299) {
+                val errorBody = try {
+                    connection.errorStream?.bufferedReader()?.use { it.readText() } ?: ""
+                } catch (_: Exception) { "" }
+                throw KetoyNetworkException("HTTP $responseCode for $urlString: $errorBody", responseCode)
+            }
+
+            val headerValue = connection.getHeaderField(headerName)
+            val inputStream = connection.inputStream
+            val buffer = ByteArrayOutputStream(4096)
+            val chunk = ByteArray(4096)
+            var bytesRead: Int
+            while (inputStream.read(chunk).also { bytesRead = it } != -1) {
+                buffer.write(chunk, 0, bytesRead)
+            }
+            return buffer.toByteArray() to headerValue
+        } finally {
+            connection.disconnect()
+        }
+    }
+
     private fun executeGetBytes(urlString: String, cfg: KetoyCloudConfig): ByteArray {
         val url = URL(urlString)
         val connection = url.openConnection() as HttpURLConnection

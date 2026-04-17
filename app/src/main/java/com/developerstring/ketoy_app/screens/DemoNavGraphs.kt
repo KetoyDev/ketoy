@@ -5,6 +5,7 @@ import com.developerstring.ketoy.navigation.KetoyNavAction
 import com.developerstring.ketoy.navigation.KetoyNavDestination
 import com.developerstring.ketoy.navigation.KetoyNavGraph
 import com.developerstring.ketoy.navigation.KetoyNavRegistry
+import kotlinx.serialization.Serializable
 
 /**
  * Navigation graph definitions for the entire app.
@@ -28,6 +29,7 @@ import com.developerstring.ketoy.navigation.KetoyNavRegistry
  * ```
  * …the same code now navigates to **"bookmarks"** instead. No recompile needed.
  */
+
 object AppNavGraphs {
 
     // ── Main app nav graph (bottom bar + drawer) ────────────────
@@ -50,7 +52,7 @@ object AppNavGraphs {
                 label = "Cards", icon = "credit_card", selectedIcon = "credit_card"
             ),
             KetoyNavDestination(
-                id = "history", route = "history", screenName = "history_screen",
+                id = "history", route = "history", screenName = "historyScreen",
                 label = "History", icon = "schedule", selectedIcon = "schedule"
             ),
             KetoyNavDestination(

@@ -55,7 +55,7 @@ class MainActivity : ComponentActivity() {
             cloudConfig = KetoyCloudConfig(
                 apiKey = "api",
                 packageName = "package",
-                baseUrl = "url"
+                baseUrl = "https://api.ketoy.dev"
             ),
             cacheConfig = KetoyCacheConfig(
                 strategy = KetoyCacheStrategy.NETWORK_FIRST,
@@ -93,9 +93,9 @@ class MainActivity : ComponentActivity() {
                 KetoyThemeProvider(
                     themeMode = if (isDark) KetoyThemeMode.Dark else KetoyThemeMode.Light
                 ) {
-                    KetoyDevWrapper {
+//                    KetoyDevWrapper {
                         MainApp(vm, isDark)
-                    }
+//                    }
                 }
             }
         }

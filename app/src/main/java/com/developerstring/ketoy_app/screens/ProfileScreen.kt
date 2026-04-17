@@ -2,6 +2,7 @@ package com.developerstring.ketoy_app.screens
 
 import androidx.compose.runtime.Composable
 import com.developerstring.ketoy.export.ketoyExport
+import com.developerstring.ketoy.model.KNode
 import com.developerstring.ketoy.model.KScrollConfig
 import com.developerstring.ketoy.screen.KetoyContent
 import com.developerstring.ketoy.screen.ProvideKetoyScreen
@@ -188,5 +189,283 @@ fun buildProfileScreen(
         }
 
         KSpacer(height = 20)
+    }
+}
+
+fun buildFinanceDashboard(): KNode = ketoyRoot {
+
+    KColumn(
+        modifier = kModifier(
+            fillMaxSize = 1f,
+            padding = kPadding(all = 16)
+        ),
+        verticalArrangement = KArrangements.spacedBy(20)
+    ) {
+
+        // 🔹 Header
+        KRow(
+            modifier = kModifier(fillMaxWidth = 1f),
+            horizontalArrangement = KArrangements.SpaceBetween,
+            verticalAlignment = KAlignments.CenterVertically
+        ) {
+
+            KRow(
+                verticalAlignment = KAlignments.CenterVertically,
+                horizontalArrangement = KArrangements.spacedBy(12)
+            ) {
+
+                KBox(
+                    modifier = kModifier(
+                        size = 48,
+                        shape = KShapes.Circle,
+                        background = KColors.Blue
+                    ),
+                    contentAlignment = KAlignments.Center
+                ) {
+                    KText(
+                        text = "AD",
+                        color = KColors.White,
+                        fontWeight = KFontWeights.Bold
+                    )
+                }
+
+                KText(
+                    text = "Aditya",
+                    fontSize = 20,
+                    fontWeight = KFontWeights.Bold,
+                    color = KColors.OnSurface
+                )
+            }
+
+            KIcon(
+                icon = KIcons.NotificationsNone,
+                size = 24,
+                color = KColors.OnSurface
+            )
+        }
+
+        // 🔹 Total Balance Card
+        KCard(
+            modifier = kModifier(
+                fillMaxWidth = 1f,
+                padding = kPadding(vertical = 4)
+            ),
+            shape = KShapes.Rounded24,
+            containerColor = KColors.SurfaceContainerHigh,
+            elevation = 2
+        ) {
+
+            KColumn(
+                modifier = kModifier(padding = kPadding(all = 20)),
+                verticalArrangement = KArrangements.spacedBy(8)
+            ) {
+
+                KText(
+                    text = "Total Balance",
+                    fontSize = 14,
+                    color = KColors.OnSurfaceVariant
+                )
+
+                KText(
+                    text = "$24,567.80",
+                    fontSize = 32,
+                    fontWeight = KFontWeights.Bold,
+                    color = KColors.OnSurface
+                )
+
+                KRow(
+                    verticalAlignment = KAlignments.CenterVertically,
+                    horizontalArrangement = KArrangements.spacedBy(6)
+                ) {
+                    KIcon(
+                        icon = KIcons.TrendingUp,
+                        size = 16,
+                        color = KColors.Green
+                    )
+                    KText(
+                        text = "+12.5% this month",
+                        fontSize = 14,
+                        color = KColors.Green
+                    )
+                }
+            }
+        }
+
+        // 🔹 Actions Row
+        KRow(
+            modifier = kModifier(fillMaxWidth = 1f),
+            horizontalArrangement = KArrangements.SpaceBetween
+        ) {
+
+            fun actionItem(icon: String, label: String, bg: String) {
+                KColumn(
+                    horizontalAlignment = KAlignments.CenterHorizontally,
+                    verticalArrangement = KArrangements.spacedBy(8)
+                ) {
+                    KBox(
+                        modifier = kModifier(
+                            size = 64,
+                            shape = KShapes.Rounded20,
+                            background = bg
+                        ),
+                        contentAlignment = KAlignments.Center
+                    ) {
+                        KIcon(icon = icon, size = 24, color = KColors.White)
+                    }
+
+                    KText(
+                        text = label,
+                        fontSize = 14,
+                        color = KColors.OnSurfaceVariant
+                    )
+                }
+            }
+
+            actionItem(KIcons.Send, "Send", KColors.Blue)
+            actionItem(KIcons.Download, "Receive", KColors.Gray)
+            actionItem(KIcons.SwapHoriz, "Swap", KColors.Purple)
+            actionItem(KIcons.MoreHoriz, "More", KColors.SurfaceVariant)
+        }
+
+        // 🔹 Income Card
+        KCard(
+            modifier = kModifier(fillMaxWidth = 1f),
+            shape = KShapes.Rounded24,
+            containerColor = KColors.SurfaceContainerHigh,
+            elevation = 2
+        ) {
+
+            KRow(
+                modifier = kModifier(
+                    padding = kPadding(all = 20)
+                ),
+                horizontalArrangement = KArrangements.SpaceBetween,
+                verticalAlignment = KAlignments.CenterVertically
+            ) {
+
+                KColumn(
+                    verticalArrangement = KArrangements.spacedBy(6)
+                ) {
+
+                    KRow(
+                        verticalAlignment = KAlignments.CenterVertically,
+                        horizontalArrangement = KArrangements.spacedBy(8)
+                    ) {
+                        KBox(
+                            modifier = kModifier(
+                                size = 36,
+                                shape = KShapes.Rounded12,
+                                background = KColors.Green
+                            ),
+                            contentAlignment = KAlignments.Center
+                        ) {
+                            KIcon(
+                                icon = KIcons.TrendingUp,
+                                size = 16,
+                                color = KColors.White
+                            )
+                        }
+
+                        KText(
+                            text = "Income",
+                            fontSize = 14,
+                            color = KColors.OnSurfaceVariant
+                        )
+                    }
+
+                    KText(
+                        text = "$8,240.00",
+                        fontSize = 22,
+                        fontWeight = KFontWeights.Bold,
+                        color = KColors.OnSurface
+                    )
+                }
+
+                KText(
+                    text = "+8.2%",
+                    fontSize = 14,
+                    color = KColors.Green
+                )
+            }
+        }
+
+        // 🔹 Expenses Overview Title
+        KText(
+            text = "Expenses Overview",
+            fontSize = 18,
+            fontWeight = KFontWeights.Bold,
+            color = KColors.OnSurface
+        )
+
+        // 🔹 Bottom Cards
+        KRow(
+            modifier = kModifier(fillMaxWidth = 1f),
+            horizontalArrangement = KArrangements.spacedBy(12)
+        ) {
+
+            fun statCard(
+                title: String,
+                amount: String,
+                change: String,
+                icon: String,
+                color: String
+            ) {
+                KCard(
+                    modifier = kModifier(weight = 1f),
+                    shape = KShapes.Rounded20,
+                    containerColor = KColors.SurfaceContainer,
+                    elevation = 1
+                ) {
+
+                    KColumn(
+                        modifier = kModifier(padding = kPadding(all = 16)),
+                        verticalArrangement = KArrangements.spacedBy(8)
+                    ) {
+
+                        KRow(
+                            horizontalArrangement = KArrangements.SpaceBetween,
+                            verticalAlignment = KAlignments.CenterVertically
+                        ) {
+                            KIcon(icon = icon, size = 18, color = color)
+
+                            KText(
+                                text = change,
+                                fontSize = 12,
+                                color = color
+                            )
+                        }
+
+                        KText(
+                            text = title,
+                            fontSize = 14,
+                            color = KColors.OnSurfaceVariant
+                        )
+
+                        KText(
+                            text = amount,
+                            fontSize = 18,
+                            fontWeight = KFontWeights.Bold,
+                            color = KColors.OnSurface
+                        )
+                    }
+                }
+            }
+
+            statCard(
+                "Expenses",
+                "$3,820.00",
+                "-3.1%",
+                KIcons.TrendingDown,
+                KColors.Red
+            )
+
+            statCard(
+                "Savings",
+                "$18,240.00",
+                "+5.4%",
+                KIcons.TrendingUp,
+                KColors.Green
+            )
+        }
     }
 }

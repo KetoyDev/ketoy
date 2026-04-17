@@ -76,12 +76,14 @@ class FileWatcher(
                         StandardWatchEventKinds.ENTRY_MODIFY -> {
                             if (file.exists() && file.length() > 0) {
                                 if (isNavFile) {
-                                    val json = screenManager.loadNavGraph(file)
-                                    if (json != null) {
+                                    val content = screenManager.loadNavGraph(file)
+                                    if (content != null) {
                                         val navName = file.nameWithoutExtension.removePrefix("nav_")
+                                        val isWire = file.extension == "ktw"
                                         val timestamp = java.time.LocalTime.now().toString().substring(0, 8)
-                                        println("[$timestamp] 🗺️  Nav changed: $filename")
-                                        server.broadcastNavUpdate(navName, json)
+                                        val label = if (isWire) "📦" else "🗺️ "
+                                        println("[$timestamp] $label Nav changed: $filename")
+                                        server.broadcastNavUpdate(navName, content, isWire)
                                     }
                                 } else {
                                     val content = screenManager.loadScreen(file)

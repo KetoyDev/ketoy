@@ -20,7 +20,7 @@ object DevServerLauncher {
     fun launch(config: ServerConfig) {
         println("""
     ┌─────────────────────────────────────────────────┐
-    │           Ketoy Dev Server v0.1.2-beta            │
+    │           Ketoy Dev Server v0.1.6-beta          │
     │       Hot-reload for Ketoy UI Framework         │
     └─────────────────────────────────────────────────┘
         """.trimIndent())

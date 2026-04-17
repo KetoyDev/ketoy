@@ -8,7 +8,7 @@ plugins {
 }
 
 group = "dev.ketoy"
-version = "0.1.5-beta.10"
+version = "0.1.6-beta"
 
 java {
     sourceCompatibility = JavaVersion.VERSION_11

@@ -6,14 +6,25 @@ import org.gradle.api.DefaultTask
 import org.gradle.api.GradleException
 import org.gradle.api.tasks.Internal
 import org.gradle.api.tasks.TaskAction
+import java.util.Base64
 
 /**
- * Upload ALL screen JSONs from the screens directory to the Ketoy Cloud server.
+ * Upload ALL exported screen `.ktw` files to the Ketoy Cloud server as a
+ * single bundle.
+ *
+ * Endpoint: `POST /apps/{appId}/screens/bundle/ktw`
+ * with a JSON body listing each screen as `{screenId, version, ktw(base64)}`.
+ *
+ * All versions are validated upfront by the server — the entire request
+ * is rejected if any version is already taken.
  *
  * Usage:
  * ```bash
- * ./gradlew ketoyPushAll -Pversion=1.0.0
+ * ./gradlew ketoyPushAll -PscreenVersion=1.0.0
  * ```
+ *
+ * The `.ktw` files are read from the production export directory
+ * (`ketoy-export/` by default) — run `ketoyExportProd` first to generate them.
  */
 abstract class KetoyPushAllTask : DefaultTask() {
 
@@ -22,12 +33,12 @@ abstract class KetoyPushAllTask : DefaultTask() {
 
     @TaskAction
     fun execute() {
-        val apiKey = extension.apiKey.orNull
+        val token = extension.apiKey.orNull
             ?: throw GradleException(missingConfig("apiKey", "KETOY_DEVELOPER_API_KEY"))
-        val packageName = extension.packageName.orNull
-            ?: throw GradleException(missingConfig("packageName", "KETOY_PACKAGE_NAME"))
+        val appId = extension.appId.orNull
+            ?: throw GradleException(missingConfig("appId", "KETOY_APP_ID"))
         val baseUrl = extension.baseUrl.get().trimEnd('/')
-        val screensDir = extension.screensDir.get()
+        val exportDir = extension.prodExportDir.getOrElse("ketoy-export")
 
         val version = (project.findProperty("screenVersion") as? String)
             ?: (project.findProperty("version") as? String)?.takeIf { it != "unspecified" }
@@ -42,68 +53,48 @@ abstract class KetoyPushAllTask : DefaultTask() {
                 """.trimMargin()
             )
 
-        val screensDirFile = project.rootProject.file(screensDir)
-        val jsonFiles = screensDirFile.listFiles()?.filter { it.extension == "json" } ?: emptyList()
+        val exportDirFile = project.rootProject.file(exportDir)
+        val ktwFiles = exportDirFile.listFiles()?.filter { it.extension == "ktw" } ?: emptyList()
 
-        if (jsonFiles.isEmpty()) {
-            throw GradleException("No JSON files found in $screensDir/")
+        if (ktwFiles.isEmpty()) {
+            throw GradleException(
+                "No .ktw files found in $exportDir/. Run `./gradlew ketoyExportProd` first."
+            )
         }
+
+        // ── Build the bundle JSON body ──
+        val encoder = Base64.getEncoder()
+        val screensJson = ktwFiles.joinToString(",") { file ->
+            val screenId = file.nameWithoutExtension
+            val b64 = encoder.encodeToString(file.readBytes())
+            """{"screenId":"$screenId","version":"$version","ktw":"$b64"}"""
+        }
+        val body = """{"bundleVersion":"$version","screens":[$screensJson]}"""
+
+        val url = "$baseUrl/apps/$appId/screens/bundle/ktw"
 
         logger.lifecycle("")
         logger.lifecycle("╔════════════════════════════════════════════╗")
-        logger.lifecycle("║       Ketoy Batch Screen Upload            ║")
+        logger.lifecycle("║     Ketoy Bundle Screen Upload (KTW)       ║")
         logger.lifecycle("╚════════════════════════════════════════════╝")
         logger.lifecycle("  Server:   $baseUrl")
-        logger.lifecycle("  Package:  $packageName")
+        logger.lifecycle("  App ID:   $appId")
         logger.lifecycle("  Version:  $version")
-        logger.lifecycle("  Screens:  ${jsonFiles.size} file(s)")
+        logger.lifecycle("  Screens:  ${ktwFiles.size} file(s)")
+        ktwFiles.forEach { logger.lifecycle("    • ${it.nameWithoutExtension} (${it.length()} bytes)") }
         logger.lifecycle("")
+        logger.lifecycle("  Uploading bundle...")
 
-        var success = 0
-        var failed = 0
+        val (code, response) = KetoyHttpClient.request("POST", url, token, body)
 
-        jsonFiles.forEach { file ->
-            val screenName = file.nameWithoutExtension
-            val rawJson = file.readText()
-            val escapedJson = escapeJson(rawJson)
-
-            val displayName = screenName.replace("_", " ")
-                .replaceFirstChar { it.uppercaseChar() }
-
-            val requestBody = buildString {
-                append("{")
-                append("\"screenName\": \"$screenName\",")
-                append("\"displayName\": \"$displayName\",")
-                append("\"version\": \"$version\",")
-                append("\"jsonContent\": \"$escapedJson\"")
-                append("}")
-            }
-
-            val url = "$baseUrl/api/screens/$packageName/upload"
-            logger.lifecycle("  ↑ $screenName ... ")
-
-            try {
-                val (code, response) = KetoyHttpClient.request("POST", url, apiKey, requestBody)
-                if (code in 200..299) {
-                    logger.lifecycle("    ✔ (HTTP $code)")
-                    success++
-                } else {
-                    logger.lifecycle("    ✖ (HTTP $code)")
-                    logger.lifecycle("    $response")
-                    failed++
-                }
-            } catch (e: Exception) {
-                logger.lifecycle("    ✖ (${e.message})")
-                failed++
-            }
+        if (code in 200..299) {
+            logger.lifecycle("  ✔ Bundle upload successful (HTTP $code)")
+            logger.lifecycle("  $response")
+        } else {
+            logger.lifecycle("  ✖ Bundle upload failed (HTTP $code)")
+            logger.lifecycle("  $response")
+            throw GradleException("Bundle upload failed with HTTP $code")
         }
-
         logger.lifecycle("")
-        logger.lifecycle("  Done: $success uploaded, $failed failed")
-        logger.lifecycle("")
-
-        if (failed > 0) {
-            throw GradleException("$failed screen(s) failed to upload")
-        }
     }
 }

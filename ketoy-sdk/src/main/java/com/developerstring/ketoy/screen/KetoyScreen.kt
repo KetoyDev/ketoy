@@ -258,7 +258,9 @@ class KetoyScreen(
         fun buildJson(): String? = buildNode()?.toJson()
     }
 
-    private val _contents = mutableMapOf<String, ContentEntry>()
+    // mutableStateMapOf: any write to this map (addContent, clear, etc.) is observable
+    // by Compose, so ContentInternal automatically recomposes when an entry is replaced.
+    private val _contents = mutableStateMapOf<String, ContentEntry>()
 
     /** Read-only view of all content entries keyed by name. */
     val contents: Map<String, ContentEntry> get() = _contents.toMap()
@@ -546,13 +548,9 @@ class KetoyScreen(
         // when KetoyVariableRegistry values are updated.
         val varRevision = com.developerstring.ketoy.core.KetoyVariableRegistry.revision
 
-        // Debug: log content resolution state
-        println("📱 Ketoy Dev [render] ContentInternal($screenName/$name) | _devOverrideBytes keys=${_devOverrideBytes.keys} | _devOverrides keys=${_devOverrides.keys} | hasEntry=${entry != null}")
-
         // 1a. Dev-server override as raw wire bytes (takes precedence)
         val devWireBytes = _devOverrideBytes[name]
         if (devWireBytes != null) {
-            println("📱 Ketoy Dev [render] ✅ Rendering wire bytes for $screenName/$name (${devWireBytes.size} bytes)")
             key(devWireBytes, varRevision) {
                 JSONBytesToUI(data = devWireBytes, colorScheme = colorScheme)
             }
@@ -615,9 +613,15 @@ class KetoyScreen(
         }
 
         // 6. DSL fallback
-        val dslBytes = remember { entry.buildJson()?.toByteArray(Charsets.UTF_8) }
+        // Key on `entry` so bytes are recomputed whenever addContent() replaces the
+        // entry (e.g. when the parent composable recomposes with a new literal value).
+        // Key on `varRevision` so JSONBytesToUI re-renders when registry values change
+        // (needed when the JSON contains template strings like {{data:user:field}}).
+        val dslBytes = remember(entry) { entry.buildJson()?.toByteArray(Charsets.UTF_8) }
         if (dslBytes != null) {
-            JSONBytesToUI(data = dslBytes, colorScheme = colorScheme)
+            key(dslBytes, varRevision) {
+                JSONBytesToUI(data = dslBytes, colorScheme = colorScheme)
+            }
             return
         }
 
@@ -876,21 +880,39 @@ private fun CloudContent(
     }
     var retryTrigger by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(screenName, retryTrigger) {
+    // Cloud screens are exported as one `.ktw` file per content block, named
+    // `<screenName>_<contentName>.ktw`. Each content is a self-contained wire
+    // payload, so we fetch the combined key directly — no extraction needed.
+    val fetchKey = "${screenName}_${contentName}"
+
+    LaunchedEffect(fetchKey, retryTrigger) {
         // Don't flash loading if we already have content (e.g. from a previous fetch
         // or from the initial cache-first fallback)
         if (fetchState !is CloudState.Loaded) {
             fetchState = CloudState.Loading
         }
-        val result = KetoyCloudService.fetchScreen(screenName)
+        android.util.Log.d("KetoyCloud", "CloudContent: fetching '$fetchKey'")
+        val result = KetoyCloudService.fetchScreen(fetchKey)
         fetchState = when (result) {
             is KetoyCloudService.FetchResult.Success -> {
-                // The cloud response is bytes — convert to string for content extraction
-                val uiString = result.uiBytes.toString(Charsets.UTF_8)
-                val resolvedJson = extractContentJsonFromCloud(uiString, contentName)
-                CloudState.Loaded(resolvedJson.toByteArray(Charsets.UTF_8))
+                android.util.Log.d(
+                    "KetoyCloud",
+                    "CloudContent: ✔ '$fetchKey' loaded — ${result.uiBytes.size} bytes, v${result.version}, fromCache=${result.fromCache}"
+                )
+                // Each `.ktw` file is a single self-contained content block,
+                // so the bytes go straight to JSONBytesToUI (which auto-detects
+                // wire vs JSON). The legacy `{contents:{...}}` JSON wrapper is
+                // only honoured if the server still returns plain JSON text.
+                val resolved = if (looksLikeJson(result.uiBytes)) {
+                    val uiString = result.uiBytes.toString(Charsets.UTF_8)
+                    extractContentJsonFromCloud(uiString, contentName).toByteArray(Charsets.UTF_8)
+                } else {
+                    result.uiBytes
+                }
+                CloudState.Loaded(resolved)
             }
             is KetoyCloudService.FetchResult.Error -> {
+                android.util.Log.w("KetoyCloud", "CloudContent: ✖ '$fetchKey' failed — ${result.message}")
                 // Keep showing content if already loaded (don't regress to error)
                 val current = fetchState
                 if (current is CloudState.Loaded) current
@@ -925,6 +947,21 @@ private fun CloudContent(
  * @return The extracted content JSON, or the original JSON if no
  *         wrapper is detected.
  */
+/**
+ * Heuristic: does the byte array look like text JSON (vs. binary `.ktw` wire format)?
+ * Wire bytes always start with the gzip magic number `0x1f 0x8b`. JSON starts
+ * with `{` or `[` (possibly preceded by whitespace).
+ */
+private fun looksLikeJson(bytes: ByteArray): Boolean {
+    if (bytes.size < 2) return false
+    // Gzip magic — definitely wire format
+    if (bytes[0] == 0x1f.toByte() && bytes[1] == 0x8b.toByte()) return false
+    // First non-whitespace byte should be { or [
+    val first = bytes.firstOrNull { it != ' '.code.toByte() && it != '\n'.code.toByte() && it != '\r'.code.toByte() && it != '\t'.code.toByte() }
+        ?: return false
+    return first == '{'.code.toByte() || first == '['.code.toByte()
+}
+
 private fun extractContentJsonFromCloud(json: String, contentName: String): String {
     return try {
         val jsonElement = kotlinx.serialization.json.Json.parseToJsonElement(json)

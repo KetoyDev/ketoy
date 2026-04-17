@@ -20,3 +20,6 @@ gradle.properties
 *.aar
 
 /gradle.properties
+
+CLAUDE.md
+

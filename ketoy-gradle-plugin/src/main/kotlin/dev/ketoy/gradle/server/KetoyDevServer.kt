@@ -170,9 +170,14 @@ class KetoyDevServer(
         println("📤 Pushed update: $screenName [$label] (v$version) → ${wsServer.connections.size} client(s)")
     }
 
-    fun broadcastNavUpdate(navName: String, json: String) {
+    fun broadcastNavUpdate(navName: String, data: String, isWire: Boolean = false) {
         val version = screenManager.getVersion()
-        val message = """{"type":"nav_update","navHost":"$navName","version":$version,"data":${json}}"""
+        val dataField = if (isWire) {
+            """"data":"$data","format":"ktw""""
+        } else {
+            """"data":$data"""
+        }
+        val message = """{"type":"nav_update","navHost":"$navName","version":$version,$dataField}"""
 
         wsServer.broadcast(message)
 
@@ -185,7 +190,8 @@ class KetoyDevServer(
             pollWaiters.clear()
         }
 
-        println("📤 Pushed nav update: $navName (v$version) → ${wsServer.connections.size} client(s)")
+        val label = if (isWire) "wire" else "json"
+        println("📤 Pushed nav update: $navName [$label] (v$version) → ${wsServer.connections.size} client(s)")
     }
 
     // ── HTTP Handlers ──────────────────────────────────────────────
@@ -227,9 +233,10 @@ class KetoyDevServer(
             </div>
             <div class="card">
                 <h3>🗺️ Navigation Graphs</h3>
-                ${screenManager.listNavGraphs().joinToString("") { 
-                    "<div class='screen'>• $it <span class='badge'>nav</span></div>" 
-                }.ifEmpty { "<p>No nav graphs yet. Add nav_*.json files to the watch directory.</p>" }}
+                ${screenManager.listNavGraphs().joinToString("") { name ->
+                    val badge = if (screenManager.isWireFormatNav(name)) "ktw" else "nav"
+                    "<div class='screen'>• $name <span class='badge'>$badge</span></div>"
+                }.ifEmpty { "<p>No nav graphs yet. Add nav_*.json or nav_*.ktw files to the watch directory.</p>" }}
             </div>
             <div class="card">
                 <h3>🔗 API Endpoints</h3>
@@ -308,12 +315,18 @@ WS  :${port + 1}    → WebSocket live updates
             sendJson(exchange, 400, """{"error":"Missing 'name' parameter"}""")
             return
         }
-        val navJson = screenManager.getNavGraph(name)
-        if (navJson == null) {
+        val navData = screenManager.getNavGraph(name)
+        if (navData == null) {
             sendJson(exchange, 404, """{"error":"Nav graph '$name' not found"}""")
             return
         }
-        val json = """{"version":${screenManager.getVersion()},"navHost":"$name","data":$navJson}"""
+        val isWire = screenManager.isWireFormatNav(name)
+        val dataField = if (isWire) {
+            """"data":"$navData","format":"ktw""""
+        } else {
+            """"data":$navData"""
+        }
+        val json = """{"version":${screenManager.getVersion()},"navHost":"$name",$dataField}"""
         sendJson(exchange, 200, json)
     }
 
@@ -349,8 +362,12 @@ WS  :${port + 1}    → WebSocket live updates
             }
         }
         val navGraphs = screenManager.getAllNavGraphs()
-        val navsJson = navGraphs.entries.joinToString(",") { (name, json) ->
-            "\"$name\":$json"
+        val navsJson = navGraphs.entries.joinToString(",") { (name, data) ->
+            if (screenManager.isWireFormatNav(name)) {
+                "\"$name\":{\"format\":\"ktw\",\"data\":\"$data\"}"
+            } else {
+                "\"$name\":$data"
+            }
         }
         return """{"version":${screenManager.getVersion()},"screens":{$screensJson},"navGraphs":{$navsJson}}"""
     }

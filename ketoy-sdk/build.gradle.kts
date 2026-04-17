@@ -82,7 +82,7 @@ mavenPublishing {
 
     signAllPublications()
 
-    coordinates("dev.ketoy", "sdk", "0.1.3-beta.2")
+    coordinates("dev.ketoy", "sdk", "0.1.4-beta")
 
     pom {
         name = "Ketoy SDUI SDK"

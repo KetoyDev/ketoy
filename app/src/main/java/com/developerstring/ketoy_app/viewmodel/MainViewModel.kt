@@ -5,6 +5,10 @@ import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
 import androidx.lifecycle.ViewModel
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
+import kotlin.random.Random
 import com.developerstring.ketoy.core.KetoyDataProvider
 import com.developerstring.ketoy.core.KetoyVariableRegistry
 import com.developerstring.ketoy.core.syncListToKetoy
@@ -13,6 +17,7 @@ import com.developerstring.ketoy.model.KetoyVariable
 import com.developerstring.ketoy.registry.KetoyFunctionRegistry
 import com.developerstring.ketoy.util.KColors
 import com.developerstring.ketoy.util.KIcons
+import kotlin.math.roundToInt
 
 /**
  * Main ViewModel for the Ketoy demo app.
@@ -29,8 +34,21 @@ class MainViewModel : ViewModel(), KetoyDataProvider {
     var userName by mutableStateOf("Aditya")
         private set
 
-    var totalBalance by mutableStateOf(24567.80)
+    var totalBalance by androidx.compose.runtime.mutableDoubleStateOf(24567.80)
         private set
+
+    init {
+        viewModelScope.launch {
+            while (true) {
+                delay(1000)
+                totalBalance = Random.nextDouble(10000.0, 50000.0)
+                    .let { (it * 100).roundToInt() / 100.0 }
+
+                selectedCardIndex = Random.nextInt(0, 2)
+                syncVariables()
+            }
+        }
+    }
 
     var income by mutableStateOf(8240.00)
         private set
@@ -50,7 +68,7 @@ class MainViewModel : ViewModel(), KetoyDataProvider {
     var toastMessage by mutableStateOf<String?>(null)
         private set
 
-    var selectedCardIndex by mutableIntStateOf(0)
+    var selectedCardIndex by mutableIntStateOf(1)
         private set
 
     data class Transaction(

@@ -246,6 +246,12 @@ class KetoyDevPlugin : Plugin<Project> {
             if (value != null) ext.packageName.set(value)
         }
 
+        if (!ext.appId.isPresent) {
+            val value = project.findProperty("ketoyAppId") as? String
+                ?: localProps.getProperty("KETOY_APP_ID")
+            if (value != null) ext.appId.set(value)
+        }
+
         if (!ext.baseUrl.isPresent) {
             val value = project.findProperty("ketoyBaseUrl") as? String
                 ?: localProps.getProperty("KETOY_BASE_URL")

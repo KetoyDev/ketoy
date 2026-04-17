@@ -264,7 +264,7 @@ object KetoyCloudService {
             FetchResult.Success(
                 screenName = data.screenName,
                 version = data.version,
-                uiBytes = data.ui.toString().toByteArray(Charsets.UTF_8),
+                uiBytes = data.bytes,
                 fromCache = false
             )
         } catch (e: Exception) {
@@ -325,7 +325,7 @@ object KetoyCloudService {
             FetchResult.Success(
                 screenName = data.screenName,
                 version = data.version,
-                uiBytes = data.ui.toString().toByteArray(Charsets.UTF_8),
+                uiBytes = data.bytes,
                 fromCache = false
             )
         } catch (e: Exception) {
@@ -378,7 +378,7 @@ object KetoyCloudService {
             FetchResult.Success(
                 screenName = data.screenName,
                 version = data.version,
-                uiBytes = data.ui.toString().toByteArray(Charsets.UTF_8),
+                uiBytes = data.bytes,
                 fromCache = false
             )
         } catch (e: Exception) {
@@ -430,7 +430,7 @@ object KetoyCloudService {
             FetchResult.Success(
                 screenName = data.screenName,
                 version = data.version,
-                uiBytes = data.ui.toString().toByteArray(Charsets.UTF_8),
+                uiBytes = data.bytes,
                 fromCache = false
             )
         } catch (e: Exception) {
@@ -448,19 +448,21 @@ object KetoyCloudService {
      * @return [KetoyScreenData] containing the screen name, version, and JSON UI tree.
      * @throws KetoyNetworkException on HTTP or API errors.
      */
-    private fun fetchFromNetwork(screenName: String, saveToCache: Boolean): KetoyScreenData {
-        val data = KetoyApiClient.fetchScreenOptimized(screenName)
+    private data class NetworkResult(val screenName: String, val version: String, val bytes: ByteArray)
+
+    private fun fetchFromNetwork(screenName: String, saveToCache: Boolean): NetworkResult {
+        val wire = KetoyApiClient.fetchScreenWire(screenName)
 
         if (saveToCache) {
             KetoyCacheStore.putBytes(
-                screenName = data.screenName,
-                version = data.version,
-                data = data.ui.toString().toByteArray(Charsets.UTF_8)
+                screenName = screenName,
+                version = wire.version,
+                data = wire.bytes
             )
-            Log.d(TAG, "Cached screen '${data.screenName}' v${data.version}")
+            Log.d(TAG, "Cached screen '$screenName' v${wire.version} (${wire.bytes.size} bytes)")
         }
 
-        return data
+        return NetworkResult(screenName, wire.version, wire.bytes)
     }
 
     /**

@@ -61,7 +61,7 @@ That DSL compiles to a `.ktw` wire binary — **10-15x smaller than equivalent J
 ```kotlin
 // build.gradle.kts (app module)
 dependencies {
-    implementation("dev.ketoy:sdk:0.1.3-beta.2")
+    implementation("dev.ketoy:sdk:0.1.6-beta")
 }
 ```
 
@@ -72,7 +72,7 @@ dependencies {
 ```kotlin
 // build.gradle.kts (app module)
 plugins {
-    id("dev.ketoy.devtools") version "0.1.5-beta.10"
+    id("dev.ketoy.devtools") version "0.1.6-beta"
 }
 ```
 
@@ -209,8 +209,8 @@ The `dev.ketoy.devtools` plugin adds 11 tasks:
 
 | Artifact | Coordinates | Registry |
 |---|---|---|
-| Android SDK | `dev.ketoy:sdk:0.1.3-beta.2` | [Maven Central](https://central.sonatype.com/artifact/dev.ketoy/sdk) |
-| Gradle Plugin | `dev.ketoy.devtools:0.1.5-beta.10` | [Gradle Plugin Portal](https://plugins.gradle.org/plugin/dev.ketoy.devtools) |
+| Android SDK | `dev.ketoy:sdk:0.1.6-beta` | [Maven Central](https://central.sonatype.com/artifact/dev.ketoy/sdk) |
+| Gradle Plugin | `dev.ketoy.devtools:0.1.6-beta` | [Gradle Plugin Portal](https://plugins.gradle.org/plugin/dev.ketoy.devtools) |
 
 ---
 

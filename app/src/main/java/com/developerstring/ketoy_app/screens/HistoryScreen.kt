@@ -2,6 +2,7 @@ package com.developerstring.ketoy_app.screens
 
 import androidx.compose.runtime.Composable
 import com.developerstring.ketoy.export.ketoyExport
+import com.developerstring.ketoy.model.KScrollConfig
 import com.developerstring.ketoy.screen.KetoyContent
 import com.developerstring.ketoy.screen.ProvideKetoyScreen
 import com.developerstring.ketoy.util.*
@@ -9,7 +10,7 @@ import com.developerstring.ketoy.util.*
 /**
  * Export definition for the History screen.
  */
-val historyExport = ketoyExport("history_screen", displayName = "History", description = "Full transaction history") {
+val historyExport = ketoyExport("historyScreen", displayName = "History", description = "Full transaction history") {
     content {
         buildHistoryScreen()
     }
@@ -21,7 +22,7 @@ val historyExport = ketoyExport("history_screen", displayName = "History", descr
  */
 @Composable
 fun HistoryScreen() {
-    ProvideKetoyScreen(screenName = "history_screen") {
+    ProvideKetoyScreen(screenName = "historyScreen") {
         KetoyContent(
             nodeBuilder = {
                 buildHistoryScreen()
@@ -42,12 +43,13 @@ fun buildHistoryScreen(
         modifier = kModifier(
             fillMaxSize = 1f,
             padding = kPadding(top = 16),
-            background = KColors.Background
+            background = KColors.Background,
+            verticalScroll = KScrollConfig(enabled = true)
         ),
         verticalArrangement = KArrangements.spacedBy(0)
     ) {
 
-        KText(fontSize = 20)
+        KText(fontSize = 60)
 
         // ── Header ────────────────────────────────────────
         KRow(

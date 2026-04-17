@@ -178,6 +178,7 @@ class KetoyDevPluginFunctionalTest {
             ketoyDev {
                 apiKey.set("test-key")
                 packageName.set("com.example.test")
+                appId.set("00000000-0000-0000-0000-000000000000")
             }
             """.trimIndent()
         )
@@ -200,19 +201,20 @@ class KetoyDevPluginFunctionalTest {
             ketoyDev {
                 apiKey.set("test-key")
                 packageName.set("com.example.test")
+                appId.set("00000000-0000-0000-0000-000000000000")
             }
             """.trimIndent()
         )
 
-        // Create the screens dir but not the specific file
-        File(testProjectDir, "ketoy-screens").mkdirs()
+        // Create the export dir but not the specific .ktw file
+        File(testProjectDir, "ketoy-export").mkdirs()
 
-        val result = runner("ketoyPush", "-PscreenName=nonexistent", "-Pversion=1.0.0")
+        val result = runner("ketoyPush", "-PscreenName=nonexistent", "-PscreenVersion=1.0.0")
             .buildAndFail()
 
         assertTrue(
-            result.output.contains("Screen file not found"),
-            "Should report missing screen file"
+            result.output.contains("Wire-format file not found"),
+            "Should report missing .ktw file"
         )
     }
 
@@ -226,17 +228,18 @@ class KetoyDevPluginFunctionalTest {
             ketoyDev {
                 apiKey.set("test-key")
                 packageName.set("com.example.test")
+                appId.set("00000000-0000-0000-0000-000000000000")
             }
             """.trimIndent()
         )
 
-        File(testProjectDir, "ketoy-screens").mkdirs()
+        File(testProjectDir, "ketoy-export").mkdirs()
 
         val result = runner("ketoyPushAll", "-PscreenVersion=1.0.0").buildAndFail()
 
         assertTrue(
-            result.output.contains("No JSON files found"),
-            "Should report no JSON files found"
+            result.output.contains("No .ktw files found"),
+            "Should report no .ktw files found"
         )
     }
 
@@ -250,6 +253,7 @@ class KetoyDevPluginFunctionalTest {
             ketoyDev {
                 apiKey.set("test-key")
                 packageName.set("com.example.test")
+                appId.set("00000000-0000-0000-0000-000000000000")
             }
             """.trimIndent()
         )
@@ -272,6 +276,7 @@ class KetoyDevPluginFunctionalTest {
             ketoyDev {
                 apiKey.set("test-key")
                 packageName.set("com.example.test")
+                appId.set("00000000-0000-0000-0000-000000000000")
             }
             """.trimIndent()
         )
@@ -294,6 +299,7 @@ class KetoyDevPluginFunctionalTest {
             ketoyDev {
                 apiKey.set("test-key")
                 packageName.set("com.example.test")
+                appId.set("00000000-0000-0000-0000-000000000000")
             }
             """.trimIndent()
         )
@@ -316,6 +322,7 @@ class KetoyDevPluginFunctionalTest {
             ketoyDev {
                 apiKey.set("test-key")
                 packageName.set("com.example.test")
+                appId.set("00000000-0000-0000-0000-000000000000")
             }
             """.trimIndent()
         )
@@ -338,6 +345,7 @@ class KetoyDevPluginFunctionalTest {
             ketoyDev {
                 apiKey.set("test-key")
                 packageName.set("com.example.test")
+                appId.set("00000000-0000-0000-0000-000000000000")
             }
             """.trimIndent()
         )
@@ -360,6 +368,7 @@ class KetoyDevPluginFunctionalTest {
             ketoyDev {
                 apiKey.set("test-key")
                 packageName.set("com.example.test")
+                appId.set("00000000-0000-0000-0000-000000000000")
             }
             """.trimIndent()
         )

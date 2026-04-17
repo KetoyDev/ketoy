@@ -9,16 +9,24 @@ import com.developerstring.ketoy.util.*
 
 /**
  * Export definition for the Cards screen.
+ *
+ * Uses [KData.userInt] so the exported JSON contains `{{data:user:selectedCardIndex}}`
+ * instead of a hardcoded `0`. At runtime the SDK resolves this to the real value
+ * from [com.developerstring.ketoy.core.KetoyVariableRegistry], keeping the selected card in sync with ViewModel state.
  */
 val cardsExport = ketoyExport("cards", displayName = "Cards", description = "Wallet cards and card management") {
     content {
-        buildCardsScreen(selectedCardIndex = 0)
+        buildCardsScreen(selectedCardIndex = KData.userInt("selectedCardIndex"))
     }
 }
 
 /**
  * Cards screen composable — wraps the DSL builder as a `@KScreen`
  * with a single `KetoyContent` child for cloud / hot-reload support.
+ *
+ * [selectedCardIndex] accepts either a literal [Int] (runtime) or a
+ * template string from [KData.userInt] (export). The DSL builder resolves
+ * it via [com.developerstring.ketoy.core.KetoyVariableRegistry.resolveInt].
  */
 @Composable
 fun CardsScreen(
@@ -36,12 +44,18 @@ fun CardsScreen(
 }
 
 /**
- * Cards screen DSL builder — returns a [KNode] tree with wallet-style
+ * Cards screen DSL builder — returns a [com.developerstring.ketoy.model.KNode] tree with wallet-style
  * card carousel, card actions, and recent card activity.
+ *
+ * @param selectedCardIndex Either a literal [Int] or a template string such as
+ *   `KData.userInt("selectedCardIndex")`. The value is resolved via
+ *   [com.developerstring.ketoy.core.KetoyVariableRegistry.resolveInt] so both the export path (template → JSON)
+ *   and the runtime path (literal → direct use) work identically.
  */
 fun buildCardsScreen(
-    selectedCardIndex: Int,
+    selectedCardIndex: Any,
 ): com.developerstring.ketoy.model.KNode = ketoyRoot {
+    val indexForLogic = selectedCardIndex as? Int ?: 0
 
     data class CardData(
         val name: String, val lastFour: String, val balance: String,
@@ -60,9 +74,9 @@ fun buildCardsScreen(
     KColumn(
         modifier = kModifier(
             fillMaxSize = 1f,
-            padding = kPadding(top = 16),
+            padding = kPadding(top = 15),
             background = KColors.Background,
-            verticalScroll = KScrollConfig.Default
+            verticalScroll = KScrollConfig(enabled = true)
         ),
         verticalArrangement = KArrangements.spacedBy(0)
     ) {
@@ -85,13 +99,15 @@ fun buildCardsScreen(
 
         KSpacer(height = 20)
 
+        KText(text = selectedCardIndex.toString(), fontSize = 30, color = KColors.White)
+
         // ── Card carousel ─────────────────────────────────
         KColumn(
             modifier = kModifier(fillMaxWidth = 1f, padding = kPadding(horizontal = 20)),
             verticalArrangement = KArrangements.spacedBy(16)
         ) {
             cards.forEachIndexed { index, card ->
-                val isSelected = index == selectedCardIndex
+                val isSelected = (index == selectedCardIndex.toString().toIntOrNull())
 
                 walletCard(
                     cardName = card.name,
@@ -138,8 +154,8 @@ fun buildCardsScreen(
         ) {
             KRow(horizontalArrangement = KArrangements.spacedBy(8)) {
                 cards.forEachIndexed { index, card ->
-                    val chipBg = if (index == selectedCardIndex) KColors.Primary else KColors.SurfaceContainerLow
-                    val chipColor = if (index == selectedCardIndex) KColors.OnPrimary else KColors.OnSurfaceVariant
+                    val chipBg = if (index == indexForLogic) KColors.Primary else KColors.SurfaceContainerLow
+                    val chipColor = if (index == indexForLogic) KColors.OnPrimary else KColors.OnSurfaceVariant
 
                     KCard(
                         modifier = kModifier(height = 36),

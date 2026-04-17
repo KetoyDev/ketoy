@@ -10,6 +10,8 @@ import org.gradle.api.tasks.TaskAction
 /**
  * List all screens deployed on the Ketoy Cloud server for this app.
  *
+ * Endpoint: `GET /apps/{appId}/screens`
+ *
  * Usage:
  * ```bash
  * ./gradlew ketoyListScreens
@@ -22,19 +24,19 @@ abstract class KetoyListScreensTask : DefaultTask() {
 
     @TaskAction
     fun execute() {
-        val apiKey = extension.apiKey.orNull
+        val token = extension.apiKey.orNull
             ?: throw GradleException(missingConfig("apiKey", "KETOY_DEVELOPER_API_KEY"))
-        val packageName = extension.packageName.orNull
-            ?: throw GradleException(missingConfig("packageName", "KETOY_PACKAGE_NAME"))
+        val appId = extension.appId.orNull
+            ?: throw GradleException(missingConfig("appId", "KETOY_APP_ID"))
         val baseUrl = extension.baseUrl.get().trimEnd('/')
 
-        val url = "$baseUrl/api/screens/$packageName"
+        val url = "$baseUrl/apps/$appId/screens"
 
         logger.lifecycle("")
-        logger.lifecycle("  Fetching screens for $packageName ...")
+        logger.lifecycle("  Fetching screens for app $appId ...")
         logger.lifecycle("")
 
-        val (code, response) = KetoyHttpClient.request("GET", url, apiKey)
+        val (code, response) = KetoyHttpClient.request("GET", url, token)
 
         if (code in 200..299) {
             logger.lifecycle("  ✔ Screens (HTTP $code):")

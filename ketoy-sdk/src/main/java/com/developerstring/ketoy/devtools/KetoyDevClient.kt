@@ -40,6 +40,9 @@ class KetoyDevClient {
 
     val navGraphs = mutableStateMapOf<String, String>()
 
+    /** Wire format nav graph bytes (base64-decoded). Nav graphs present here should be decoded via KetoyWireFormat. */
+    val navGraphBytes = mutableStateMapOf<String, ByteArray>()
+
     var dataVersion = mutableStateOf(0L)
         private set
 
@@ -290,11 +293,21 @@ class KetoyDevClient {
                         }
                     }
                     val navsObj = data.optJSONObject("navGraphs")
-                    val navUpdates = if (navsObj != null) buildMap {
+                    val navJsonUpdates = mutableMapOf<String, String>()
+                    val navByteUpdates = mutableMapOf<String, ByteArray>()
+                    if (navsObj != null) {
                         navsObj.keys().forEach { name ->
-                            put(name, navsObj.get(name).toString())
+                            val value = navsObj.get(name)
+                            if (value is org.json.JSONObject && value.optString("format") == "ktw") {
+                                val b64 = value.optString("data")
+                                if (b64.isNotEmpty()) {
+                                    navByteUpdates[name] = Base64.decode(b64, Base64.DEFAULT)
+                                }
+                            } else {
+                                navJsonUpdates[name] = value.toString()
+                            }
                         }
-                    } else emptyMap()
+                    }
 
                     scope.launch(Dispatchers.Main.immediate) {
                         dataVersion.value = version
@@ -306,7 +319,14 @@ class KetoyDevClient {
                             screenBytes[name] = bytes
                             screens[name] = "__wire__" // sentinel so screen appears in screens map
                         }
-                        navUpdates.forEach { (name, navJson) -> navGraphs[name] = navJson }
+                        navJsonUpdates.forEach { (name, navJson) ->
+                            navGraphs[name] = navJson
+                            navGraphBytes.remove(name)
+                        }
+                        navByteUpdates.forEach { (name, bytes) ->
+                            navGraphBytes[name] = bytes
+                            navGraphs[name] = "__wire__"
+                        }
                     }
                 }
                 "update" -> {
@@ -334,12 +354,23 @@ class KetoyDevClient {
                 "nav_update" -> {
                     val navHost = json.optString("navHost")
                     val version = json.optLong("version", dataVersion.value)
-                    val data = json.opt("data")?.toString() ?: return
+                    val format = json.optString("format", "")
+                    val isWire = format == "ktw"
 
                     scope.launch(Dispatchers.Main.immediate) {
                         dataVersion.value = version
-                        navGraphs[navHost] = data
-                        println("📱 Ketoy Dev: Updated nav '$navHost' (v$version)")
+                        if (isWire) {
+                            val b64 = json.optString("data")
+                            if (b64.isNotEmpty()) {
+                                navGraphBytes[navHost] = Base64.decode(b64, Base64.DEFAULT)
+                                navGraphs[navHost] = "__wire__"
+                            }
+                        } else {
+                            val data = json.opt("data")?.toString() ?: return@launch
+                            navGraphs[navHost] = data
+                            navGraphBytes.remove(navHost)
+                        }
+                        println("📱 Ketoy Dev: Updated nav '$navHost' (v$version) [${if (isWire) "wire" else "json"}]")
                     }
                 }
                 "pong" -> { /* heartbeat ack */ }
@@ -366,11 +397,21 @@ class KetoyDevClient {
                         }
                     }
                     val navsObj = json.optJSONObject("navGraphs")
-                    val navUpdates = if (navsObj != null) buildMap {
+                    val navJsonUpdates = mutableMapOf<String, String>()
+                    val navByteUpdates = mutableMapOf<String, ByteArray>()
+                    if (navsObj != null) {
                         navsObj.keys().forEach { name ->
-                            put(name, navsObj.get(name).toString())
+                            val value = navsObj.get(name)
+                            if (value is org.json.JSONObject && value.optString("format") == "ktw") {
+                                val b64 = value.optString("data")
+                                if (b64.isNotEmpty()) {
+                                    navByteUpdates[name] = Base64.decode(b64, Base64.DEFAULT)
+                                }
+                            } else {
+                                navJsonUpdates[name] = value.toString()
+                            }
                         }
-                    } else emptyMap()
+                    }
 
                     scope.launch(Dispatchers.Main.immediate) {
                         dataVersion.value = version
@@ -382,7 +423,14 @@ class KetoyDevClient {
                             screenBytes[name] = bytes
                             screens[name] = "__wire__"
                         }
-                        navUpdates.forEach { (name, navJson) -> navGraphs[name] = navJson }
+                        navJsonUpdates.forEach { (name, navJson) ->
+                            navGraphs[name] = navJson
+                            navGraphBytes.remove(name)
+                        }
+                        navByteUpdates.forEach { (name, bytes) ->
+                            navGraphBytes[name] = bytes
+                            navGraphs[name] = "__wire__"
+                        }
                     }
                 }
             } catch (_: Exception) {

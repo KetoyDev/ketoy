@@ -2,6 +2,7 @@ package com.developerstring.ketoy.export
 
 import com.developerstring.ketoy.navigation.KetoyNavGraph
 import com.developerstring.ketoy.navigation.KetoyNavRegistry
+import com.developerstring.ketoy.wire.KetoyWireFormat
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.json.jsonArray
 import kotlinx.serialization.json.jsonObject
@@ -97,7 +98,25 @@ object KetoyProductionNavLoader {
     }
 
     /**
-     * Load all `nav_*.json` files and the navigation manifest from an
+     * Load a single nav graph from wire format (.ktw) bytes and register it.
+     *
+     * @param wireBytes The raw .ktw wire format bytes.
+     * @return The registered nav graph, or null on decode/parse failure.
+     */
+    fun loadNavGraphFromWireBytes(wireBytes: ByteArray): KetoyNavGraph? {
+        return try {
+            val jsonString = KetoyWireFormat.decode(wireBytes)
+            val navGraph = KetoyNavGraph.fromJson(jsonString)
+            KetoyNavRegistry.register(navGraph)
+            navGraph
+        } catch (e: Exception) {
+            System.err.println("Failed to load nav graph from wire bytes: ${e.message}")
+            null
+        }
+    }
+
+    /**
+     * Load all `nav_*.json` and `nav_*.ktw` files and the navigation manifest from an
      * Android asset directory.
      *
      * This method:
@@ -128,14 +147,23 @@ object KetoyProductionNavLoader {
         val registered = mutableListOf<String>()
         try {
             val files = assetManager.list(assetDirectory) ?: emptyArray()
-            files.filter { it.startsWith("nav_") && it.endsWith(".json") }
+            files.filter { it.startsWith("nav_") && (it.endsWith(".json") || it.endsWith(".ktw")) }
                 .forEach { fileName ->
                     try {
-                        val navJson = assetManager.open("$assetDirectory/$fileName")
-                            .bufferedReader().use { it.readText() }
-                        val navGraph = loadNavGraph(navJson)
-                        if (navGraph != null) {
-                            registered.add(navGraph.navHostName)
+                        if (fileName.endsWith(".ktw")) {
+                            val wireBytes = assetManager.open("$assetDirectory/$fileName")
+                                .use { it.readBytes() }
+                            val navGraph = loadNavGraphFromWireBytes(wireBytes)
+                            if (navGraph != null) {
+                                registered.add(navGraph.navHostName)
+                            }
+                        } else {
+                            val navJson = assetManager.open("$assetDirectory/$fileName")
+                                .bufferedReader().use { it.readText() }
+                            val navGraph = loadNavGraph(navJson)
+                            if (navGraph != null) {
+                                registered.add(navGraph.navHostName)
+                            }
                         }
                     } catch (e: Exception) {
                         System.err.println("Failed to load $fileName: ${e.message}")
@@ -179,7 +207,7 @@ object KetoyProductionNavLoader {
         // Load screens
         try {
             val files = assetManager.list(assetDirectory) ?: emptyArray()
-            files.filter { it.endsWith(".json") && !it.startsWith("nav_") && it != "navigation_manifest.json" && it != "screen_manifest.json" }
+            files.filter { (it.endsWith(".json") || it.endsWith(".ktw")) && !it.startsWith("nav_") && it != "navigation_manifest.json" && it != "screen_manifest.json" }
                 .forEach { fileName ->
                     try {
                         val screenJson = assetManager.open("$assetDirectory/$fileName")

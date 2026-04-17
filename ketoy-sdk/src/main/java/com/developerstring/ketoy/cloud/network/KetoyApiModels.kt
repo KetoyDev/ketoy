@@ -91,6 +91,24 @@ data class KetoyScreenData(
  * @see KetoyScreenData
  * @see KetoyApiClient.fetchScreenVersion
  */
+/**
+ * Response payload for the raw `.ktw` screen fetch endpoint.
+ *
+ * **Endpoint:** `GET {baseUrl}/ktw?app={packageName}&screen={name}`
+ *
+ * The server returns the raw wire bytes as the body and (optionally)
+ * a version string in the `X-Screen-Version` response header.
+ *
+ * @property version Semantic version string from the response header,
+ *                   or `"0.0.0"` if the header was not present.
+ * @property bytes   Raw `.ktw` wire bytes — pass directly to
+ *                   [com.developerstring.ketoy.renderer.JSONBytesToUI].
+ */
+data class WireScreenResponse(
+    val version: String,
+    val bytes: ByteArray
+)
+
 @Serializable
 data class KetoyScreenVersionData(
     val screenName: String,

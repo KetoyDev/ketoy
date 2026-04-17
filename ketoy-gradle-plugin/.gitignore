@@ -12,3 +12,4 @@ gradle.properties
 *.class
 *.jar
 *.aar
+CLAUDE.md

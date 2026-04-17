@@ -58,6 +58,67 @@ object KetoyVariableRegistry {
 
     fun getAllVariables(): Map<String, KetoyVariable<*>> = variables.toMap()
 
+    /* ── Typed value resolution ───────────────────────── */
+
+    /**
+     * Resolves [value] to an [Int]. If [value] is already numeric it is
+     * returned directly. If it is a template string (e.g. `"{{data:user:count}}"`)
+     * it is resolved via [resolveTemplate] and parsed; [default] is returned on
+     * parse failure or when the key is missing.
+     */
+    fun resolveInt(value: Any, default: Int = 0): Int = when (value) {
+        is Int -> value
+        is Number -> value.toInt()
+        is String -> resolveTemplate(value).toIntOrNull() ?: default
+        else -> default
+    }
+
+    /**
+     * Resolves [value] to a [Boolean]. Accepts a [Boolean] literal, a
+     * template string, or the strings `"true"` / `"false"` (case-insensitive).
+     */
+    fun resolveBoolean(value: Any, default: Boolean = false): Boolean = when (value) {
+        is Boolean -> value
+        is String -> {
+            val resolved = resolveTemplate(value)
+            resolved.toBooleanStrictOrNull() ?: resolved.equals("true", ignoreCase = true)
+        }
+        else -> default
+    }
+
+    /**
+     * Resolves [value] to a [Float]. Accepts a [Float]/[Number] literal or a
+     * template string; [default] is returned on failure.
+     */
+    fun resolveFloat(value: Any, default: Float = 0f): Float = when (value) {
+        is Float -> value
+        is Number -> value.toFloat()
+        is String -> resolveTemplate(value).toFloatOrNull() ?: default
+        else -> default
+    }
+
+    /**
+     * Resolves [value] to a [Double]. Accepts a [Double]/[Number] literal or a
+     * template string; [default] is returned on failure.
+     */
+    fun resolveDouble(value: Any, default: Double = 0.0): Double = when (value) {
+        is Double -> value
+        is Number -> value.toDouble()
+        is String -> resolveTemplate(value).toDoubleOrNull() ?: default
+        else -> default
+    }
+
+    /**
+     * Resolves [value] to a [Long]. Accepts a [Long]/[Number] literal or a
+     * template string; [default] is returned on failure.
+     */
+    fun resolveLong(value: Any, default: Long = 0L): Long = when (value) {
+        is Long -> value
+        is Number -> value.toLong()
+        is String -> resolveTemplate(value).toLongOrNull() ?: default
+        else -> default
+    }
+
     /* ── Template resolution ─────────────────────────── */
 
     /**
